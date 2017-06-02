@@ -1,0 +1,18 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/boost_*/**/Debug/*.cache
+/boost_*/**/Release/*.cache
+/boost_*/**/debug/**/*.obj
+/boost_*/**/release/**/*.obj
+/boost_*/**/debug/**/*.rsp
+/boost_*/**/release/**/*.rsp
+/boost_*/bin.v2/
+/boost_*/stage/
+/boost_*/tools/build/src/engine/bin.*/
+/boost_*/tools/build/src/engine/bootstrap/
+/boost_*/b2*
+/boost_*/bjam*
+/boost_*/bootstrap.log
+/boost_*/project-config.jam
