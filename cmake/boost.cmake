@@ -4,11 +4,20 @@ set(_CR_BOOST_SRC_FLODER "${_CR_PROJECT_ROOT}/third_party/boost/boost_1_64_0")
 
 include(common.cmake)
 
+function(_set_scripts_perm)
+    execute_process(COMMAND chmod a+x "${_CR_BOOST_SRC_FLODER}/bootstrap.sh" WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}")
+    file(GLOB_RECURSE _CR_SHELL_SCRIPTS "${_CR_BOOST_SRC_FLODER}/tools/build/*.sh")
+    foreach(scriptFile ${_CR_SHELL_SCRIPTS})
+        execute_process(COMMAND chmod a+x "${scriptFile}" WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}")
+    endforeach()
+endfunction()
+
 if(_CR_MSVC EQUAL 1)
     set(_CR_BOOST_BOOTSTRAP "${_CR_BOOST_SRC_FLODER}/bootstrap.bat")
     set(_CR_BOOST_B2_EXE "${_CR_BOOST_SRC_FLODER}/b2.exe")
 else()
-    set(_CR_BOOST_BOOTSTRAP "bash ${_CR_BOOST_SRC_FLODER}/bootstrap.sh")
+    _set_scripts_perm()
+    set(_CR_BOOST_BOOTSTRAP "${_CR_BOOST_SRC_FLODER}/bootstrap.sh")
     set(_CR_BOOST_B2_EXE "${_CR_BOOST_SRC_FLODER}/b2")
 endif()
 
