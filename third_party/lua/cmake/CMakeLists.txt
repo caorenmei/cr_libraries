@@ -74,16 +74,21 @@ set(_CR_INCLUDES
     ${_CR_SOPUIRCE_DIR}/src/lualib.h
 )
 
+# linux 平台数学库
+if(NOT MSVC)
+    set(_CR_MATHLIB "m")
+endif()
+
 # lib
 add_library(lua53 ${_CR_SOURCE})
 
 # lua
 add_executable(lua ${_CR_SOPUIRCE_DIR}/src/lua.c)
-target_link_libraries(lua lua53)
+target_link_libraries(lua lua53 ${_CR_MATHLIB})
 
 # luac
 add_executable(luac ${_CR_SOPUIRCE_DIR}/src/luac.c)
-target_link_libraries(luac lua53)
+target_link_libraries(luac lua53 ${_CR_MATHLIB})
 
 # install 
 install(FILES ${_CR_INCLUDES} DESTINATION include/lua )
