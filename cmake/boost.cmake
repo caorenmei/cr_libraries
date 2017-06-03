@@ -8,7 +8,7 @@ if(_CR_MSVC EQUAL 1)
     set(_CR_BOOST_BOOTSTRAP "${_CR_BOOST_SRC_FLODER}/bootstrap.bat")
     set(_CR_BOOST_B2_EXE "${_CR_BOOST_SRC_FLODER}/b2.exe")
 else()
-    set(_CR_BOOST_BOOTSTRAP "${_CR_BOOST_SRC_FLODER}/bootstrap.sh")
+    set(_CR_BOOST_BOOTSTRAP "bash ${_CR_BOOST_SRC_FLODER}/bootstrap.sh")
     set(_CR_BOOST_B2_EXE "${_CR_BOOST_SRC_FLODER}/b2")
 endif()
 
