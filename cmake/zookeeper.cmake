@@ -24,7 +24,6 @@ function(_build_zookeeper buildMode)
     endif()
     # 生成cmake
     _cr_install_path(_CR_ZOOKEEPER_INSTALL_DIR "zookeeper" ${buildMode})
-    set(_CR_ZOOKEEPER_INSTALL_DIR "${_CR_ZOOKEEPER_INSTALL_PREFIX}/${buildMode}")
     if(NOT EXISTS "${_CR_ZOOKEEPER_INSTALL_DIR}")
         file(MAKE_DIRECTORY "${_CR_ZOOKEEPER_INSTALL_DIR}")
         message(STATUS "MAKE_DIRECTORY ${_CR_ZOOKEEPER_INSTALL_DIR}")
