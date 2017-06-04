@@ -23,7 +23,6 @@ function(_build_protobuf buildMode)
     endif()
     # 生成cmake
     _cr_install_path(_CR_PROTOBUF_INSTALL_DIR "protobuf" ${buildMode})
-    set(_CR_PROTOBUF_INSTALL_DIR "${_CR_PROTOBUF_ROOT}/install/${buildMode}")
     if(NOT EXISTS "${_CR_PROTOBUF_INSTALL_DIR}")
         file(MAKE_DIRECTORY "${_CR_PROTOBUF_INSTALL_DIR}")
         message(STATUS "MAKE_DIRECTORY ${_CR_PROTOBUF_INSTALL_DIR}")
