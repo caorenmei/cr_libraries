@@ -6,5 +6,5 @@
 /.vs
 
 # build
-/build/*
-/install/*
+/build
+/install
