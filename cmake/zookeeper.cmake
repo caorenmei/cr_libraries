@@ -2,6 +2,8 @@
 set(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(_CR_ZOOKEEPER_CMAKE "${_CR_PROJECT_ROOT}/third_party/zookeeper/cmake")
 set(_CR_ZOOKEEPER_SRC "${_CR_PROJECT_ROOT}/third_party/zookeeper/zookeeper-3.4.10/src/c")
+file(GLOB _CR_ZOOKEEPER_SRC "${_CR_ZOOKEEPER_SRC}")
+message(STATUS "fffffffffffffff ${_CR_ZOOKEEPER_SRC}")
 
 include(common.cmake)
 
@@ -43,6 +45,8 @@ endfunction()
 # unix下编译
 function(_build_zookeeper_unix buildMode)
     _cr_install_path(_CR_ZOOKEEPER_INSTALL_DIR "zookeeper" ${buildMode})
+    execute_process(COMMAND cd "${_CR_ZOOKEEPER_INSTALL_DIR}"; OUTPUT_VARIABLE _CR_ZOOKEEPER_INSTALL_DIR)
+    message(STATUS "install: ${_CR_ZOOKEEPER_INSTALL_DIR}")
     execute_process(COMMAND chmod a+x "${_CR_ZOOKEEPER_SRC}/configure" WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
     execute_process(COMMAND ${_CR_ZOOKEEPER_SRC}/configure --prefix="${_CR_ZOOKEEPER_INSTALL_DIR}"  WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
 endfunction()
