@@ -42,18 +42,26 @@ endfunction()
 
 # unix下编译
 function(_build_zookeeper_unix buildMode)
+    # 安装目录
     _cr_install_path(_CR_ZOOKEEPER_INSTALL_DIR "zookeeper" ${buildMode})
     if(NOT EXISTS "${_CR_ZOOKEEPER_INSTALL_DIR}")
         file(MAKE_DIRECTORY "${_CR_ZOOKEEPER_INSTALL_DIR}")
         message(STATUS "MAKE_DIRECTORY ${_CR_ZOOKEEPER_INSTALL_DIR}")
     endif()
     execute_process(COMMAND pwd OUTPUT_VARIABLE _CR_ZOOKEEPER_INSTALL_DIR WORKING_DIRECTORY "${_CR_ZOOKEEPER_INSTALL_DIR}")
-    message(STATUS "FDFDFDFDF ${_CR_ZOOKEEPER_INSTALL_DIR}")
-    execute_process(COMMAND chmod a+x * WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
-    execute_process(COMMAND autoreconf -ivf WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
-    execute_process(COMMAND ${_CR_ZOOKEEPER_SRC}/configure --prefix=${_CR_ZOOKEEPER_INSTALL_DIR} --enable-shared=no --without-PACKAG --without-cppunit WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
-    execute_process(COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
-    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
+    # 编译目
+    _cr_build_path(_CR_ZOOKEEPER_BUILD_DIR "zookeeper" ${buildMode})
+    if(NOT EXISTS "${_CR_ZOOKEEPER_BUILD_DIR}")
+        file(MAKE_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
+        message(STATUS "MAKE_DIRECTORY ${_CR_ZOOKEEPER_BUILD_DIR}")
+    endif()
+    file(COPY "${_CR_ZOOKEEPER_SRC}/" DESTINATION "${_CR_ZOOKEEPER_BUILD_DIR}/")
+    # 编译
+    execute_process(COMMAND chmod a+x * WORKING_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
+    execute_process(COMMAND autoreconf -ivf WORKING_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
+    execute_process(COMMAND ${_CR_ZOOKEEPER_BUILD_DIR}/configure --prefix=${_CR_ZOOKEEPER_INSTALL_DIR} --enable-shared=no --without-PACKAG --without-cppunit WORKING_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
+    execute_process(COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
+    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_ZOOKEEPER_BUILD_DIR}")
 endfunction()
 
 function(_build_zookeeper buildMode)
