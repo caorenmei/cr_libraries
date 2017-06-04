@@ -46,6 +46,8 @@ function(_build_zookeeper_unix buildMode)
     execute_process(COMMAND pwd OUTPUT_VARIABLE _CR_ZOOKEEPER_INSTALL_DIR WORKING_DIRECTORY "${_CR_ZOOKEEPER_INSTALL_DIR}")
     execute_process(COMMAND chmod a+x "${_CR_ZOOKEEPER_SRC}/configure" WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
     execute_process(COMMAND ${_CR_ZOOKEEPER_SRC}/configure --prefix="${_CR_ZOOKEEPER_INSTALL_DIR}"  WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
+    execute_process(COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
+    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_ZOOKEEPER_SRC}")
 endfunction()
 
 function(_build_zookeeper buildMode)
