@@ -9,10 +9,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(MSVC)
-	set(_CR_MSVC 1)
     set(_CR_ENV_TERMINAL ";")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else()
-    set(_CR_MSVC 0)
     set(_CR_ENV_TERMINAL ":")
 endif()
 
@@ -25,7 +24,6 @@ endforeach()
 
 # Boost
 option(Boost_USE_STATIC_LIBS "Use static libs" ON)
-find_package(Boost REQUIRED)
 
 # 子文件
 add_subdirectory(src)

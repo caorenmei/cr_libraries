@@ -28,8 +28,8 @@ namespace cr
 		/** 断言发生次数 */
 		static int sAssertCount;
 
-		ThrowAssertError cr_assert_impl_a;
-		ThrowAssertError cr_assert_impl_b;
+		ThrowAssertError CR_ASSERT_IMPL_A;
+		ThrowAssertError CR_ASSERT_IMPL_B;
 
 		/**
 		 * Constructor.

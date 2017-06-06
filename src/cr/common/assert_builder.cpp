@@ -15,8 +15,8 @@ namespace cr
 	int AssertBuilder::sAssertCount = 0;
 
 	AssertBuilder::AssertBuilder(std::function<void(const char*)> handler, const char* file, int line, const char* expression)
-		: cr_assert_impl_a(*this),
-		cr_assert_impl_b(*this),
+		: CR_ASSERT_IMPL_A(*this),
+        CR_ASSERT_IMPL_B(*this),
 		handler_(std::move(handler))
 	{
 		message_ << "Failed: " << expression << "\n"

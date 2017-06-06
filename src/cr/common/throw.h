@@ -13,7 +13,7 @@
  * @param ... 构造函数参数.
  * @exception E
  */
-#define cr_throw(E, ...) \
+#define CR_THROW(E, ...) \
 	do \
 	{ \
 		E e(__VA_ARGS__); \
