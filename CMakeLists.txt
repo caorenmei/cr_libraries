@@ -5,7 +5,7 @@ project (cr_libraris CXX)
 enable_testing()
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 if(MSVC)
@@ -25,6 +25,7 @@ endforeach()
 
 # Boost
 option(Boost_USE_STATIC_LIBS "Use static libs" ON)
+find_package(Boost REQUIRED)
 
 # 子文件
 add_subdirectory(src)
