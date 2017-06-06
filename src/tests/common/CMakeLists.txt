@@ -5,7 +5,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(cr_common_unittest_SRCS
     unittest_main.cpp
     assert_unittest.cpp
+    error_unittest.cpp
+    exception_unittest.cpp
     scope_guard_unittest.cpp
+    throw_unittest.cpp
 )
   
 add_executable(cr_common_unittest ${cr_common_unittest_SRCS})

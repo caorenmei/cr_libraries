@@ -1,6 +1,8 @@
 #ifndef CR_COMMON_ERROR_H_
 #define CR_COMMON_ERROR_H_
 
+#include <string>
+
 namespace cr
 {
 	/**
@@ -15,26 +17,10 @@ namespace cr
 		 *
 		 * @param	错误描述信息.
 		 */
-		explicit Error(const char* message = "");
-
-		/**
-		 * Copy constructor.
-		 *
-		 * @param	other	The other.
-		 */
-		Error(const Error& other);
+		explicit Error(std::string message = "");
 
 		/** Destructor. */
 		virtual ~Error() noexcept;
-
-		/**
-		 * Assignment operator.
-		 *
-		 * @param	other	The other.
-		 *
-		 * @return	A shallow copy of this object.
-		 */
-		Error& operator=(const Error& other);
 
 		/**
 		 * 获取错误描述信息
@@ -42,6 +28,13 @@ namespace cr
 		 * @return	错误描述信息
 		 */
 		virtual const char* what() const;
+       
+        /**
+		 * 获取错误描述信息
+		 *
+		 * @return	错误描述信息
+		 */
+        virtual const std::string& getMessage() const;
 
 		/**
 		 * 设置错误发生的源文件名
@@ -74,7 +67,7 @@ namespace cr
 	private:
 
 		// 错误描述信息
-		char* message_;
+		std::string message_;
 		// 源文件名
 		const char* sourceName_;
 		// 源码行

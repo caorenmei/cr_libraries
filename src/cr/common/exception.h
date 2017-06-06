@@ -1,12 +1,13 @@
-#ifndef CR_COMMON_EXCEPTION_H_
+ï»¿#ifndef CR_COMMON_EXCEPTION_H_
 #define CR_COMMON_EXCEPTION_H_
 
 #include <exception>
+#include <string>
 
 namespace cr
 {
 	/**
-	* Òì³£»ùÀà£¬ÃèÊö·¢ÉúÁËÒì³£
+	* å¼‚å¸¸åŸºç±»ï¼Œæè¿°å‘ç”Ÿäº†å¼‚å¸¸
 	*/
 	class Exception : public std::exception
 	{
@@ -15,71 +16,63 @@ namespace cr
 		/**
 		* Constructor.
 		*
-		* @param	Òì³£ÃèÊöĞÅÏ¢.
+		* @param	å¼‚å¸¸æè¿°ä¿¡æ¯.
 		*/
-		explicit Exception(const char* message = "");
+		explicit Exception(std::string message = "");
 
-		/**
-		* Copy constructor.
-		*
-		* @param	other	The other.
-		*/
-		Exception(const Exception& other);
 
 		/** Destructor. */
 		virtual ~Exception();
 
 		/**
-		* Assignment operator.
+		* è·å–å¼‚å¸¸æè¿°ä¿¡æ¯
 		*
-		* @param	other	The other.
-		*
-		* @return	A shallow copy of this object.
-		*/
-		Exception& operator=(const Exception& other);
-
-		/**
-		* »ñÈ¡Òì³£ÃèÊöĞÅÏ¢
-		*
-		* @return	Òì³£ÃèÊöĞÅÏ¢
+		* @return	å¼‚å¸¸æè¿°ä¿¡æ¯
 		*/
 		virtual const char* what() const override;
 
+        /**
+		 * è·å–é”™è¯¯æè¿°ä¿¡æ¯
+		 *
+		 * @return	é”™è¯¯æè¿°ä¿¡æ¯
+		 */
+        virtual const std::string& getMessage() const;
+
 		/**
-		* ÉèÖÃÒì³£·¢ÉúµÄÔ´ÎÄ¼şÃû
+		* è®¾ç½®å¼‚å¸¸å‘ç”Ÿçš„æºæ–‡ä»¶å
 		*
-		* @param Ô´ÎÄ¼şÃû
+		* @param æºæ–‡ä»¶å
 		*/
 		void setSourceName(const char* sourceName);
 
 		/**
-		* »ñÈ¡Òì³£·¢ÉúµÄÔ´ÎÄ¼şÃû
+		* è·å–å¼‚å¸¸å‘ç”Ÿçš„æºæ–‡ä»¶å
 		*
-		* @return Òì³£·¢ÉúµÄÔ´ÎÄ¼şÃû
+		* @return å¼‚å¸¸å‘ç”Ÿçš„æºæ–‡ä»¶å
 		*/
 		const char* getSourceName() const;
 
 		/**
-		* ÉèÖÃÒì³£·¢ÉúµÄÔ´ÂëĞĞ
+		* è®¾ç½®å¼‚å¸¸å‘ç”Ÿçš„æºç è¡Œ
 		*
-		* @param Òì³£·¢ÉúµÄÔ´ÂëĞĞ
+		* @param å¼‚å¸¸å‘ç”Ÿçš„æºç è¡Œ
 		*/
 		void setSourceLine(int sourceLine);
 
 		/**
-		* »ñÈ¡Òì³£·¢ÉúµÄÔ´ÂëĞĞ
+		* è·å–å¼‚å¸¸å‘ç”Ÿçš„æºç è¡Œ
 		*
-		* @return Òì³£·¢ÉúµÄÔ´ÂëĞĞ
+		* @return å¼‚å¸¸å‘ç”Ÿçš„æºç è¡Œ
 		*/
 		int getSourceLine() const;
 
 	private:
 
-		// Òì³£ÃèÊöĞÅÏ¢
-		char* message_;
-		// Ô´ÎÄ¼şÃû
+		// å¼‚å¸¸æè¿°ä¿¡æ¯
+		std::string message_;
+		// æºæ–‡ä»¶å
 		const char* sourceName_;
-		// Ô´ÂëĞĞ
+		// æºç è¡Œ
 		int sourceLine_;
 	};
 }

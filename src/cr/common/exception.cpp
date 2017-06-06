@@ -5,40 +5,24 @@
 
 namespace cr
 {
-	Exception::Exception(const char* message/* = ""*/)
-		: sourceName_(""),
+    Exception::Exception(std::string message/* = ""*/)
+        : message_(std::move(message)),
+        sourceName_(""),
 		sourceLine_(0)
-	{
-		std::size_t messageLength = std::strlen(message);
-		message_ = new char[messageLength + 1];
-		std::strncpy(message_, message, messageLength + 1);
-	}
-
-	Exception::Exception(const Exception& other)
-		: sourceName_(other.sourceName_),
-		sourceLine_(other.sourceLine_)
-	{
-		std::size_t messageLength = std::strlen(other.message_);
-		message_ = new char[messageLength + 1];
-		std::strncpy(message_, other.message_, messageLength + 1);
-	}
+    {}
 
 	Exception::~Exception()
-	{
-		delete[] message_;
-	}
-
-	Exception& Exception::operator=(const Exception& other)
-	{
-		Exception temp(other);
-		std::swap(message_, temp.message_);
-		return *this;
-	}
+	{}
 
 	const char* Exception::what() const
 	{
-		return message_;
+		return message_.c_str();
 	}
+
+    const std::string& Exception::getMessage() const
+    {
+        return message_;
+    }
 
 	void Exception::setSourceName(const char* sourceName)
 	{
