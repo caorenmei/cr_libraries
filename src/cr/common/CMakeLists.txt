@@ -16,6 +16,7 @@ set(cr_common_SRCS
     streams_empty.h
     streams_enumerators.h
     streams_from.h
+    streams_for.h
     streams_generate.h
     throw.h
 )
@@ -31,6 +32,7 @@ set(cr_common_HEADERS
     streams_empty.h
     streams_enumerators.h
     streams_from.h
+    streams_for.h
     streams_generate.h
     throw.h
 )

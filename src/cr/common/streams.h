@@ -294,8 +294,9 @@ namespace cr
     };
 }
 
-#include <cr/common/streams_from.h>
 #include <cr/common/streams_empty.h>
+#include <cr/common/streams_for.h>
+#include <cr/common/streams_from.h>
 #include <cr/common/streams_generate.h>
 
 #endif
