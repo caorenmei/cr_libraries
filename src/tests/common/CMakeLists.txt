@@ -8,6 +8,7 @@ set(cr_common_unittest_SRCS
     error_unittest.cpp
     exception_unittest.cpp
     scope_guard_unittest.cpp
+    streams_unittest.cpp
     throw_unittest.cpp
 )
   

@@ -12,6 +12,11 @@ set(cr_common_SRCS
     exception.h
     exception.cpp
     scope_guard.h
+    streams.h
+    streams_empty.h
+    streams_enumerators.h
+    streams_from.h
+    streams_generate.h
     throw.h
 )
 
@@ -22,6 +27,11 @@ set(cr_common_HEADERS
     error.h
     exception.h
     scope_guard.h
+    streams.h
+    streams_empty.h
+    streams_enumerators.h
+    streams_from.h
+    streams_generate.h
     throw.h
 )
  
