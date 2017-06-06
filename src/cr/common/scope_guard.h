@@ -1,17 +1,16 @@
 #ifndef CR_COMMON_SCOPE_GUARD_H_
 #define CR_COMMON_SCOPE_GUARD_H_
 
-#include <type_traits>
+#include <functional>
 #include <utility>
+
+#include <boost/preprocessor/cat.hpp>
 
 namespace cr
 {
 	/**
 	 * 超出作用域自动回滚.
-	 *
-	 * @tparam TRollback 回滚函数.
 	 */
-	template <typename TRollback>
 	class ScopeGuard
 	{
 	public:
@@ -20,8 +19,8 @@ namespace cr
 		 *
 		 * @param rollback 回滚函数.
 		 */
-		explicit ScopeGuard(TRollback&& rollback)
-			: rollback_(std::forward<TRollback>(rollback)),
+		explicit ScopeGuard(std::function<void()> rollback)
+			: rollback_(std::move(rollback)),
 			dismissed_(false)
 		{}
 
@@ -46,6 +45,20 @@ namespace cr
 			}
 		}
 
+        ScopeGuard(const ScopeGuard&) = delete;
+        ScopeGuard& operator=(const ScopeGuard&&) = delete;
+        ScopeGuard& operator=(ScopeGuard&& other) = delete;
+
+        /**
+         * Swaps the given other.
+         *
+         * @param [in,out]  other   The other.
+         */
+        void swap(ScopeGuard& other)
+        {
+            std::swap(rollback_, other.rollback_);
+            std::swap(dismissed_, other.dismissed_);
+        }
 
 		/** 解除自动回滚. */
 		void dismiss()
@@ -56,16 +69,12 @@ namespace cr
 	private:
 
 		// 回滚函数
-		TRollback rollback_;
+        std::function<void()> rollback_;
 		// 是否取消自动化回滚
 		bool dismissed_;
 	};
 }
 
-#define CR_ON_SCOPE_GUARD(varName, rollback)\
-	auto CR_MACRO_CAT(lamdbaRollback, __LINE__) = std::move(rollback);\
-	 cr::ScopeGuard<std::decay_t<decltype(CR_MACRO_CAT(lamdbaRollback, __LINE__))>> varName(std::move(CR_MACRO_CAT(lamdbaRollback, __LINE__)))
-
-#define CR_ON_SCOPE_EXIT(rollback) CR_ON_SCOPE_GUARD(CR_MACRO_CAT(onScopeExit, __LINE__), rollback)
+#define CR_ON_SCOPE_EXIT(rollback) cr::ScopeGuard BOOST_PP_CAT(onScopeExit_, __LINE__)(rollback)
 
 #endif // !CR_CORE_SCOPE_GUARD_H_

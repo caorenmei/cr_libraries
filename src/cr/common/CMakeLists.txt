@@ -1,4 +1,7 @@
 
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 set(cr_common_SRCS
   assert.h
   assert_builder.h
