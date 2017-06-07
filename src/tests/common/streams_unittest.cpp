@@ -200,6 +200,12 @@ BOOST_AUTO_TEST_CASE(generate)
     BOOST_CHECK_EQUAL(cr::generate([&] { return initValue++; }).skip(2).limit(3).sum().value_or(0), 9);
 }
 
+BOOST_AUTO_TEST_CASE(generate_step)
+{
+    int initValue = 0;
+    BOOST_CHECK_EQUAL(cr::generate(0, 1).limit(3).sum().value_or(0), 3);
+}
+
 BOOST_AUTO_TEST_CASE(rangeFor)
 {
     int sum = 0;
