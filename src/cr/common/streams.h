@@ -14,7 +14,7 @@ namespace cr
     class Stream
     {
     public:
-
+        typedef TEnumerable EnumeratorType;
         typedef typename TEnumerable::ValueType ValueType;
         typedef typename TEnumerable::ValueType ReferenceType;
 
@@ -62,6 +62,14 @@ namespace cr
         {
             auto enumerator = streams::MapperEnumerator<TEnumerable, TMapper>{ std::move(enumerator_), std::move(mapper) };
             return Stream<decltype(enumerator)>{ enumerator };
+        }
+
+        template <typename TMapper>
+        auto flatMap(TMapper mapper)
+        {
+            auto mapperEnumerator = streams::MapperEnumerator<TEnumerable, TMapper>{ std::move(enumerator_), std::move(mapper) };
+            auto flatMapperEnumerator = streams::FlatEnumerator<decltype(mapperEnumerator)>{ std::move(mapperEnumerator) };
+            return Stream<decltype(flatMapperEnumerator)>{ flatMapperEnumerator };
         }
 
         template <typename TInitValueType, typename TAccumulator>
@@ -189,6 +197,13 @@ namespace cr
         auto skip(std::size_t n)
         {
             auto enumerator = streams::SkipEnumerator<TEnumerable>{ std::move(enumerator_), n };
+            return Stream<decltype(enumerator)>{ enumerator };
+        }
+
+        template <typename TPredicate>
+        auto until(TPredicate predicate)
+        {
+            auto enumerator = streams::UntilEnumerator<TEnumerable, TPredicate>{ std::move(enumerator_), std::move(predicate) };
             return Stream<decltype(enumerator)>{ enumerator };
         }
 

@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/lexical_cast.hpp>
+
 #include <cr/common/streams.h>
 
 BOOST_AUTO_TEST_SUITE(cr_common_streams)
@@ -54,11 +56,17 @@ BOOST_AUTO_TEST_CASE(deepClone)
     BOOST_CHECK_EQUAL(svec[1], "world");
 }
 
-BOOST_AUTO_TEST_CASE(mapper)
+BOOST_AUTO_TEST_CASE(map)
 {
     int sum = 0;
     cr::from({ 1,2,3 }).map([](auto&& e) {return e * 10; }).forEach([&](auto&& e) { sum += e; });
     BOOST_CHECK_EQUAL(sum, 60);
+}
+
+BOOST_AUTO_TEST_CASE(flatMap)
+{
+    std::vector<std::string> svec = { "123", "456", "789" };
+    BOOST_CHECK_EQUAL(cr::from(svec).flatMap([](auto&& e) { return cr::from(e); }).map([](auto&& e) { return e - '0'; }).sum().value_or(0), 45);
 }
 
 BOOST_AUTO_TEST_CASE(reduce)
@@ -148,6 +156,12 @@ BOOST_AUTO_TEST_CASE(skip)
     BOOST_CHECK_EQUAL(cr::from({ 1,2,3 }).skip(2).findFirst().value_or(0), 3);
     BOOST_CHECK_EQUAL(cr::from({ 1,2,3 }).skip(3).findFirst().value_or(0), 0);
     BOOST_CHECK_EQUAL(cr::empty<int>().skip(1).findLast().value_or(0), 0);
+}
+
+BOOST_AUTO_TEST_CASE(until)
+{
+    BOOST_CHECK_EQUAL(cr::generate(0, 1).until([](auto&& e) { return e >= 3; }).sum().value_or(0), 3);
+    BOOST_CHECK_EQUAL(cr::empty<int>().until([](auto&& e) { return e >= 3; }).sum().value_or(0), 0);
 }
 
 BOOST_AUTO_TEST_CASE(min)

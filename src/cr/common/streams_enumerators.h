@@ -93,8 +93,9 @@ namespace cr
         {
         public:
 
-            typedef typename TEnumerable::ValueType ValueType;
-            typedef typename TEnumerable::ValueType ReferenceType;
+            typedef std::conditional_t<std::is_function<TMapper>::value, std::add_pointer_t<TMapper>, TMapper> FuncType;
+            typedef std::result_of_t<FuncType(typename TEnumerable::ReferenceType)> ReferenceType;
+            typedef std::remove_reference_t<ReferenceType> ValueType;
 
             explicit MapperEnumerator(TEnumerable enumerator, TMapper mapper)
                 : enumerator_(std::move(enumerator)),
@@ -114,6 +115,53 @@ namespace cr
         private:
             TEnumerable enumerator_;
             TMapper mapper_;
+        };
+
+        /** 展开变换 */
+        template <typename TEnumerable>
+        class FlatEnumerator
+        {
+        public:
+            typedef typename TEnumerable::ValueType StreamType;
+            typedef typename StreamType::EnumeratorType InnnerEnumeratorType;
+            typedef typename StreamType::ValueType ValueType;
+            typedef typename StreamType::ReferenceType ReferenceType;
+
+            explicit FlatEnumerator(TEnumerable enumerator)
+                : enumerator_(std::move(enumerator))
+            {}
+
+            bool next()
+            {
+                while (true)
+                {
+                    if (current_)
+                    {
+                        if (current_->next())
+                        {
+                            return true;
+                        }
+                        current_.reset();
+                    }
+                    if (enumerator_.next())
+                    {
+                        current_ = std::move(enumerator_.current().getEnumerator());
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            ReferenceType current()
+            {
+                return current_->current();
+            }
+
+        private:
+            TEnumerable enumerator_;
+            boost::optional<InnnerEnumeratorType> current_;
         };
 
         /** 连接 */
@@ -404,6 +452,38 @@ namespace cr
             std::size_t current_;
         };
 
+        /** 直到 */
+        template <typename TEnumerable, typename TPredicate>
+        class UntilEnumerator
+        {
+        public:
+
+            typedef typename TEnumerable::ValueType ValueType;
+            typedef typename TEnumerable::ReferenceType ReferenceType;
+
+            UntilEnumerator(TEnumerable enumerator, TPredicate predicate)
+                : enumerator_(std::move(enumerator)),
+                predicate_(std::move(predicate))
+            {}
+
+            bool next()
+            {
+                if (enumerator_.next())
+                {
+                    return !predicate_(enumerator_.current());
+                }
+                return false;
+            }
+
+            ReferenceType current()
+            {
+                return enumerator_.current();
+            }
+
+        private:
+            TEnumerable enumerator_;
+            TPredicate predicate_;
+        };
     }
 }
 

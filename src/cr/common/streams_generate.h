@@ -16,8 +16,8 @@ namespace cr
         {
         public:
             typedef std::conditional_t<std::is_function<TGenerator>::value, std::add_pointer_t<TGenerator>, TGenerator> FuncType;
-            typedef std::result_of_t<FuncType()> ValueType;
-            typedef std::add_lvalue_reference_t<ValueType> ReferenceType;
+            typedef std::result_of_t<FuncType()> ReferenceType;
+            typedef std::remove_reference_t<ReferenceType> ValueType;
 
             GenerateEnumerator(TGenerator generator)
                 : generator_(std::move(generator))
