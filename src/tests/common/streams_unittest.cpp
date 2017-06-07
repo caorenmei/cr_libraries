@@ -164,6 +164,12 @@ BOOST_AUTO_TEST_CASE(until)
     BOOST_CHECK_EQUAL(cr::empty<int>().until([](auto&& e) { return e >= 3; }).sum().value_or(0), 0);
 }
 
+BOOST_AUTO_TEST_CASE(toList)
+{
+    std::vector<int> ivec = cr::generate(0, 1).limit(10).toList<std::vector<int> >();
+    BOOST_CHECK_EQUAL(cr::from(ivec).sum().value_or(0), 45);
+}
+
 BOOST_AUTO_TEST_CASE(min)
 {
     BOOST_CHECK_EQUAL(cr::from({ 3,1,2 }).min().value_or(0), 1);

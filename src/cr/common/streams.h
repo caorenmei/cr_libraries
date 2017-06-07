@@ -207,6 +207,17 @@ namespace cr
             return Stream<decltype(enumerator)>{ enumerator };
         }
 
+        template <typename TCollection>
+        TCollection toList()
+        {
+            TCollection collection;
+            forEach([&](auto&& e)
+            {
+                collection.push_back(e);
+            });
+            return collection;
+        }
+
         template <typename TComparator>
         auto min(TComparator comparator)
         {
