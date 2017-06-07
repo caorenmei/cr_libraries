@@ -1,4 +1,4 @@
-#ifndef CR_COMMON_ASSERT_H_
+ï»¿#ifndef CR_COMMON_ASSERT_H_
 #define CR_COMMON_ASSERT_H_
 
 #include <cr/common/assert_builder.h>
@@ -10,17 +10,17 @@
 #define CR_ASSERT_IMPL_OP(x, next) print((x), #x).CR_ASSERT_IMPL_##next
 
 /**
- * °²È«µÄ¶ÏÑÔ£¬¶ÏÑÔÊ§°ÜÅ×³öAssertErrorÒì³£.
+ * å®‰å…¨çš„æ–­è¨€ï¼Œæ–­è¨€å¤±è´¥æŠ›å‡ºAssertErrorå¼‚å¸¸.
  *
  * @see cr::AssertError
- * @param ¶ÏÑÔ±í´ïÊ½.
+ * @param æ–­è¨€è¡¨è¾¾å¼.
  */
 #define CR_ASSERT(expression)\
-	if (!(expression))\
-		cr::AssertBuilder::sAssertCount = (cr::AssertBuilder(\
-		[](const char* message)\
-		{ \
-			CR_THROW(cr::AssertError, message); \
-		}, __FILE__, __LINE__, #expression)).CR_ASSERT_IMPL_A
+    if (!(expression))\
+        cr::AssertBuilder::sAssertCount = (cr::AssertBuilder(\
+        [](const char* message)\
+        { \
+            CR_THROW(cr::AssertError, message); \
+        }, __FILE__, __LINE__, #expression)).CR_ASSERT_IMPL_A
 
 #endif

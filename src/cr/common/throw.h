@@ -1,25 +1,25 @@
-#ifndef CR_COMMON_THROW_H_
+ï»¿#ifndef CR_COMMON_THROW_H_
 #define CR_COMMON_THROW_H_
 
 #include <cr/common/error.h>
 #include <cr/common/exception.h>
 
 /**
- * ¸ÃºêÓÃÓÚÅ×³öcr::Error, cr::Exception¼°Æä×ÓÀà£¬²¢×Ô¶¯ÉèÖÃĞĞºÅÓëÔ´ÎÄ¼ş.
+ * è¯¥å®ç”¨äºæŠ›å‡ºcr::Error, cr::ExceptionåŠå…¶å­ç±»ï¼Œå¹¶è‡ªåŠ¨è®¾ç½®è¡Œå·ä¸æºæ–‡ä»¶.
  *
  * @see cr:Error
  * @see cr::Exception
- * @param E cr::Error, cr::Exception¼°Æä×ÓÀà
- * @param ... ¹¹Ôìº¯Êı²ÎÊı.
+ * @param E cr::Error, cr::ExceptionåŠå…¶å­ç±»
+ * @param ... æ„é€ å‡½æ•°å‚æ•°.
  * @exception E
  */
 #define CR_THROW(E, ...) \
-	do \
-	{ \
-		E e(__VA_ARGS__); \
-		e.setSourceName(__FILE__); \
-		e.setSourceLine(__LINE__); \
-		throw e; \
-	} while(0)
+    do \
+    { \
+        E e(__VA_ARGS__); \
+        e.setSourceName(__FILE__); \
+        e.setSourceLine(__LINE__); \
+        throw e; \
+    } while(0)
 
 #endif

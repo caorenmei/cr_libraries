@@ -8,39 +8,39 @@ namespace cr
     Exception::Exception(std::string message/* = ""*/)
         : message_(std::move(message)),
         sourceName_(""),
-		sourceLine_(0)
+        sourceLine_(0)
     {}
 
-	Exception::~Exception()
-	{}
+    Exception::~Exception()
+    {}
 
-	const char* Exception::what() const
-	{
-		return message_.c_str();
-	}
+    const char* Exception::what() const
+    {
+        return message_.c_str();
+    }
 
     const std::string& Exception::getMessage() const
     {
         return message_;
     }
 
-	void Exception::setSourceName(const char* sourceName)
-	{
-		sourceName_ = sourceName;
-	}
+    void Exception::setSourceName(const char* sourceName)
+    {
+        sourceName_ = sourceName;
+    }
 
-	const char* Exception::getSourceName() const
-	{
-		return sourceName_;
-	}
+    const char* Exception::getSourceName() const
+    {
+        return sourceName_;
+    }
 
-	void Exception::setSourceLine(int sourceLine)
-	{
-		sourceLine_ = sourceLine;
-	}
+    void Exception::setSourceLine(int sourceLine)
+    {
+        sourceLine_ = sourceLine;
+    }
 
-	int Exception::getSourceLine() const
-	{
-		return sourceLine_;
-	}
+    int Exception::getSourceLine() const
+    {
+        return sourceLine_;
+    }
 }

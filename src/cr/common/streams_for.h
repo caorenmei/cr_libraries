@@ -10,8 +10,7 @@ namespace cr
     namespace streams
     {
         template <typename TEnumerator>
-        class RangeForIterator : public std::iterator<std::input_iterator_tag, 
-            typename TEnumerator::ValueType, std::ptrdiff_t, std::add_pointer_t<typename TEnumerator::ValueType>, typename TEnumerator::ReferenceType>
+        class RangeForIterator
         {
         public:
 
@@ -20,7 +19,7 @@ namespace cr
                 hasNext_(enumerator && enumerator_->next())
             {}
 
-            reference operator*()
+            typename TEnumerator::ReferenceType operator*()
             {
                 return enumerator_->current();
             }

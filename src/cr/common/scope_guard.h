@@ -8,42 +8,42 @@
 
 namespace cr
 {
-	/**
-	 * 超出作用域自动回滚.
-	 */
-	class ScopeGuard
-	{
-	public:
-		/**
-		 * Constructor.
-		 *
-		 * @param rollback 回滚函数.
-		 */
-		explicit ScopeGuard(std::function<void()> rollback)
-			: rollback_(std::move(rollback)),
-			dismissed_(false)
-		{}
+    /**
+     * 超出作用域自动回滚.
+     */
+    class ScopeGuard
+    {
+    public:
+        /**
+         * Constructor.
+         *
+         * @param rollback 回滚函数.
+         */
+        explicit ScopeGuard(std::function<void()> rollback)
+            : rollback_(std::move(rollback)),
+            dismissed_(false)
+        {}
 
-		/**
-		 * Move constructor.
-		 *
-		 * @param [in,out] other The other.
-		 */
-		ScopeGuard(ScopeGuard&& other)
-			: rollback_(std::move(other.rollback_)),
-			dismissed_(other.dismissed_)
-		{
-			other.dismissed_ = true;
-		}
+        /**
+         * Move constructor.
+         *
+         * @param [in,out] other The other.
+         */
+        ScopeGuard(ScopeGuard&& other)
+            : rollback_(std::move(other.rollback_)),
+            dismissed_(other.dismissed_)
+        {
+            other.dismissed_ = true;
+        }
 
-		/** Destructor. */
-		~ScopeGuard()
-		{
-			if (!dismissed_)
-			{
-				rollback_();
-			}
-		}
+        /** Destructor. */
+        ~ScopeGuard()
+        {
+            if (!dismissed_)
+            {
+                rollback_();
+            }
+        }
 
         ScopeGuard(const ScopeGuard&) = delete;
         ScopeGuard& operator=(const ScopeGuard&&) = delete;
@@ -60,19 +60,19 @@ namespace cr
             std::swap(dismissed_, other.dismissed_);
         }
 
-		/** 解除自动回滚. */
-		void dismiss()
-		{
-			dismissed_ = true;
-		}
+        /** 解除自动回滚. */
+        void dismiss()
+        {
+            dismissed_ = true;
+        }
 
-	private:
+    private:
 
-		// 回滚函数
+        // 回滚函数
         std::function<void()> rollback_;
-		// 是否取消自动化回滚
-		bool dismissed_;
-	};
+        // 是否取消自动化回滚
+        bool dismissed_;
+    };
 }
 
 #define CR_ON_SCOPE_EXIT(rollback) cr::ScopeGuard BOOST_PP_CAT(onScopeExit_, __LINE__)(rollback)

@@ -8,12 +8,12 @@
 namespace cr
 {
 
-	/** ¶ÏÑÔ´íÎó */
-	class AssertError : public Error
-	{
-	public:
-		using Error::Error;
-	};
+    /** ¶ÏÑÔ´íÎó */
+    class AssertError : public Error
+    {
+    public:
+        using Error::Error;
+    };
 }
 
 #endif

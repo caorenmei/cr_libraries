@@ -4,17 +4,17 @@
 
 namespace cr
 {
-	Error::Error(std::string message/* = ""*/)
-		: message_(std::move(message)),
+    Error::Error(std::string message/* = ""*/)
+        : message_(std::move(message)),
         sourceName_(""),
-		sourceLine_(0)
+        sourceLine_(0)
     {}
 
-	Error::~Error()
-	{}
+    Error::~Error()
+    {}
 
-	const char* Error::what() const
-	{
+    const char* Error::what() const
+    {
         return message_.c_str();
     }
 
@@ -23,23 +23,23 @@ namespace cr
         return message_;
     }
 
-	void Error::setSourceName(const char* sourceName)
-	{
-		sourceName_ = sourceName;
-	}
+    void Error::setSourceName(const char* sourceName)
+    {
+        sourceName_ = sourceName;
+    }
 
-	const char* Error::getSourceName() const
-	{
-		return sourceName_;
-	}
+    const char* Error::getSourceName() const
+    {
+        return sourceName_;
+    }
 
-	void Error::setSourceLine(int sourceLine)
-	{
-		sourceLine_ = sourceLine;
-	}
+    void Error::setSourceLine(int sourceLine)
+    {
+        sourceLine_ = sourceLine;
+    }
 
-	int Error::getSourceLine() const
-	{
-		return sourceLine_;
-	}
+    int Error::getSourceLine() const
+    {
+        return sourceLine_;
+    }
 }

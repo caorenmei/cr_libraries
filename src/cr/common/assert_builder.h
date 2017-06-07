@@ -1,4 +1,4 @@
-#ifndef CR_COMMON_ASSERT_BUILDER_H_
+ï»¿#ifndef CR_COMMON_ASSERT_BUILDER_H_
 #define CR_COMMON_ASSERT_BUILDER_H_
 
 #include <functional>
@@ -6,69 +6,69 @@
 
 namespace cr
 {
-	class AssertBuilder;
+    class AssertBuilder;
 
-	/** Å×³ö¶ÏÑÔ. */
-	class ThrowAssertError
-	{
-	public:
-		explicit ThrowAssertError(const AssertBuilder& builder);
+    /** æŠ›å‡ºæ–­è¨€. */
+    class ThrowAssertError
+    {
+    public:
+        explicit ThrowAssertError(const AssertBuilder& builder);
 
-		operator int();
+        operator int();
 
-	private:
-		const AssertBuilder& builder_;
-	};
+    private:
+        const AssertBuilder& builder_;
+    };
 
-	/** ¶ÏÑÔ¹¹ÔìÆ÷ */
-	class AssertBuilder
-	{
-	public:
+    /** æ–­è¨€æ„é€ å™¨ */
+    class AssertBuilder
+    {
+    public:
 
-		/** ¶ÏÑÔ·¢Éú´ÎÊı */
-		static int sAssertCount;
+        /** æ–­è¨€å‘ç”Ÿæ¬¡æ•° */
+        static int sAssertCount;
 
-		ThrowAssertError CR_ASSERT_IMPL_A;
-		ThrowAssertError CR_ASSERT_IMPL_B;
+        ThrowAssertError CR_ASSERT_IMPL_A;
+        ThrowAssertError CR_ASSERT_IMPL_B;
 
-		/**
-		 * Constructor.
-		 *
-		 * @param handler ¶ÏÑÔÒì³£Å×³ö.
-		 * @param file ¶ÏÑÔ·¢ÉúÎÄ¼şÃû.
-		 * @param line ¶ÏÑÔ·¢ÉúĞĞÊı.
-		 * @param expression ¶ÏÑÔ±í´ïÊ½.
-		 */
-		AssertBuilder(std::function<void(const char*)> handler, const char* file, int line, const char* expression);
+        /**
+         * Constructor.
+         *
+         * @param handler æ–­è¨€å¼‚å¸¸æŠ›å‡º.
+         * @param file æ–­è¨€å‘ç”Ÿæ–‡ä»¶å.
+         * @param line æ–­è¨€å‘ç”Ÿè¡Œæ•°.
+         * @param expression æ–­è¨€è¡¨è¾¾å¼.
+         */
+        AssertBuilder(std::function<void(const char*)> handler, const char* file, int line, const char* expression);
 
-		/**
-		 * ´òÓ¡±äÁ¿Ãû.
-		 *
-		 * @tparam T ±äÁ¿ÀàĞÍ.
-		 * @param x ±äÁ¿.
-		 * @param varName ±äÁ¿Ãû.
-		 *
-		 * @return ¶ÏÑÔ¹¹ÔìÆ÷.
-		 */
-		template <typename T>
-		AssertBuilder& print(const T& x, const char* varName);
+        /**
+         * æ‰“å°å˜é‡å.
+         *
+         * @tparam T å˜é‡ç±»å‹.
+         * @param x å˜é‡.
+         * @param varName å˜é‡å.
+         *
+         * @return æ–­è¨€æ„é€ å™¨.
+         */
+        template <typename T>
+        AssertBuilder& print(const T& x, const char* varName);
 
-	private:
+    private:
 
-		friend ThrowAssertError;
+        friend ThrowAssertError;
 
-		// ¶ÏÑÔÃèÊö
-		std::stringstream message_;
-		// Òì³£Å×³ö
-		std::function<void(const char*)> handler_;
-	};
+        // æ–­è¨€æè¿°
+        std::stringstream message_;
+        // å¼‚å¸¸æŠ›å‡º
+        std::function<void(const char*)> handler_;
+    };
 
-	template <typename T>
-	AssertBuilder& AssertBuilder::print(const T& x, const char* varName)
-	{
-		message_ << "\t" << varName << " = " << x << "\n";
-		return *this;
-	}
+    template <typename T>
+    AssertBuilder& AssertBuilder::print(const T& x, const char* varName)
+    {
+        message_ << "\t" << varName << " = " << x << "\n";
+        return *this;
+    }
 }
 
 #endif
