@@ -24,7 +24,7 @@ namespace cr
 
             bool next()
             {
-                if (count_++ > 0)
+                if (count_++ > 0 && first_ != last_)
                 {
                     ++first_;
                 }
