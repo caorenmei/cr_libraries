@@ -1,5 +1,5 @@
 
-find_package(Boost REQUIRED coroutine)
+find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(cr_network_SRCS

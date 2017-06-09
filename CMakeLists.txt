@@ -10,10 +10,13 @@ endif()
 
 if(MSVC)
     set(_CR_ENV_TERMINAL ";")
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /DEBUG")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WIN32_WINNT=0x0501)
 else()
     set(_CR_ENV_TERMINAL ":")
 endif()
+
+add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
 
 # 第三方库
 foreach(libName boost cpp-netlib eluna lua mongodb-bson mongodb-driver mongodb-driver-cxx mysql mysql-connector-cpp protobuf rapidxml zookeeper)

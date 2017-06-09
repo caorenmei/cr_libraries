@@ -6,9 +6,7 @@
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/coroutine2/fixedsize_stack.hpp>
-#include <boost/coroutine2/pooled_fixedsize_stack.hpp>
-#include <boost/coroutine2/protected_fixedsize_stack.hpp>
+#include <boost/coroutine/attributes.hpp>
 
 namespace cr
 {
@@ -47,35 +45,11 @@ namespace cr
          * 发起协程
          * @param strand 调度器.
          * @param handler 协程处理器.
-         */
-        void spawn(boost::asio::io_service::strand strand, std::function<void(Coroutine)> handler);
-
-        /**
-         * 发起协程
-         * @param strand 调度器.
-         * @param handler 协程处理器.
-         * @param alloc 堆栈构造器.
+         * @param attr 协程参数.
          */
         void spawn(boost::asio::io_service::strand strand, std::function<void(Coroutine)> handler, 
-            boost::coroutines2::fixedsize_stack alloc);
+            boost::coroutines::attributes attrs = boost::coroutines::attributes());
 
-        /**
-         * 发起协程
-         * @param strand 调度器.
-         * @param handler 协程处理器.
-         * @param alloc 堆栈构造器.
-         */
-        void spawn(boost::asio::io_service::strand strand, std::function<void(Coroutine)> handler, 
-            boost::coroutines2::pooled_fixedsize_stack alloc);
-
-        /**
-         * 发起协程
-         * @param strand 调度器.
-         * @param handler 协程处理器.
-         * @param alloc 堆栈构造器.
-         */
-        void spawn(boost::asio::io_service::strand strand, std::function<void(Coroutine)> handler, 
-            boost::coroutines2::protected_fixedsize_stack alloc);
 
         /**
          * 发起协程
@@ -83,23 +57,8 @@ namespace cr
          * @param handler 协程处理器.
          * @param attr 协程参数.
          */
-        inline void spawn(boost::asio::io_service& ioService, std::function<void(Coroutine)> handler)
-        {
-            spawn(boost::asio::io_service::strand(ioService), std::move(handler));
-        }
-
-        /**
-         * 发起协程
-         * @param ioService 调度器.
-         * @param handler 协程处理器.
-         * @param alloc 栈构造器
-         */
-        template <typename StackAllocator>
-        inline void spawn(boost::asio::io_service& ioService, std::function<void(Coroutine)> handler, 
-            StackAllocator alloc)
-        {
-            spawn(boost::asio::io_service::strand(ioService), std::move(handler), alloc);
-        }
+        void spawn(boost::asio::io_service& ioService, std::function<void(Coroutine)> handler,
+            boost::coroutines::attributes attrs = boost::coroutines::attributes());
 
     }
 }
