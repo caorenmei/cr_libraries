@@ -115,7 +115,7 @@ namespace cr
                 auto impl = std::make_shared<Coroutine::Impl>(fun->strand, caller, fun->callee);
                 Coroutine coro(impl);
                 fun->handler(coro);
-                impl->getIoServieStrand().post([fun] {fun->callee.reset(); });
+                fun->strand.post([fun] {fun->callee.reset(); });
             }, attrs);
             fun->callee = callee;
             strand.dispatch([fun]
