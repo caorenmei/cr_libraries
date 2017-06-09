@@ -117,9 +117,9 @@ namespace cr
                 fun->handler(coro);
                 fun->strand.post([fun] {fun->callee.reset(); });
             }, attrs);
-            fun->callee = callee;
-            strand.dispatch([fun]
+            strand.dispatch([fun, callee]
             {
+                fun->callee = callee;
                 fun->start();
             });
         }

@@ -7,11 +7,12 @@ set(cr_common_SRCS
     assert_builder.h
     assert_builder.cpp
     assert_error.h
+    scope_guard.h
     error.h
     error.cpp
     exception.h
     exception.cpp
-    scope_guard.h
+    function.h
     streams.h
     streams_empty.h
     streams_enumerators.h
@@ -19,15 +20,17 @@ set(cr_common_SRCS
     streams_for.h
     streams_generate.h
     throw.h
+    tuple_utils.h
 )
 
 set(cr_common_HEADERS
     assert.h
     assert_builder.h
     assert_error.h
+    scope_guard.h
     error.h
     exception.h
-    scope_guard.h
+    function.h
     streams.h
     streams_empty.h
     streams_enumerators.h
@@ -35,6 +38,7 @@ set(cr_common_HEADERS
     streams_for.h
     streams_generate.h
     throw.h
+    tuple_utils.h
 )
  
 add_library(cr_common ${cr_common_SRCS})

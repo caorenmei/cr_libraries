@@ -59,8 +59,9 @@ namespace cr
          */
         void spawn(boost::asio::io_service& ioService, std::function<void(Coroutine)> handler,
             boost::coroutines::attributes attrs = boost::coroutines::attributes());
-
     }
 }
+
+#include <cr/network/spawn_coro.h>
 
 #endif

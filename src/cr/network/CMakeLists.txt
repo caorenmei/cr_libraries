@@ -4,11 +4,13 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 set(cr_network_SRCS
     spawn.h
+    spawn_coro.h
     spawn.cpp
 )
 
 set(cr_network_HEADERS
     spawn.h
+    spawn_coro.h
 )
 
 add_library(cr_network ${cr_network_SRCS})
