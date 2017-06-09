@@ -1,0 +1,16 @@
+
+find_package(Boost REQUIRED coroutine)
+include_directories(${Boost_INCLUDE_DIRS})
+
+set(cr_network_SRCS
+    spawn.h
+    spawn.cpp
+)
+
+set(cr_network_HEADERS
+    spawn.h
+)
+
+add_library(cr_network ${cr_network_SRCS})
+install(FILES ${cr_network_HEADERS} DESTINATION include/cr/network)
+install(TARGETS cr_network DESTINATION lib)
