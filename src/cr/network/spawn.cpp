@@ -13,15 +13,15 @@ namespace cr
         typedef boost::coroutines::coroutine<void>::pull_type CoroCaller;
         typedef boost::coroutines::coroutine<void>::push_type CoroCallee;
 
-        class Coroutine::Impl
+        class Coroutine::Impl : public std::enable_shared_from_this<Impl>
         {
         public:
 
-            Impl(boost::asio::io_service::strand strand, CoroCaller& caller, std::weak_ptr<CoroCallee> callee)
+            Impl(boost::asio::io_service::strand strand, CoroCaller& caller, CoroCallee& callee)
                 : status_(Status::RUNNING),
                 strand_(strand),
                 caller_(caller),
-                callee_(std::move(callee))
+                callee_(callee)
             {}
 
             ~Impl()
@@ -32,40 +32,46 @@ namespace cr
 
             void resume()
             {
-                CR_ASSERT(status_ == Status::SUSPENDED)(static_cast<int>(status_));
-                status_ = Status::RUNNING;
-                auto callee = callee_.lock();
-                CR_ASSERT(callee != nullptr);
-                (*callee)();
+                strand_.dispatch([this, self = shared_from_this()]
+                {
+                    CR_ASSERT(status_ == Status::SUSPENDED)(static_cast<int>(status_));
+                    status_ = Status::RUNNING;
+                    callee_();
+                });
             }
 
             void yield()
             {
-                CR_ASSERT(status_ == Status::RUNNING)(static_cast<int>(status_));
-                status_ = Status::SUSPENDED;
-                caller_();
+                strand_.dispatch([this, self = shared_from_this()]
+                {
+                    CR_ASSERT(status_ == Status::RUNNING)(static_cast<int>(status_));
+                    status_ = Status::SUSPENDED;
+                    caller_();
+                });
             }
+
+            void dead()
+            {
+                CR_ASSERT(status_ == Status::RUNNING)(static_cast<int>(status_));
+                status_ = Status::DEAD;
+            }
+
+        private:
 
             enum class Status
             {
                 RUNNING = 0,
                 SUSPENDED = 1,
+                DEAD = 2,
             };
-
-            boost::asio::io_service::strand& getIoServieStrand()
-            {
-                return strand_;
-            }
-
-        private:
 
             Status status_;
             boost::asio::io_service::strand strand_;
             CoroCaller& caller_;
-            std::weak_ptr<CoroCallee> callee_;
+            CoroCallee& callee_;
         };
 
-        Coroutine::Coroutine(std::weak_ptr<Impl> impl)
+        Coroutine::Coroutine(std::shared_ptr<Impl> impl)
             : impl_(std::move(impl))
         {}
 
@@ -74,16 +80,12 @@ namespace cr
 
         void Coroutine::yield()
         {
-            auto impl = impl_.lock();
-            CR_ASSERT(impl != nullptr);
-            impl->getIoServieStrand().dispatch([impl] {impl->yield(); });
+            impl_->yield();
         }
 
         void Coroutine::resume()
         {
-            auto impl = impl_.lock();
-            CR_ASSERT(impl != nullptr);
-            impl->getIoServieStrand().dispatch([impl] {impl->resume(); });
+            impl_->resume();
         }
 
         struct CoroutineFun
@@ -112,9 +114,10 @@ namespace cr
             auto fun = std::make_shared<CoroutineFun>(strand, handler);
             auto callee = std::make_shared<CoroCallee>([fun](CoroCaller& caller)
             {
-                auto impl = std::make_shared<Coroutine::Impl>(fun->strand, caller, fun->callee);
+                auto impl = std::make_shared<Coroutine::Impl>(fun->strand, caller, *(fun->callee));
                 Coroutine coro(impl);
                 fun->handler(coro);
+                impl->dead();
                 fun->strand.post([fun] {fun->callee.reset(); });
             }, attrs);
             strand.dispatch([fun, callee]

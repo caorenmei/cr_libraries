@@ -24,7 +24,7 @@ namespace cr
             * Constructor.
             * @param impl 实际实现.
             */
-            explicit Coroutine(std::weak_ptr<Impl> impl);
+            explicit Coroutine(std::shared_ptr<Impl> impl);
 
             /** Destructor. */
             ~Coroutine();
@@ -37,8 +37,7 @@ namespace cr
 
         private:
 
-            // 调用者
-            std::weak_ptr<Impl> impl_;
+            std::shared_ptr<Impl> impl_;
         };
 
         /**
