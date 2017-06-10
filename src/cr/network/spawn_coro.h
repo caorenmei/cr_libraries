@@ -9,6 +9,7 @@
 
 #include <cr/common/function.h>
 #include <cr/common/tuple_utils.h>
+#include <cr/common/type_utils.h>
 
 namespace cr
 {
@@ -30,7 +31,7 @@ namespace cr
                  * @param coro spawn创建的协程
                  * @param params 绑定的参数
                  */
-                CallCapture(Coroutine coro, TArgs&... params)
+                CallCapture(Coroutine coro, ValueType<TArgs>&... params)
                     : coro_(std::move(coro)),
                     params_(params...)
                 {}
@@ -39,7 +40,7 @@ namespace cr
                  * Function call operator.
                  * @param params 回调结果参数.
                  */
-                void operator()(TArgs&... params, ...)
+                void operator()(ValueType<TArgs>... params, ...)
                 {
                     params_ = std::forward_as_tuple(std::move(params)...);
                 }
@@ -61,7 +62,7 @@ namespace cr
                 // 协程
                 Coroutine coro_;
                 // 绑定的参数
-                std::tuple<TArgs&...> params_;
+                std::tuple<ValueType<TArgs>&...> params_;
             };
 
             /**
@@ -79,10 +80,6 @@ namespace cr
             template <typename CallCapture, typename... TArgs>
             struct CallHelper
             {
-                // 值类型
-                template <typename T>
-                using ValueType = std::remove_reference_t<std::remove_cv_t<T>>;
-
                 // 结果列表
                 using ValuesType = std::tuple<ValueType<TArgs>...>;
 
@@ -94,7 +91,6 @@ namespace cr
             template <typename CallCapture, typename... TArgs>
             struct CallHandler
             {
-
                 // 返回类型
                 using ResultsType = typename CallHelper<CallCapture, TArgs...>::ResultsType;
 
@@ -113,13 +109,14 @@ namespace cr
                  *
                  * @param args 回调的参数.
                  */
-                void operator()(TArgs... args)
+                template <typename... UArgs>
+                auto operator()(UArgs&&... args) -> std::enable_if_t<sizeof...(UArgs) == sizeof...(TArgs)>
                 {
-                    capature(static_cast<TArgs&>(args)...);
-                    cr::fun::shift<CallCapture::capture_size>([this](auto&... params)
+                    capature(std::forward<UArgs>(args)...);
+                    cr::fun::shift<CallCapture::capture_size>([this](auto&&... params)
                     {
                         *results = std::forward_as_tuple(std::move(params)...);
-                    }, static_cast<TArgs&>(args)...);
+                    }, std::forward<UArgs>(args)...);
                     if (--*ready == 0)
                     {
                         capature.resume();

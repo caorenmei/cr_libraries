@@ -21,6 +21,7 @@ set(cr_common_SRCS
     streams_generate.h
     throw.h
     tuple_utils.h
+    type_utils.h
 )
 
 set(cr_common_HEADERS
@@ -39,6 +40,7 @@ set(cr_common_HEADERS
     streams_generate.h
     throw.h
     tuple_utils.h
+    type_utils.h
 )
  
 add_library(cr_common ${cr_common_SRCS})
