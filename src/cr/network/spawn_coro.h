@@ -39,9 +39,9 @@ namespace cr
                  * Function call operator.
                  * @param params 回调结果参数.
                  */
-                void operator()(const TArgs&... params, ...)
+                void operator()(TArgs&... params, ...)
                 {
-                    params_ = std::tie(params...);
+                    params_ = std::forward_as_tuple(std::move(params)...);
                 }
 
                 /** 唤醒协程. */
@@ -113,14 +113,13 @@ namespace cr
                  *
                  * @param args 回调的参数.
                  */
-                template <typename... UArgs>
-                void operator()(UArgs&&... args)
+                void operator()(TArgs... args)
                 {
-                    capature(std::forward<UArgs>(args)...);
-                    cr::fun::shift<CallCapture::capture_size>([this](auto&&... params)
+                    capature(static_cast<TArgs&>(args)...);
+                    cr::fun::shift<CallCapture::capture_size>([this](auto&... params)
                     {
-                        *results = std::forward_as_tuple(params...);
-                    }, std::forward<UArgs>(args)...);
+                        *results = std::forward_as_tuple(std::move(params)...);
+                    }, static_cast<TArgs&>(args)...);
                     if (--*ready == 0)
                     {
                         capature.resume();

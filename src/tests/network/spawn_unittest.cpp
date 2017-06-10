@@ -18,7 +18,12 @@ BOOST_AUTO_TEST_CASE(spawn)
         boost::asio::system_timer timer(ioService);
         for (std::size_t i = 0; i != 10; ++i)
         {
-            auto r = ioService.post(cr::network::coro::async(coro));
+            timer.expires_from_now(std::chrono::seconds(0));
+            std::tuple<boost::system::error_code> r = timer.async_wait(cr::network::coro::async(coro));
+            BOOST_CHECK_EQUAL(std::get<0>(r), boost::system::error_code());
+            timer.expires_from_now(std::chrono::seconds(0));
+            timer.async_wait(cr::network::coro::async(coro, std::get<0>(r)));
+            BOOST_CHECK_EQUAL(std::get<0>(r), boost::system::error_code());
             loopCount = loopCount + 1;
         }
     });
