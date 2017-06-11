@@ -47,8 +47,8 @@ namespace cr
             * 追加元素到队尾.
             * @param element The element.
             */
-            template <typename U>
-            void push(U&& element)
+            template <typename... TArgs>
+            void push(TArgs&&... args)
             {
                 std::function<void()> complete;
                 std::unique_ptr<boost::asio::io_service::work> work;
@@ -57,7 +57,7 @@ namespace cr
                     if (!handlers_.empty())
                     {
                         CR_ASSERT(queue_.empty())(handlers_.size());
-                        T telement(std::forward<U>(element));
+                        T telement(std::forward<TArgs>(args)...);
                         complete = [handler = std::move(handlers_.front()), telement = std::move(telement)]() mutable
                         {
                             handler(boost::system::error_code(), std::move(telement));
@@ -70,12 +70,12 @@ namespace cr
                     }
                     else
                     {
-                        queue_.emplace_back(std::forward<U>(element));
+                        queue_.emplace_back(std::forward<TArgs>(args)...);
                     }
                 }
                 if (complete != nullptr)
                 {
-                    strand_.dispatch(complete);
+                    strand_.dispatch(std::move(complete));
                 }
             }
 
@@ -108,13 +108,13 @@ namespace cr
                         handlers_.emplace_back(std::move(init.handler));
                         if (work_ == nullptr)
                         {
-                            work_ = std::make_unique<boost::asio::io_service::work>(strand_.get_io_service());
+                            work_ = std::make_unique<boost::asio::io_service::work>(get_io_service());
                         }
                     }
                 }
                 if (complete)
                 {
-                    strand_.dispatch(complete);
+                    strand_.dispatch(std::move(complete));
                 }
                 return init.result.get();
             }
@@ -134,11 +134,9 @@ namespace cr
                 }
                 for (auto&& handler : handlers)
                 {
-                    strand_.dispatch([handler = std::move(handler)]
-                    {
-                        namespace asio_error = boost::asio::error;
-                        handler(asio_error::make_error_code(asio_error::operation_aborted), T());
-                    });
+                    namespace asio_error = boost::asio::error;
+                    auto complete = std::bind(std::move(handler), asio_error::make_error_code(asio_error::operation_aborted), T());
+                    strand_.dispatch(complete);
                 }
                 return handlers.size();
             }
@@ -169,13 +167,13 @@ namespace cr
              */
             boost::asio::io_service& get_io_service()
             {
-                return strand_.get_io_service();
+                return strand_;
             }
 
         private:
 
             // strad
-            boost::asio::io_service::strand strand_;
+            boost::asio::io_service& strand_;
             // io_service work
             std::unique_ptr<boost::asio::io_service::work> work_;
             // 处理器
