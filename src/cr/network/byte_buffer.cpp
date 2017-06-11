@@ -84,15 +84,15 @@ namespace cr
             std::size_t readerIndex = readerIndex_;
             if (writerIndex_ <= readerIndex && n != 0)
             {
-                std::size_t size = std::min(buffer_.size() - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, size);
-                readerIndex = (readerIndex + size) % buffer_.size();
-                n = n - size;
+                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                readerIndex = (readerIndex + nbytes) % buffer_.size();
+                n = n - nbytes;
             }
             if (readerIndex < writerIndex_ && n != 0)
             {
-                std::size_t size = std::min(writerIndex_ - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, size);
+                std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
+                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
             }
             return buffers;
         }
@@ -104,15 +104,15 @@ namespace cr
             std::size_t readerIndex = readerIndex_;
             if (writerIndex_ <= readerIndex && n != 0)
             {
-                std::size_t size = std::min(buffer_.size() - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, size);
-                readerIndex = (readerIndex + size) % buffer_.size();
-                n = n - size;
+                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                readerIndex = (readerIndex + nbytes) % buffer_.size();
+                n = n - nbytes;
             }
             if (readerIndex < writerIndex_ && n != 0)
             {
-                std::size_t size = std::min(writerIndex_ - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, size);
+                std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
+                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
             }
             return buffers;
         }
@@ -131,15 +131,15 @@ namespace cr
             std::size_t writerIndex = writerIndex_;
             if (readerIndex_ <= writerIndex && n != 0)
             {
-                std::size_t size = std::min(buffer_.size() - writerIndex, n);
-                buffers.emplace_back(buffer_.data() + writerIndex, size);
-                writerIndex = (writerIndex + size) % buffer_.size();
-                n = n - size;
+                std::size_t nbytes = std::min(buffer_.size() - writerIndex, n);
+                buffers.emplace_back(buffer_.data() + writerIndex, nbytes);
+                writerIndex = (writerIndex + nbytes) % buffer_.size();
+                n = n - nbytes;
             }
             if (writerIndex < readerIndex_ && n != 0)
             {
-                std::size_t size = std::min(readerIndex_ - writerIndex, n);
-                buffers.emplace_back(buffer_.data() + writerIndex, size);
+                std::size_t nbytes = std::min(readerIndex_ - writerIndex, n);
+                buffers.emplace_back(buffer_.data() + writerIndex, nbytes);
             }
             return buffers;
         }
