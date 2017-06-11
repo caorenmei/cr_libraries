@@ -8,7 +8,7 @@ namespace cr
 {
     namespace network
     {
-        ByteBuffer::ByteBuffer(std::size_t initialCapacity)
+        ByteBuffer::ByteBuffer(std::size_t initialCapacity/* = 1024*/)
             : buffer_(initialCapacity),
             readerIndex_(0),
             writerIndex_(0),
@@ -183,6 +183,16 @@ namespace cr
             {
                 std::memcpy(dest, buffer_.data(), n);
             }
+        }
+
+        void ByteBuffer::shrink(std::size_t n/* = 1024*/)
+        {
+            std::size_t capacity = std::max(size_, n);
+            std::vector<char> buffer(capacity);
+            boost::asio::buffer_copy(boost::asio::buffer(buffer), data());
+            std::swap(buffer_, buffer);
+            readerIndex_ = 0;
+            writerIndex_ = size_ % buffer_.size();
         }
 
         void ByteBuffer::swap(ByteBuffer& other)

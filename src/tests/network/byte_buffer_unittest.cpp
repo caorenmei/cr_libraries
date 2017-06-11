@@ -126,6 +126,23 @@ BOOST_AUTO_TEST_CASE(set_get)
     BOOST_CHECK_EQUAL(data1, dest1); 
 }
 
+BOOST_AUTO_TEST_CASE(shrink)
+{
+    cr::network::ByteBuffer buffer0(0);
+    buffer0.prepare(10);
+    buffer0.commit(10);
+    buffer0.consume(5);
+
+    buffer0.shrink(7);
+    BOOST_CHECK_EQUAL(buffer0.getCapacity(), 7);
+
+    buffer0.shrink(5);
+    BOOST_CHECK_EQUAL(buffer0.getCapacity(), 5);
+
+    buffer0.shrink(3);
+    BOOST_CHECK_EQUAL(buffer0.getCapacity(), 5);
+}
+
 BOOST_AUTO_TEST_CASE(swap)
 {
     std::string data0 = "1234567890";

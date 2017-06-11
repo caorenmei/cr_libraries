@@ -129,6 +129,12 @@ namespace cr
             void get(std::size_t offset, void* dest, std::size_t n) const;
 
             /**
+             * 收缩缓冲区到刚好合适
+             * @param n 建议的大小
+             */
+            void shrink(std::size_t n = 1024);
+
+            /**
              * 交换两个缓冲区
              * @param other 待交换缓冲区
              */
