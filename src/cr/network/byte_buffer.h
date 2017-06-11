@@ -113,6 +113,22 @@ namespace cr
             void commit(std::size_t n);
 
             /**
+             * 随机覆写一段缓冲区
+             * @param  offset 偏移量
+             * @param b 源缓冲区
+             * @param n 写入字节数
+             */
+            void set(std::size_t offset, const void* source, std::size_t n);
+
+            /**
+             * 随机读取一段缓冲区
+             * @param  offset 偏移量
+             * @param b 源缓冲区
+             * @param n 写入字节数
+             */
+            void get(std::size_t offset, void* dest, std::size_t n) const;
+
+            /**
              * 交换两个缓冲区
              * @param other 待交换缓冲区
              */

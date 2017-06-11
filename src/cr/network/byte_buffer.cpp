@@ -1,5 +1,7 @@
 #include <cr/network/byte_buffer.h>
 
+#include <cstring>
+
 #include <cr/common/assert.h>
 
 namespace cr
@@ -149,6 +151,40 @@ namespace cr
             size_ = size_ + n;
         }
 
+        void ByteBuffer::set(std::size_t offset, const void* source, std::size_t n)
+        {
+            CR_ASSERT(source != nullptr && offset + n <= size_)(source)(offset)(n)(size_);
+            if (n != 0)
+            {
+                std::size_t readerIndex = (readerIndex_ + offset) % buffer_.size();
+                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                std::memcpy(buffer_.data() + readerIndex, source, nbytes);
+                source = static_cast<const char*>(source) + nbytes;
+                n = n - nbytes;
+            }
+            if (n != 0)
+            {
+                std::memcpy(buffer_.data(), source, n);
+            }
+        }
+
+        void ByteBuffer::get(std::size_t offset, void* dest, std::size_t n) const
+        {
+            CR_ASSERT(dest != nullptr && offset + n <= size_)(dest)(offset)(n)(size_);
+            if (n != 0)
+            {
+                std::size_t readerIndex = (readerIndex_ + offset) % buffer_.size();
+                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                std::memcpy(dest, buffer_.data() + readerIndex, nbytes);
+                dest = static_cast<char*>(dest) + nbytes;
+                n = n - nbytes;
+            }
+            if (n != 0)
+            {
+                std::memcpy(dest, buffer_.data(), n);
+            }
+        }
+
         void ByteBuffer::swap(ByteBuffer& other)
         {
             std::swap(buffer_, other.buffer_);
@@ -168,7 +204,7 @@ namespace cr
         {
             if (buffer_.size() - size_ < n)
             {
-                std::size_t capacity = std::max<std::size_t>(buffer_.size() * 1.5, size_ + n);
+                std::size_t capacity = std::max(static_cast<std::size_t>(buffer_.size() * 1.5), size_ + n);
                 std::vector<char> buffer(capacity);
                 boost::asio::buffer_copy(boost::asio::buffer(buffer), data());
                 std::swap(buffer_, buffer);

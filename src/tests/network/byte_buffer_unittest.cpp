@@ -85,6 +85,47 @@ BOOST_AUTO_TEST_CASE(consume)
     BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(set_get)
+{
+    std::string data0 = "1234567890";
+    std::string data1 = "12345";
+
+    std::string dest0(data0.size(), '0');
+    std::string dest1(data1.size(), '0');
+
+    cr::network::ByteBuffer buffer0(0);
+    buffer0.prepare(10);
+    buffer0.commit(10);
+
+    buffer0.set(0, data0.data(), data0.size());
+    buffer0.get(0, &dest0[0], dest0.size());
+    BOOST_CHECK_EQUAL(data0, dest0);
+
+    buffer0.set(0, data1.data(), data1.size());
+    buffer0.get(0, &dest1[0], dest1.size());
+    BOOST_CHECK_EQUAL(data1, dest1);
+
+    buffer0.set(3, data1.data(), data1.size());
+    buffer0.get(3, &dest1[0], dest1.size());
+    BOOST_CHECK_EQUAL(data1, dest1);
+
+    buffer0.consume(5);
+    buffer0.prepare(5);
+    buffer0.commit(5);
+
+    buffer0.set(0, data0.data(), data0.size());
+    buffer0.get(0, &dest0[0], dest0.size());
+    BOOST_CHECK_EQUAL(data0, dest0);
+
+    buffer0.set(0, data1.data(), data1.size());
+    buffer0.get(0, &dest1[0], dest1.size());
+    BOOST_CHECK_EQUAL(data1, dest1);
+
+    buffer0.set(3, data1.data(), data1.size());
+    buffer0.get(3, &dest1[0], dest1.size());
+    BOOST_CHECK_EQUAL(data1, dest1); 
+}
+
 BOOST_AUTO_TEST_CASE(swap)
 {
     std::string data0 = "1234567890";
