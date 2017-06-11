@@ -3,6 +3,8 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(cr_network_SRCS
+    byte_buffer.h
+    byte_buffer.cpp
     pipe.h
     spawn.h
     spawn_coro.h
@@ -10,6 +12,7 @@ set(cr_network_SRCS
 )
 
 set(cr_network_HEADERS
+    byte_buffer.h
     pipe.h
     spawn.h
     spawn_coro.h

@@ -3,6 +3,7 @@ find_package(Boost REQUIRED chrono context coroutine date_time regex system thre
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(cr_network_unittest_SRCS
+    byte_buffer_unittest.cpp
     pipe_unittest.cpp
     spawn_unittest.cpp
     unittest_main.cpp

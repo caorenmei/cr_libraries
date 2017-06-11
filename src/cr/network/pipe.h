@@ -45,9 +45,9 @@ namespace cr
             Pipe& operator=(const Pipe&) = delete;
 
             /**
-            * 追加元素到队尾.
-            * @param element The element.
-            */
+             * 追加元素到队尾.
+             * @param element The element.
+             */
             template <typename... TArgs>
             bool push(TArgs&&... args)
             {
