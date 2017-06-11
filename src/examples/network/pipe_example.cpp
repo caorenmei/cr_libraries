@@ -28,7 +28,7 @@ void multiThread()
             pipe2.push(i);
             pipe1.pop(cr::network::coro::async(coro, ec));
         }
-        pipe2.cancel();
+        pipe2.shutdown();
     });
 
     // 处理任务，回执结果
@@ -69,7 +69,7 @@ void singleThread()
             pipe2.push(i);
             pipe1.pop(cr::network::coro::async(coro, ec));
         }
-        strand.post([&] {pipe2.cancel(); });
+        pipe2.shutdown();
     });
 
     // 处理任务，回执结果

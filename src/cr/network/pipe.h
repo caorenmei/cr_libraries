@@ -31,7 +31,8 @@ namespace cr
              * @param ioService boost::asio::io_service.
              */
             explicit Pipe(boost::asio::io_service& ioService)
-                : strand_(ioService)
+                : strand_(ioService),
+                shutdown_(false)
             {}
 
             /** Destructor. */
@@ -48,35 +49,41 @@ namespace cr
             * @param element The element.
             */
             template <typename... TArgs>
-            void push(TArgs&&... args)
+            bool push(TArgs&&... args)
             {
                 std::function<void()> complete;
                 std::unique_ptr<boost::asio::io_service::work> work;
+                bool pushed = false;
                 {
                     std::lock_guard<TMutex> lg(mutex_);
-                    if (!handlers_.empty())
+                    if (!shutdown_)
                     {
-                        CR_ASSERT(queue_.empty())(handlers_.size());
-                        T telement(std::forward<TArgs>(args)...);
-                        complete = [handler = std::move(handlers_.front()), telement = std::move(telement)]() mutable
+                        if (!handlers_.empty())
                         {
-                            handler(boost::system::error_code(), std::move(telement));
-                        };
-                        handlers_.pop_front();
-                        if (handlers_.empty())
-                        {
-                            std::swap(work_, work);
+                            CR_ASSERT(queue_.empty())(handlers_.size());
+                            T telement(std::forward<TArgs>(args)...);
+                            complete = [handler = std::move(handlers_.front()), telement = std::move(telement)]() mutable
+                            {
+                                handler(boost::system::error_code(), std::move(telement));
+                            };
+                            handlers_.pop_front();
+                            if (handlers_.empty())
+                            {
+                                std::swap(work_, work);
+                            }
                         }
-                    }
-                    else
-                    {
-                        queue_.emplace_back(std::forward<TArgs>(args)...);
+                        else
+                        {
+                            queue_.emplace_back(std::forward<TArgs>(args)...);
+                        }
+                        pushed = true;
                     }
                 }
                 if (complete != nullptr)
                 {
                     strand_.dispatch(std::move(complete));
                 }
+                return pushed;
             }
 
             /**
@@ -93,23 +100,31 @@ namespace cr
                 std::function<void()> complete;
                 {
                     std::lock_guard<TMutex> lg(mutex_);
-                    if (!queue_.empty())
+                    if (!shutdown_)
                     {
-                        CR_ASSERT(handlers_.empty())(queue_.size());
-                        T element = std::move(queue_.front());
-                        queue_.pop_front();
-                        complete = [handler = std::move(init.handler), element = std::move(element)]() mutable
+                        if (!queue_.empty())
                         {
-                            handler(boost::system::error_code(), std::move(element));
-                        };
+                            CR_ASSERT(handlers_.empty())(queue_.size());
+                            T element = std::move(queue_.front());
+                            queue_.pop_front();
+                            complete = [handler = std::move(init.handler), element = std::move(element)]() mutable
+                            {
+                                handler(boost::system::error_code(), std::move(element));
+                            };
+                        }
+                        else
+                        {
+                            handlers_.emplace_back(std::move(init.handler));
+                            if (work_ == nullptr)
+                            {
+                                work_ = std::make_unique<boost::asio::io_service::work>(get_io_service());
+                            }
+                        }
                     }
                     else
                     {
-                        handlers_.emplace_back(std::move(init.handler));
-                        if (work_ == nullptr)
-                        {
-                            work_ = std::make_unique<boost::asio::io_service::work>(get_io_service());
-                        }
+                        namespace asio_error = boost::asio::error;
+                        complete = std::bind(std::move(init.handler), asio_error::make_error_code(asio_error::broken_pipe), T());
                     }
                 }
                 if (complete)
@@ -139,6 +154,39 @@ namespace cr
                     strand_.dispatch(complete);
                 }
                 return handlers.size();
+            }
+
+            /**
+            * 停止等待的任务.
+            * @return 取消任务的个数.
+            */
+            std::size_t shutdown()
+            {
+                {
+                    std::lock_guard<TMutex> lg(mutex_);
+                    queue_.clear();
+                    shutdown_ = true;
+                }
+                return cancel();
+            }
+
+            /**
+             * 清楚元素.
+             */
+            void clear()
+            {
+                std::lock_guard<TMutex> lg(mutex_);
+                queue_.clear();
+            }
+
+            /**
+             * 管道是否打开.
+             * @return True 打开，否则其它.
+             */
+            bool isOpen() const
+            {
+                std::lock_guard<TMutex> lg(mutex_);
+                return !shutdown_;
             }
 
             /**
@@ -180,6 +228,8 @@ namespace cr
             std::deque<HandlerType> handlers_;
             // 队列
             std::deque<T> queue_;
+            //shutdown
+            bool shutdown_;
             // 锁
            mutable TMutex mutex_;
         };

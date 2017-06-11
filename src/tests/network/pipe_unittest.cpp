@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(pipe)
             pipe1.pop(cr::network::coro::async(coro, ec, element2));
             ivec.push_back(element2);
         }
-        pipe2.cancel();
+        pipe2.shutdown();
     });
 
     // 处理任务，回执结果
