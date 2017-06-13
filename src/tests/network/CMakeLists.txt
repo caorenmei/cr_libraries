@@ -12,7 +12,6 @@ set(cr_network_unittest_SRCS
 add_executable(cr_network_unittest ${cr_network_unittest_SRCS})
 install(TARGETS cr_network_unittest DESTINATION bin)
 target_link_libraries(cr_network_unittest
-    ${_CR_PTHREAD_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_CONTEXT_LIBRARY}
     ${Boost_COROUTINE_LIBRARY} 
@@ -23,5 +22,6 @@ target_link_libraries(cr_network_unittest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     cr_common
     cr_network
+    ${_CR_PTHREAD_LIBRARY}
 )
 add_test(cr_network_unittest cr_network_unittest)
