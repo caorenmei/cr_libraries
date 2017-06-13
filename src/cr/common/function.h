@@ -9,13 +9,13 @@ namespace cr
     namespace fun
     {
         template <std::size_t N, typename Functor, typename T, typename... Args>
-        auto shiftAux(std::integral_constant<std::size_t, N>, Functor& call, T&& arg, Args&&... args)
+        auto shiftAux(std::integral_constant<std::size_t, N>, Functor&& call, T&& arg, Args&&... args)
         {
-            return shiftAux(std::integral_constant<std::size_t, N - 1>(), call, std::forward<Args>(args)...);
+            return shiftAux(std::integral_constant<std::size_t, N - 1>(), std::forward<Functor>(call), std::forward<Args>(args)...);
         }
 
         template <typename Functor, typename... Args>
-        auto shiftAux(std::integral_constant<std::size_t, 0>, Functor& call, Args&&... args)
+        auto shiftAux(std::integral_constant<std::size_t, 0>, Functor&& call, Args&&... args)
         {
             return call(std::forward<Args>(args)...);
         }
@@ -27,9 +27,9 @@ namespace cr
          * @return call().
          */
         template <std::size_t N, typename Functor, typename... Args>
-        auto shift(Functor& call, Args&&... args)
+        auto shift(Functor&& call, Args&&... args)
         {
-            return shiftAux(std::integral_constant<std::size_t, N>(), call, std::forward<Args>(args)...);
+            return shiftAux(std::integral_constant<std::size_t, N>(), std::forward<Functor>(call), std::forward<Args>(args)...);
         }
     }
 }
