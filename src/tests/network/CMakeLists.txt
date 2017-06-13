@@ -8,10 +8,15 @@ set(cr_network_unittest_SRCS
     spawn_unittest.cpp
     unittest_main.cpp
 )
+
+if(NOT MSVC)
+    set(_CR_PTHREAD_LIBRARY "pthread")
+endif()
   
 add_executable(cr_network_unittest ${cr_network_unittest_SRCS})
 install(TARGETS cr_network_unittest DESTINATION bin)
 target_link_libraries(cr_network_unittest
+    ${_CR_PTHREAD_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_CONTEXT_LIBRARY}
     ${Boost_COROUTINE_LIBRARY} 
