@@ -22,6 +22,6 @@ target_link_libraries(cr_network_unittest
     ${Boost_SYSTEM_LIBRARY} 
     ${Boost_THREAD_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${_CR_PTHREAD_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 add_test(cr_network_unittest cr_network_unittest)
