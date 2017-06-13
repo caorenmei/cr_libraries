@@ -12,6 +12,7 @@ set(cr_network_unittest_SRCS
 add_executable(cr_network_unittest ${cr_network_unittest_SRCS})
 install(TARGETS cr_network_unittest DESTINATION bin)
 target_link_libraries(cr_network_unittest
+    ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_CONTEXT_LIBRARY}
     ${Boost_COROUTINE_LIBRARY} 
