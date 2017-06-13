@@ -3,9 +3,9 @@ find_package(Boost REQUIRED chrono context coroutine date_time regex system thre
 include_directories(${Boost_INCLUDE_DIRS})
 
 # assert.h
-add_executable(cr_nwtwork_example_pipe pipe_example.cpp)
-install(TARGETS cr_nwtwork_example_pipe DESTINATION bin)
-target_link_libraries(cr_nwtwork_example_pipe 
+add_executable(cr_network_example_pipe pipe_example.cpp)
+install(TARGETS cr_network_example_pipe DESTINATION bin)
+target_link_libraries(cr_network_example_pipe 
     ${_CR_PTHREAD_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_CONTEXT_LIBRARY}
