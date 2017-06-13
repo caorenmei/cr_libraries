@@ -113,7 +113,7 @@ namespace cr
                 auto operator()(UArgs&&... args) -> std::enable_if_t<sizeof...(UArgs) == sizeof...(TArgs)>
                 {
                     capature(std::forward<UArgs>(args)...);
-                    cr::fun::shift(std::integral_constant<std::size_t, CallCapture::capture_size>(), [this](auto&&... params)
+                    cr::fun::shift<CallCapture::capture_size>([this](auto&&... params)
                     {
                         *results = std::forward_as_tuple(params...);
                     }, std::forward<UArgs>(args)...);
