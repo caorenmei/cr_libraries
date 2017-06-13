@@ -17,6 +17,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WIN32_WINNT=0x0501)
 else()
     set(_CR_ENV_TERMINAL ":")
+    add_compile_options(-std=C++1z)
 endif()
 
 add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
