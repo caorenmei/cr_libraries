@@ -186,18 +186,24 @@ namespace cr
     }
 }
 
-template <typename Signature, typename... TArgs>
-struct boost::asio::handler_type<cr::network::coro::CallCapture<TArgs...>, Signature>
+namespace boost
 {
-    using type = typename cr::network::coro::AsioHandlerType<
-        cr::network::coro::CallCapture<TArgs...>, Signature>::type;
-};
+    namespace asio
+    {
+        template <typename Signature, typename... TArgs>
+        struct handler_type<cr::network::coro::CallCapture<TArgs...>, Signature>
+        {
+            using type = typename cr::network::coro::AsioHandlerType<
+                cr::network::coro::CallCapture<TArgs...>, Signature>::type;
+        };
 
-template <typename Capture, typename... TArgs>
-struct boost::asio::async_result<cr::network::coro::CallHandler<Capture, TArgs...>>
-    : cr::network::coro::CallResult<Capture, TArgs...>
-{
-    using cr::network::coro::CallResult<Capture, TArgs...>::CallResult;
-};
+        template <typename Capture, typename... TArgs>
+        struct async_result<cr::network::coro::CallHandler<Capture, TArgs...>>
+            : cr::network::coro::CallResult<Capture, TArgs...>
+        {
+            using cr::network::coro::CallResult<Capture, TArgs...>::CallResult;
+        };
+    }
+}
 
 #endif
