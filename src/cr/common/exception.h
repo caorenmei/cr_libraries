@@ -29,7 +29,7 @@ namespace cr
         *
         * @return    异常描述信息
         */
-        virtual const char* what() const override;
+        virtual const char* what() const throw() override;
 
         /**
          * 获取错误描述信息
