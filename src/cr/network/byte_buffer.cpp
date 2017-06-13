@@ -120,8 +120,11 @@ namespace cr
         void ByteBuffer::consume(std::size_t n)
         {
             CR_ASSERT(n <= size_)(n)(size_)(readerIndex_)(writerIndex_);
-            readerIndex_ = (readerIndex_ + n) % buffer_.size();
-            size_ = size_ - n;
+            if (n != 0)
+            {
+                readerIndex_ = (readerIndex_ + n) % buffer_.size();
+                size_ = size_ - n;
+            }
         }
 
         ByteBuffer::MutableBuffers ByteBuffer::prepare(std::size_t n)
@@ -147,8 +150,11 @@ namespace cr
         void ByteBuffer::commit(std::size_t n)
         {
             CR_ASSERT(n <= buffer_.size() - size_)(n)(size_)(buffer_.size())(readerIndex_)(writerIndex_);
-            writerIndex_ = (writerIndex_ + n) % buffer_.size();
-            size_ = size_ + n;
+            if (n != 0)
+            {
+                writerIndex_ = (writerIndex_ + n) % buffer_.size();
+                size_ = size_ + n;
+            }
         }
 
         void ByteBuffer::set(std::size_t offset, const void* source, std::size_t n)
@@ -187,12 +193,15 @@ namespace cr
 
         void ByteBuffer::shrink(std::size_t n/* = 1024*/)
         {
-            std::size_t capacity = std::max(size_, n);
-            std::vector<char> buffer(capacity);
-            boost::asio::buffer_copy(boost::asio::buffer(buffer), data());
-            std::swap(buffer_, buffer);
-            readerIndex_ = 0;
-            writerIndex_ = size_ % buffer_.size();
+            if (n < buffer_.size())
+            {
+                std::size_t capacity = std::max(size_, n);
+                std::vector<char> buffer(capacity);
+                boost::asio::buffer_copy(boost::asio::buffer(buffer), data());
+                std::swap(buffer_, buffer);
+                readerIndex_ = 0;
+                writerIndex_ = (size_ != buffer_.size()) ? size_ : 0;
+            }
         }
 
         void ByteBuffer::swap(ByteBuffer& other)
@@ -219,7 +228,7 @@ namespace cr
                 boost::asio::buffer_copy(boost::asio::buffer(buffer), data());
                 std::swap(buffer_, buffer);
                 readerIndex_ = 0;
-                writerIndex_ = size_ % buffer_.size();
+                writerIndex_ = (size_ != buffer_.size()) ? size_ : 0;
             }
         }
     }
