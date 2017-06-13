@@ -15,10 +15,10 @@ namespace cr
             return call(std::forward<Args>(args)...);
         }
 
-        template <std::size_t N, typename Functor, typename T, typename... Args>
-        auto shiftAux(std::integral_constant<std::size_t, N>, Functor&& call, T&& arg, Args&&... args)
+        template <typename Constant, typename Functor, typename T, typename... Args>
+        auto shiftAux(Constant, Functor&& call, T&& arg, Args&&... args)
         {
-            return shiftAux(std::integral_constant<std::size_t, N - 1>(), std::forward<Functor>(call), std::forward<Args>(args)...);
+            return shiftAux(std::integral_constant<std::size_t, Constant::value - 1>(), std::forward<Functor>(call), std::forward<Args>(args)...);
         }
 
         /**
