@@ -11,7 +11,7 @@ namespace cr
         template <std::size_t N, typename Functor, typename T, typename... Args>
         auto shiftAux(std::integral_constant<std::size_t, N>, std::false_type, Functor&& call, T&& arg, Args&&... args)
         {
-            return shiftAux(std::integral_constant<std::size_t, N - 1>(), std::bool_constant<N - 1 == 0>(), std::forward<Functor>(call), std::forward<Args>(args)...);
+            return shiftAux(std::integral_constant<std::size_t, N - 1>(), std::integral_constant<bool, N - 1 == 0>(), std::forward<Functor>(call), std::forward<Args>(args)...);
         }
 
         template <typename Functor, typename... Args>
@@ -29,7 +29,7 @@ namespace cr
         template <std::size_t N, typename Functor, typename... Args>
         auto shift(Functor&& call, Args&&... args)
         {
-            return shiftAux(std::integral_constant<std::size_t, N>(), std::bool_constant<N == 0>(), std::forward<Functor>(call), std::forward<Args>(args)...);
+            return shiftAux(std::integral_constant<std::size_t, N>(), std::integral_constant<bool, N == 0>(), std::forward<Functor>(call), std::forward<Args>(args)...);
         }
     }
 }
