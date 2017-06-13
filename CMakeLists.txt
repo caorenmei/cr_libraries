@@ -17,7 +17,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_WIN32_WINNT=0x0501)
 else()
     set(_CR_ENV_TERMINAL ":")
-    add_compile_options(-std=c++1z)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z -g -lpthread")
 endif()
 
 add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)

@@ -6,7 +6,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_executable(cr_nwtwork_example_pipe pipe_example.cpp)
 install(TARGETS cr_nwtwork_example_pipe DESTINATION bin)
 target_link_libraries(cr_nwtwork_example_pipe 
-    ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_CHRONO_LIBRARY}
     ${Boost_CONTEXT_LIBRARY}
     ${Boost_COROUTINE_LIBRARY} 
