@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(generate_step)
 BOOST_AUTO_TEST_CASE(rangeFor)
 {
     int sum = 0;
-    for (int e : cr::from({ 1,2,3 }))
+    for (int e : cr::from({ 1,2,3 }).deepClone())
     {
         sum += e;
     }
