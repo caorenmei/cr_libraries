@@ -47,7 +47,7 @@ namespace cr
         return Stream<decltype(enumerator)>{ enumerator };
     }
 
-    template <typename TArithmetic, typename = std::enable_if_t<std::is_arithmetic_v<TArithmetic> > >
+    template <typename TArithmetic, typename = std::enable_if_t<std::is_arithmetic<TArithmetic>::value>>
     auto generate(TArithmetic initValue, TArithmetic increValue)
     {
         std::size_t genCount = 0;
