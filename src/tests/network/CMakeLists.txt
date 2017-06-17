@@ -3,7 +3,7 @@ find_package(Boost REQUIRED chrono context coroutine date_time regex system thre
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(Protobuf REQUIRED)
-include_directories(${Protobuf_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 set(PROTO_LIST unittest.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_LIST})  
