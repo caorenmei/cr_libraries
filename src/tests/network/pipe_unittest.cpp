@@ -9,9 +9,9 @@
 #include <cr/network/pipe.h>
 #include <cr/network/spawn.h>
 
-BOOST_AUTO_TEST_SUITE(pipe)
+BOOST_AUTO_TEST_SUITE(cr_pipe)
 
-BOOST_AUTO_TEST_CASE(pipe)
+BOOST_AUTO_TEST_CASE(pushAndPop)
 {
     boost::asio::io_service ioService1;
     boost::asio::io_service ioService2;
