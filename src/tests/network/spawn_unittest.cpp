@@ -7,7 +7,7 @@
 #include <cr/network/spawn.h>
 #include <boost/asio/system_timer.hpp>
 
-BOOST_AUTO_TEST_SUITE(cr_network_spawn)
+BOOST_AUTO_TEST_SUITE(spawn)
 
 BOOST_AUTO_TEST_CASE(spawn)
 {

@@ -9,7 +9,7 @@
 #include <cr/network/pipe.h>
 #include <cr/network/spawn.h>
 
-BOOST_AUTO_TEST_SUITE(cr_network_pipe)
+BOOST_AUTO_TEST_SUITE(pipe)
 
 BOOST_AUTO_TEST_CASE(pipe)
 {

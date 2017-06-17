@@ -2,10 +2,15 @@
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
+
 set(cr_network_SRCS
     byte_buffer.h
     byte_buffer.cpp
     pipe.h
+    protobuf_utils.h
+    protobuf_utils.cpp
     spawn.h
     spawn_coro.h
     spawn.cpp
@@ -14,6 +19,7 @@ set(cr_network_SRCS
 set(cr_network_HEADERS
     byte_buffer.h
     pipe.h
+    protobuf_utils.h
     spawn.h
     spawn_coro.h
 )

@@ -2,7 +2,7 @@
 
 #include <cr/network/byte_buffer.h>
 
-BOOST_AUTO_TEST_SUITE(cr_network_byte_buffer)
+BOOST_AUTO_TEST_SUITE(byte_buffer)
 
 template <typename Buffers>
 auto bufferToString(const Buffers& buffers)
