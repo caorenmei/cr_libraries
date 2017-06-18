@@ -13,7 +13,8 @@ BOOST_AUTO_TEST_CASE(getProtobufMessageFromName)
 {
     cr::unittest::HelloWorld helloWorld;
     auto message = cr::network::getProtobufMessageFromName(helloWorld.GetTypeName());
-    CR_ON_SCOPE_EXIT([&] { delete message; });
+    BOOST_REQUIRE_NE(message, nullptr);
+    CR_SCOPE_EXIT([&] { delete message; });
     BOOST_CHECK(typeid(*message) == typeid(helloWorld));
 }
 

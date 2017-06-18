@@ -8,7 +8,7 @@ BOOST_AUTO_TEST_CASE(on_scope_guard)
 {
     int a = 1;
     {
-        CR_ON_SCOPE_EXIT([&] { a = 0; });
+        CR_SCOPE_EXIT([&] { a = 0; });
     }
     BOOST_CHECK_EQUAL(a, 0);
 }

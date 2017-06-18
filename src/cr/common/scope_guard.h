@@ -1,4 +1,4 @@
-#ifndef CR_COMMON_SCOPE_GUARD_H_
+ï»¿#ifndef CR_COMMON_SCOPE_GUARD_H_
 #define CR_COMMON_SCOPE_GUARD_H_
 
 #include <functional>
@@ -9,7 +9,7 @@
 namespace cr
 {
     /**
-     * ³¬³ö×÷ÓÃÓò×Ô¶¯»Ø¹ö.
+     * è¶…å‡ºä½œç”¨åŸŸè‡ªåŠ¨å›æ»š.
      */
     class ScopeGuard
     {
@@ -17,7 +17,7 @@ namespace cr
         /**
          * Constructor.
          *
-         * @param rollback »Ø¹öº¯Êı.
+         * @param rollback å›æ»šå‡½æ•°.
          */
         explicit ScopeGuard(std::function<void()> rollback)
             : rollback_(std::move(rollback)),
@@ -60,7 +60,7 @@ namespace cr
             std::swap(dismissed_, other.dismissed_);
         }
 
-        /** ½â³ı×Ô¶¯»Ø¹ö. */
+        /** è§£é™¤è‡ªåŠ¨å›æ»š. */
         void dismiss()
         {
             dismissed_ = true;
@@ -68,13 +68,13 @@ namespace cr
 
     private:
 
-        // »Ø¹öº¯Êı
+        // å›æ»šå‡½æ•°
         std::function<void()> rollback_;
-        // ÊÇ·ñÈ¡Ïû×Ô¶¯»¯»Ø¹ö
+        // æ˜¯å¦å–æ¶ˆè‡ªåŠ¨åŒ–å›æ»š
         bool dismissed_;
     };
 }
 
-#define CR_ON_SCOPE_EXIT(rollback) cr::ScopeGuard BOOST_PP_CAT(onScopeExit_, __LINE__)(rollback)
+#define CR_SCOPE_EXIT(rollback) cr::ScopeGuard BOOST_PP_CAT(onScopeExit_, __LINE__)(rollback)
 
 #endif // !CR_CORE_SCOPE_GUARD_H_
