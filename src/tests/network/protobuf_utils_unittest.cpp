@@ -36,6 +36,17 @@ BOOST_AUTO_TEST_CASE(parseAndSerializeProtobufMessage)
     BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0, buffer0.getReadableBytes() - 10));
     BOOST_CHECK_EQUAL(helloWorld0.hello(), helloWorld1.hello());
     BOOST_CHECK_EQUAL(helloWorld0.world(), helloWorld1.world());
+
+    buffer0.clear();
+    buffer0.shrink(100);
+    buffer0.prepare(97);
+    buffer0.commit(97);
+    buffer0.consume(97);
+
+    BOOST_CHECK(cr::network::serializeProtobufMessage(helloWorld0, buffer0));
+    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0));
+    BOOST_CHECK_EQUAL(helloWorld0.hello(), helloWorld1.hello());
+    BOOST_CHECK_EQUAL(helloWorld0.world(), helloWorld1.world());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
