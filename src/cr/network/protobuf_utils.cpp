@@ -128,6 +128,7 @@ namespace cr
                 else
                 {
                     index_ = 0;
+                    ++iter_;
                     count -= validSize;
                 }
             }
