@@ -56,7 +56,8 @@ namespace cr
     }
 
     /** 日志类型 */
-    class Logger : public boost::log::sources::severity_logger_mt<SeverityLevel>
+    template <template<typename> class SeverityLogger>
+    class BasicLogger : public SeverityLogger<SeverityLevel>
     {
     public:
 
@@ -64,7 +65,13 @@ namespace cr
          * 构造函数
          * @param level 默认日志级别
          */
-        explicit Logger(SeverityLevel level = SeverityLevel::TRACE);
+        explicit BasicLogger(SeverityLevel level = SeverityLevel::TRACE)
+            : SeverityLogger<SeverityLevel>(level)
+        {
+            add_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
+            add_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
+            add_attribute("Tag", boost::log::attributes::mutable_constant<const char*>(""));
+        }
 
         /**
          * 设置属性值
@@ -80,6 +87,12 @@ namespace cr
             return attr.get();
         }
     };
+
+    /** 非线程安全的日志 */
+    using Logger = BasicLogger<boost::log::sources::severity_logger>;
+
+    /** 非线程安全的日志 */
+    using ThreadSafeLogger = BasicLogger<boost::log::sources::severity_logger_mt>;
 }
 
 /**
