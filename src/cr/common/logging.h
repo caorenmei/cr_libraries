@@ -43,8 +43,8 @@ namespace cr
             "WARN",
             "ERROR",
         };
-        constexpr std::size_t nlevel = sizeof(message) / sizeof(message[0]);
-        if (nlevel < std::size(message))
+        std::size_t nlevel = static_cast<std::size_t>(level);
+        if (nlevel < sizeof(message) / sizeof(message[0]))
         {
             strm << message[nlevel];
         }
