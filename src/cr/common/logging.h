@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <iterator>
 
+#include <boost/log/attributes.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 
@@ -42,7 +43,7 @@ namespace cr
             "WARN",
             "ERROR",
         };
-        std::size_t nlevel = static_cast<std::size_t>(level);
+        constexpr std::size_t nlevel = sizeof(message) / sizeof(message[0]);
         if (nlevel < std::size(message))
         {
             strm << message[nlevel];
