@@ -115,6 +115,12 @@ namespace cr
             void commit(std::size_t n);
 
             /**
+             * 回滚提交
+             * @param n 回滚字节数
+             */
+            void uncommit(std::size_t n);
+
+            /**
              * 随机覆写一段缓冲区
              * @param  offset 偏移量
              * @param b 源缓冲区

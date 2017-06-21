@@ -141,6 +141,22 @@ namespace cr
             }
         }
 
+        void ByteBuffer::uncommit(std::size_t n)
+        {
+            CR_ASSERT(n <= size_)(n)(size_)(buffer_.size())(readerIndex_)(writerIndex_);
+            size_ -= n;
+            if (writerIndex_ <= readerIndex_ && n != 0)
+            {
+                std::size_t nbytes = std::min(writerIndex_, n);
+                writerIndex_ -= nbytes;
+                n -= nbytes;
+            }
+            if (n != 0)
+            {
+                writerIndex_ = (writerIndex_ != 0 ? writerIndex_ : buffer_.size()) - n;
+            }
+        }
+
         void ByteBuffer::set(std::size_t offset, const void* source, std::size_t n)
         {
             CR_ASSERT(source != nullptr && offset + n <= size_)(source)(offset)(n)(size_);

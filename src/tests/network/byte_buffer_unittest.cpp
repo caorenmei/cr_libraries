@@ -89,6 +89,32 @@ BOOST_AUTO_TEST_CASE(consume)
     BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(uncommit)
+{
+    cr::network::ByteBuffer buffer0(0);
+    buffer0.prepare(5);
+    buffer0.commit(5);
+    buffer0.uncommit(1);
+    BOOST_CHECK_EQUAL(buffer0.getReadableBytes(), 4);
+    buffer0.uncommit(4);
+    BOOST_CHECK_EQUAL(buffer0.getReadableBytes(), 0);
+
+    cr::network::ByteBuffer buffer1(10);
+    buffer1.prepare(10);
+    buffer1.commit(10);
+    buffer1.consume(5);
+    buffer1.prepare(5);
+    buffer1.commit(5);
+    buffer1.uncommit(1);
+    BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 9);
+    buffer1.uncommit(4);
+    BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 5);
+    buffer1.uncommit(4);
+    BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 1);
+    buffer1.uncommit(1);
+    BOOST_CHECK_EQUAL(buffer1.getReadableBytes(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(set_get)
 {
     std::string data0 = "1234567890";
