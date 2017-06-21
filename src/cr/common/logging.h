@@ -15,15 +15,15 @@ namespace cr
     enum class SeverityLevel : std::size_t
     {
         /** 追踪 */
-        TRACE,
+        TRACE_LEVEL,
         /** 调试 */
-        DEBUG,
+        DEBUG_LEVEL,
         /** 信息 */
-        INFO,
+        INFO_LEVEL,
         /** 警告 */
-        WARN,
+        WARN_LEVEL,
         /** 错误 */
-        ERROR,
+        ERROR_LEVEL,
     };
 
     /**
@@ -65,7 +65,7 @@ namespace cr
          * 构造函数
          * @param level 默认日志级别
          */
-        explicit BasicLogger(SeverityLevel level = SeverityLevel::TRACE)
+        explicit BasicLogger(SeverityLevel level = SeverityLevel::TRACE_LEVEL)
             : SeverityLogger<SeverityLevel>(level)
         {
             this->add_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
@@ -114,34 +114,34 @@ namespace cr
  * @param logger 日志对象
  * @param tag Tag
  */
-#define CRLOG_TRACE(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::TRACE, tag)
+#define CRLOG_TRACE(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::TRACE_LEVEL, tag)
 
 /**
  * 调试级别日志 
  * @param logger 日志对象
  * @param tag Tag
  */
-#define CRLOG_DEBUG(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::DEBUG, tag)
+#define CRLOG_DEBUG(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::DEBUG_LEVEL, tag)
 
 /**
  * 信息级别日志 
  * @param logger 日志对象
  * @param tag Tag
  */
-#define CRLOG_INFO(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::INFO, tag)
+#define CRLOG_INFO(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::INFO_LEVEL, tag)
 
 /**
  * 警告级别日志 
  * @param logger 日志对象
  * @param tag Tag
  */
-#define CRLOG_WARN(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::WARN, tag)
+#define CRLOG_WARN(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::WARN_LEVEL, tag)
 
 /**
  * 错误级别日志 
  * @param logger 日志对象
  * @param tag Tag
  */
-#define CRLOG_ERROR(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::ERROR, tag)
+#define CRLOG_ERROR(logger, tag) CRLOG_SEV(logger, cr::SeverityLevel::ERROR_LEVEL, tag)
 
 #endif
