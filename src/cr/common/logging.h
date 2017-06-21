@@ -68,9 +68,9 @@ namespace cr
         explicit BasicLogger(SeverityLevel level = SeverityLevel::TRACE)
             : SeverityLogger<SeverityLevel>(level)
         {
-            add_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
-            add_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
-            add_attribute("Tag", boost::log::attributes::mutable_constant<const char*>(""));
+            this->add_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
+            this->add_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
+            this->add_attribute("Tag", boost::log::attributes::mutable_constant<const char*>(""));
         }
 
         /**
@@ -82,7 +82,7 @@ namespace cr
         template <typename ValueType>
         ValueType setAttrValue(const char* name, ValueType value)
         {
-            auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(get_attributes()[name]);
+            auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(this->get_attributes()[name]);
             attr.set(value);
             return attr.get();
         }
