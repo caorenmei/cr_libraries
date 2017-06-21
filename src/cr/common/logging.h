@@ -91,7 +91,7 @@ namespace cr
     /** 非线程安全的日志 */
     using Logger = BasicLogger<boost::log::sources::severity_logger>;
 
-    /** 非线程安全的日志 */
+    /** 线程安全的日志 */
     using ThreadSafeLogger = BasicLogger<boost::log::sources::severity_logger_mt>;
 }
 
