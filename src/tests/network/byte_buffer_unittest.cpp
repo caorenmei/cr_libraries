@@ -48,16 +48,19 @@ BOOST_AUTO_TEST_CASE(prepare_data_commit)
     boost::asio::buffer_copy(buffer0.prepare(data.size()), boost::asio::buffer(data));
     buffer0.commit(data.size());
     BOOST_CHECK_EQUAL(data, bufferToString(buffer0.data()));
+    BOOST_CHECK_EQUAL(data.substr(2, 5), bufferToString(buffer0.data(2, 5)));
 
     cr::network::ByteBuffer buffer1(data.size());
     boost::asio::buffer_copy(buffer1.prepare(data.size()), boost::asio::buffer(data));
     buffer1.commit(data.size());
     BOOST_CHECK_EQUAL(data, bufferToString(buffer1.data()));
+    BOOST_CHECK_EQUAL(data.substr(2, 5), bufferToString(buffer1.data(2, 5)));
 
     cr::network::ByteBuffer buffer2(100);
     boost::asio::buffer_copy(buffer2.prepare(100), boost::asio::buffer(data));
     buffer2.commit(data.size());
     BOOST_CHECK_EQUAL(data, bufferToString(buffer2.data()));
+    BOOST_CHECK_EQUAL(data.substr(2, 5), bufferToString(buffer2.data(2, 5)));
 
     cr::network::ByteBuffer buffer3(10);
     buffer3.prepare(5);
@@ -66,6 +69,7 @@ BOOST_AUTO_TEST_CASE(prepare_data_commit)
     boost::asio::buffer_copy(buffer3.prepare(data.size()), boost::asio::buffer(data));
     buffer3.commit(data.size());
     BOOST_CHECK_EQUAL(data, bufferToString(buffer3.data()));
+    BOOST_CHECK_EQUAL(data.substr(2, 5), bufferToString(buffer3.data(2, 5)));
 }
 
 BOOST_AUTO_TEST_CASE(consume)

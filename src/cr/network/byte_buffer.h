@@ -81,17 +81,19 @@ namespace cr
 
             /**
              * 可读数据
+             * @param index 起始位置
              * @param n 待读取字节数, n <= getReadableBytes()
              * @param 可读数据缓冲区
              */
-            ConstBuffers data(std::size_t n) const;
+            ConstBuffers data(std::size_t index, std::size_t n) const;
 
             /**
              * 可读数据
+             * @param index 起始位置
              * @param n 待读取字节数, n <= getReadableBytes()
              * @param 可读数据缓冲区
              */
-            MutableBuffers data(std::size_t n);
+            MutableBuffers data(std::size_t index, std::size_t n);
 
             /**
              * 消耗缓冲区数据

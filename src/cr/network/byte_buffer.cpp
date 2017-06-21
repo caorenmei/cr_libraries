@@ -47,72 +47,56 @@ namespace cr
 
         ByteBuffer::ConstBuffers ByteBuffer::data() const
         {
-            ConstBuffers buffers;
-            std::size_t readerIndex = readerIndex_;
-            if (writerIndex_ <= readerIndex && size_ != 0)
-            {
-                buffers.emplace_back(buffer_.data() + readerIndex, buffer_.size() - readerIndex);
-                readerIndex = 0;
-            }
-            if (readerIndex < writerIndex_)
-            {
-                buffers.emplace_back(buffer_.data() + readerIndex, writerIndex_ - readerIndex);
-            }
-            return buffers;
+            return data(0, size_);
         }
 
         ByteBuffer::MutableBuffers ByteBuffer::data()
         {
-            MutableBuffers buffers;
-            std::size_t readerIndex = readerIndex_;
-            if (writerIndex_ <= readerIndex && size_ != 0)
-            {
-                buffers.emplace_back(buffer_.data() + readerIndex, buffer_.size() - readerIndex);
-                readerIndex = 0;
-            }
-            if (readerIndex < writerIndex_)
-            {
-                buffers.emplace_back(buffer_.data() + readerIndex, writerIndex_ - readerIndex);
-            }
-            return buffers;
+            return data(0, size_);
         }
 
-        ByteBuffer::ConstBuffers ByteBuffer::data(std::size_t n) const
+        ByteBuffer::ConstBuffers ByteBuffer::data(std::size_t index, std::size_t n) const
         {
-            CR_ASSERT(n <= size_)(n)(size_)(readerIndex_)(writerIndex_);
+            CR_ASSERT(index + n <= size_)(index)(n)(size_)(readerIndex_)(writerIndex_);
             ConstBuffers buffers;
-            std::size_t readerIndex = readerIndex_;
-            if (writerIndex_ <= readerIndex && n != 0)
+            if (n != 0)
             {
-                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
-                readerIndex = (readerIndex + nbytes) % buffer_.size();
-                n = n - nbytes;
-            }
-            if (readerIndex < writerIndex_ && n != 0)
-            {
-                std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                std::size_t readerIndex = (readerIndex_ + index) % buffer_.size();
+                if (writerIndex_ <= readerIndex)
+                {
+                    std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                    buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                    readerIndex = (readerIndex + nbytes) % buffer_.size();
+                    n = n - nbytes;
+                }
+                if (readerIndex < writerIndex_ && n != 0)
+                {
+                    std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
+                    buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                }
             }
             return buffers;
         }
 
-        ByteBuffer::MutableBuffers ByteBuffer::data(std::size_t n)
+        ByteBuffer::MutableBuffers ByteBuffer::data(std::size_t index, std::size_t n)
         {
-            CR_ASSERT(n <= size_)(n)(size_)(readerIndex_)(writerIndex_);
+            CR_ASSERT(index + n <= size_)(index)(n)(size_)(readerIndex_)(writerIndex_);
             MutableBuffers buffers;
-            std::size_t readerIndex = readerIndex_;
-            if (writerIndex_ <= readerIndex && n != 0)
+            if (n != 0)
             {
-                std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
-                readerIndex = (readerIndex + nbytes) % buffer_.size();
-                n = n - nbytes;
-            }
-            if (readerIndex < writerIndex_ && n != 0)
-            {
-                std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
-                buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                std::size_t readerIndex = (readerIndex_ + index) % buffer_.size();
+                if (writerIndex_ <= readerIndex)
+                {
+                    std::size_t nbytes = std::min(buffer_.size() - readerIndex, n);
+                    buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                    readerIndex = (readerIndex + nbytes) % buffer_.size();
+                    n = n - nbytes;
+                }
+                if (readerIndex < writerIndex_ && n != 0)
+                {
+                    std::size_t nbytes = std::min(writerIndex_ - readerIndex, n);
+                    buffers.emplace_back(buffer_.data() + readerIndex, nbytes);
+                }
             }
             return buffers;
         }
