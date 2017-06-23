@@ -10,9 +10,7 @@ namespace cr
 {
     namespace raft
     {
-        /**
-         * 二进制日志存储接口
-         */
+        /** 二进制日志存储接口 */
         class LogStrage
         {
         public:
@@ -21,9 +19,19 @@ namespace cr
             enum Result : int
             {
                 /** 操作成功 */
-                SUCCESS = 0,
+                SUCCESS,
+                /** 不支持的操作 */
+                NO_SUPPORT,
+                /** 数据损坏 */
+                BAD_LOG,
                 /** 没有该实例 */
-                NO_INSTANCE = 1,
+                NO_INSTANCE,
+                /** 没有该日志  */
+                NO_LOG_INDEX,
+                /** 没有快照 */
+                NO_SNAPSHOT,
+                /** 日志已生成快照 */
+                IN_SNPSHOT,
             };
 
             /** 日志条目 */
@@ -42,11 +50,33 @@ namespace cr
             /** 日志条目指针 */
             using LogEntryPtr = std::shared_ptr<LogEntry>;
 
+            /** 二进制条目 */
+            using ByteEntry = std::shared_ptr<std::string>;
+
+            /** 快照接口 */
+            struct Snapshot
+            {
+                /** 实例ID */
+                std::uint32_t instanceId;
+                /** 日志ID */
+                std::uint64_t lastLogIndex;
+                /** 任期ID*/
+                std::uint32_t lastTermIndex;
+                /** 游标 */
+                std::function<void(Result, ByteEntry)> cursor;
+            };
+
+            /** 快照接口指针 */
+            using SnapshotPtr = std::shared_ptr<Snapshot>;
+
             /** 构造函数 */
-            inline LogStrage() {}
+            LogStrage();
 
             /** 析构函数 */
-            virtual ~LogStrage() {}
+            virtual ~LogStrage();
+
+            LogStrage(const LogStrage&) = delete;
+            LogStrage& operator=(const LogStrage&) = delete;
 
             /**
              * 获取一条日志
@@ -86,6 +116,26 @@ namespace cr
              * @param handler 异步返回接口
              */
             virtual void getLastLogIndex(std::uint32_t instanceId, std::function<void(Result, std::uint64_t)> handler) = 0;
+
+            /** 
+             * 是否支持快照 
+             * @return True支持快照，False其它
+             */
+            virtual bool isSupportSnapshot() const;
+
+            /** 
+             * 写入快照快照
+             * @param snapshot 快照接口
+             * @param handler 异步返回接口
+             */
+            virtual void putSnapshot(SnapshotPtr snapshot, std::function<void(Result)> handler);
+
+            /**
+             * 读取快照
+             * @param instanceId 实例ID
+             * @param handler 异步返回接口
+             */
+            virtual void getSnapshot(std::uint32_t instanceId, std::function<void(Result, SnapshotPtr)> handler);
 
         };
     }
