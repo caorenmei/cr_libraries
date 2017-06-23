@@ -5,7 +5,7 @@
 #include <cr/common/scope_guard.h>
 #include <cr/network/protobuf_utils.h>
 
-#include <tests/network/unittest.pb.h>
+#include <cr/network/unittest.pb.h>
 
 BOOST_AUTO_TEST_SUITE(protobuf_utils)
 
