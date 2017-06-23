@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(parseAndSerializeProtobufMessage)
 
     buffer0.prepare(10);
     buffer0.commit(10);
-    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0, buffer0.getReadableBytes() - 10));
+    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0.data(0, buffer0.getReadableBytes() - 10)));
     BOOST_CHECK_EQUAL(helloWorld0.hello(), helloWorld1.hello());
     BOOST_CHECK_EQUAL(helloWorld0.world(), helloWorld1.world());
 

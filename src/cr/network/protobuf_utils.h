@@ -32,7 +32,16 @@ namespace cr
          * @param b 缓冲区
          * @return True成功，False失败
          */
-        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer& b, std::size_t size);
+        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer::ConstBuffers& b);
+
+
+        /**
+         * 从缓冲区解析protobuf消息
+         * @param message protbuf 消息
+         * @param b 缓冲区
+         * @return True成功，False失败
+         */
+        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer::MutableBuffers& b);
 
         /**
          * 序列化protobuf消息到缓冲区

@@ -11,7 +11,7 @@ namespace cr
         {
         public:
 
-            explicit ByteBufferInputStream(const ByteBuffer::ConstBuffers& buffers, std::size_t size);
+            explicit ByteBufferInputStream(const ByteBuffer::ConstBuffers& buffers);
 
             bool Next(const void ** data, int * size) override;
 
@@ -24,7 +24,6 @@ namespace cr
         private:
             
             ByteBuffer::ConstBuffers buffers_;
-            std::size_t size_;
             ByteBuffer::ConstBuffers::iterator iter_;
             std::size_t index_;
             google::protobuf::int64 byteCount_;
@@ -66,14 +65,18 @@ namespace cr
 
         bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer& b)
         {
-            ByteBufferInputStream stream(b.data(), b.getReadableBytes());
+            return parseProtobufMessage(message, b.data());
+        }
+
+        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer::ConstBuffers& b)
+        {
+            ByteBufferInputStream stream(b);
             return message.ParseFromZeroCopyStream(&stream);
         }
 
-        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer& b, std::size_t size)
+        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer::MutableBuffers& b)
         {
-            ByteBufferInputStream stream(b.data(), size);
-            return message.ParseFromZeroCopyStream(&stream);
+            return parseProtobufMessage(message, ByteBuffer::ConstBuffers{ b.begin(), b.end() });
         }
 
         bool serializeProtobufMessage(const google::protobuf::Message& message, ByteBuffer& b)
@@ -82,9 +85,8 @@ namespace cr
             return message.SerializeToZeroCopyStream(&stream);
         }
 
-        ByteBufferInputStream::ByteBufferInputStream(const ByteBuffer::ConstBuffers& buffers, std::size_t size)
+        ByteBufferInputStream::ByteBufferInputStream(const ByteBuffer::ConstBuffers& buffers)
             : buffers_(buffers),
-            size_(size),
             iter_(buffers_.begin()),
             index_(0),
             byteCount_(0)
@@ -92,11 +94,11 @@ namespace cr
 
         bool ByteBufferInputStream::Next(const void ** data, int * size)
         {
-            if (iter_ != buffers_.end() && byteCount_ < size_)
+            if (iter_ != buffers_.end())
             {
                 *data = boost::asio::buffer_cast<const char*>(*iter_) + index_;
                 std::size_t nodeSize = boost::asio::buffer_size(*iter_);
-                *size = std::min<std::size_t>(nodeSize - index_, size_ - byteCount_);
+                *size = static_cast<std::size_t>(nodeSize - index_);
                 index_ += *size;
                 byteCount_ += *size;
                 if (index_ == nodeSize)
@@ -116,10 +118,10 @@ namespace cr
 
         bool ByteBufferInputStream::Skip(int count)
         {
-            while (iter_ != buffers_.end() && byteCount_ < size_ && count > 0)
+            while (iter_ != buffers_.end() && count > 0)
             {
                 std::size_t nodeSize = boost::asio::buffer_size(*iter_);
-                std::size_t validSize = std::min<std::size_t>(nodeSize - index_, size_ - byteCount_);
+                std::size_t validSize = static_cast<std::size_t>(nodeSize - index_);
                 if (count < validSize)
                 {
                     index_ += count;
