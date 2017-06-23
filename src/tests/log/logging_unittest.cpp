@@ -28,7 +28,7 @@ struct LogSinkFixture
         sink->set_formatter(
             boost::log::expressions::stream
             << "[" << boost::log::expressions::attr<const char*>("File") << ":" << boost::log::expressions::attr<int>("Line") << "]"
-            << "\t<" << boost::log::expressions::attr<cr::SeverityLevel>("Severity") << ">"
+            << "\t<" << boost::log::expressions::attr<cr::log::SeverityLevel>("Severity") << ">"
             << "\t<" << boost::log::expressions::attr<const char*>("Tag") << ">"
             << "\t" << boost::log::expressions::message
         );
@@ -41,7 +41,7 @@ struct LogSinkFixture
         boost::log::core::get()->remove_sink(sink);
     }
 
-    cr::Logger logger;
+    cr::log::Logger logger;
     std::stringstream sstrm;
     boost::shared_ptr<boost::log::sinks::sink> sink;
 };

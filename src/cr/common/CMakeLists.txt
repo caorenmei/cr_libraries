@@ -13,8 +13,6 @@ set(cr_common_SRCS
     exception.h
     exception.cpp
     function.h
-    logging.h
-    logging.cpp
     streams.h
     streams_empty.h
     streams_enumerators.h
@@ -34,7 +32,6 @@ set(cr_common_HEADERS
     error.h
     exception.h
     function.h
-    logging.h
     streams.h
     streams_empty.h
     streams_enumerators.h
