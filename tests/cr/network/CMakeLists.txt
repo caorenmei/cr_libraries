@@ -21,8 +21,8 @@ source_group("Protobuf Files" FILES ${PROTO_LIST})
 add_executable(cr_network_unittest ${cr_network_unittest_SRCS})
 install(TARGETS cr_network_unittest DESTINATION bin)
 target_link_libraries(cr_network_unittest
-    cr_common
     cr_network
+    cr_common
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${PROTOBUF_LIBRARIES}
