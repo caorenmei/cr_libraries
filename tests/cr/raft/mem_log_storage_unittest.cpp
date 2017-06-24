@@ -18,19 +18,19 @@ BOOST_AUTO_TEST_CASE(getAllInstanceId)
     storage.append(100, cr::raft::LogEntry(0, 1, "1"));
 
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
-    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({ 100 })));
+    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({ 100 }).deepClone()));
 
     storage.append(200, cr::raft::LogEntry(0, 1, "1"));
 
     instanceIds.clear();
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
-    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({ 100, 200 })));
+    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({ 100, 200 }).deepClone()));
 
     storage.del(100);
 
     instanceIds.clear();
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
-    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({  200 })));
+    BOOST_CHECK(cr::from(instanceIds).equals(cr::from({  200 }).deepClone()));
 
     storage.del(200);
 
