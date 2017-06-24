@@ -80,42 +80,41 @@ namespace cr
 
             /**
              * 获取一条日志
-             * @param options 读取参数
              * @param instanceId 一个raft实例ID
              * @param logIndex 日志ID，从0开始
-             * @param handler 异步返回接口
+             * @param [out] logEntry 日志条目
+             * @return 操作结果
              */
-            virtual void get(std::uint32_t instanceId, std::uint64_t logIndex, std::function<void(Result, LogEntryPtr)> handler) = 0;
+            virtual Result get(std::uint32_t instanceId, std::uint64_t logIndex, LogEntry& logEntry) = 0;
 
             /**
              * 追加日志
-             * @param options 写入参数
-             * @param entry 日志
-             * @param handler 异步返回接口
+             * @param logEntry 日志
+             * @return 操作结果
              */
-            virtual void append(LogEntryPtr entry, std::function<void(Result)> handler) = 0;
+            virtual Result append(const LogEntry& logEntry) = 0;
 
             /**
              * 删除日志
              * @param instanceId 实例ID
              * @param startLogIndex 起始日志索引
-             * @param handler 异步返回接口
+             * @return 操作结果
              */
-            virtual void del(std::uint32_t instanceId, std::uint64_t startLogIndex, std::function<void(Result)> handler) = 0;
+            virtual Result del(std::uint32_t instanceId, std::uint64_t startLogIndex) = 0;
 
             /**
              * 删除实例的所有日志
              * @param instanceId 实例ID
-             * @param handler 异步返回接口
+             * @return 操作结果
              */
-            virtual void del(std::uint32_t instanceId, std::function<void(Result)> handler) = 0;
+            virtual Result del(std::uint32_t instanceId) = 0;
 
             /**
              * 获取最后的日志索引
              * @param instanceId 实例ID
-             * @param handler 异步返回接口
+             * @return 操作结果
              */
-            virtual void getLastLogIndex(std::uint32_t instanceId, std::function<void(Result, std::uint64_t)> handler) = 0;
+            virtual Result getLastLogIndex(std::uint32_t instanceId, std::uint64_t& logIndex) = 0;
 
             /** 
              * 是否支持快照 
@@ -126,16 +125,17 @@ namespace cr
             /** 
              * 写入快照快照
              * @param snapshot 快照接口
-             * @param handler 异步返回接口
+             * @return 操作结果
              */
-            virtual void putSnapshot(SnapshotPtr snapshot, std::function<void(Result)> handler);
+            virtual Result putSnapshot(const Snapshot& snapshot);
 
             /**
              * 读取快照
              * @param instanceId 实例ID
-             * @param handler 异步返回接口
+             * @param [out] snapshot 快照接口
+             * @return 操作结果
              */
-            virtual void getSnapshot(std::uint32_t instanceId, std::function<void(Result, SnapshotPtr)> handler);
+            virtual Result getSnapshot(std::uint32_t instanceId, Snapshot& snapshot);
 
         };
     }
