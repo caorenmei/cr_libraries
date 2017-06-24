@@ -5,13 +5,14 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace cr
 {
     namespace raft
     {
         /** 二进制日志存储接口 */
-        class LogStrage
+        class LogStorage
         {
         public:
 
@@ -22,12 +23,16 @@ namespace cr
                 SUCCESS,
                 /** 不支持的操作 */
                 NO_SUPPORT,
-                /** 数据损坏 */
-                BAD_LOG,
+                /** 序号错误 */
+                INDEX_ERROR,
+                /** 日志数据错误 */
+                LOG_ERROR,
                 /** 没有该实例 */
                 NO_INSTANCE,
                 /** 没有该日志  */
                 NO_LOG_INDEX,
+                /** 实例没有日志  */
+                NO_LOG,
                 /** 没有快照 */
                 NO_SNAPSHOT,
                 /** 日志已生成快照 */
@@ -70,13 +75,20 @@ namespace cr
             using SnapshotPtr = std::shared_ptr<Snapshot>;
 
             /** 构造函数 */
-            LogStrage();
+            LogStorage();
 
             /** 析构函数 */
-            virtual ~LogStrage();
+            virtual ~LogStorage();
 
-            LogStrage(const LogStrage&) = delete;
-            LogStrage& operator=(const LogStrage&) = delete;
+            LogStorage(const LogStorage&) = delete;
+            LogStorage& operator=(const LogStorage&) = delete;
+
+            /** 
+             * 获取所有的实例ID
+             * @param [out] instanceIds 实例ID列表
+             * @return 操作结果
+             */
+            virtual Result getAllInstanceId(std::vector<std::uint32_t>& instanceIds) = 0;
 
             /**
              * 获取一条日志
@@ -112,9 +124,10 @@ namespace cr
             /**
              * 获取最后的日志索引
              * @param instanceId 实例ID
+             * @param lastLogIndex 最后的日志索引
              * @return 操作结果
              */
-            virtual Result getLastLogIndex(std::uint32_t instanceId, std::uint64_t& logIndex) = 0;
+            virtual Result getLastLogIndex(std::uint32_t instanceId, std::uint64_t& lastLogIndex) = 0;
 
             /** 
              * 是否支持快照 

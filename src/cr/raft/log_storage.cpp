@@ -4,23 +4,23 @@ namespace cr
 {
     namespace raft
     {
-        LogStrage::LogStrage() 
+        LogStorage::LogStorage() 
         {}
 
-        LogStrage::~LogStrage() 
+        LogStorage::~LogStorage() 
         {}
 
-        bool LogStrage::isSupportSnapshot() const
+        bool LogStorage::isSupportSnapshot() const
         {
             return false;
         }
 
-        LogStrage::Result LogStrage::putSnapshot(const Snapshot& snapshot)
+        LogStorage::Result LogStorage::putSnapshot(const Snapshot& snapshot)
         {
             return NO_SUPPORT;
         }
 
-        LogStrage::Result LogStrage::getSnapshot(std::uint32_t instanceId, Snapshot& snapshot)
+        LogStorage::Result LogStorage::getSnapshot(std::uint32_t instanceId, Snapshot& snapshot)
         {
             return NO_SUPPORT;
         }

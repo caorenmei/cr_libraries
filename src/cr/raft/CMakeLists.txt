@@ -8,6 +8,8 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 set(cr_raft_SRCS
     log_storage.h
     log_storage.cpp
+    mem_log_storage.h
+    mem_log_storage.cpp
     node.h
     node.cpp
     raft_engine.h
@@ -15,6 +17,8 @@ set(cr_raft_SRCS
 )
 
 set(cr_raft_HEADERS
+    log_storage.h
+    mem_log_storage.h
     node.h
     raft_engine.h
 )
