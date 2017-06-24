@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <cr/raft/log_entry.h>
+
 namespace cr
 {
     namespace raft
@@ -39,34 +41,16 @@ namespace cr
                 IN_SNPSHOT,
             };
 
-            /** 日志条目 */
-            struct LogEntry
-            {
-                /** 实例ID */
-                std::uint32_t instanceId;
-                /** 日志ID */
-                std::uint64_t logIndex;
-                /** 任期ID*/
-                std::uint32_t termId;
-                /** 日志条目 */
-                std::string value;
-            };
-
-            /** 日志条目指针 */
-            using LogEntryPtr = std::shared_ptr<LogEntry>;
-
             /** 二进制条目 */
             using ByteEntry = std::shared_ptr<std::string>;
 
             /** 快照接口 */
             struct Snapshot
             {
-                /** 实例ID */
-                std::uint32_t instanceId;
                 /** 日志ID */
-                std::uint64_t lastLogIndex;
+                std::uint64_t lastIndex;
                 /** 任期ID*/
-                std::uint32_t lastTermIndex;
+                std::uint32_t lastTerm;
                 /** 游标 */
                 std::function<void(Result, ByteEntry)> cursor;
             };
@@ -104,7 +88,7 @@ namespace cr
              * @param logEntry 日志
              * @return 操作结果
              */
-            virtual Result append(const LogEntry& logEntry) = 0;
+            virtual Result append(std::uint32_t instanceId, const LogEntry& logEntry) = 0;
 
             /**
              * 删除日志
@@ -140,7 +124,7 @@ namespace cr
              * @param snapshot 快照接口
              * @return 操作结果
              */
-            virtual Result putSnapshot(const Snapshot& snapshot);
+            virtual Result putSnapshot(std::uint32_t instanceId, const Snapshot& snapshot);
 
             /**
              * 读取快照

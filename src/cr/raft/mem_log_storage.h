@@ -45,7 +45,7 @@ namespace cr
              * @param logEntry 日志
              * @return 操作结果
              */
-            virtual Result append(const LogEntry& logEntry) override;
+            virtual Result append(std::uint32_t instanceId, const LogEntry& logEntry) override;
 
             /**
              * 删除日志
@@ -72,8 +72,7 @@ namespace cr
 
         private:
 
-            using LogEntries = std::vector<std::pair<std::uint32_t, std::string>>;
-            std::unordered_map<std::uint32_t, LogEntries> logs_;
+            std::unordered_map<std::uint32_t, std::vector<LogEntry>> logs_;
         };
     }
 }

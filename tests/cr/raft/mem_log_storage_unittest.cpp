@@ -15,19 +15,12 @@ BOOST_AUTO_TEST_CASE(getAllInstanceId)
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
     BOOST_CHECK(instanceIds.empty());
 
-    cr::raft::LogStorage::LogEntry logEntry;
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(100, cr::raft::LogEntry(0, 1, "1"));
 
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
     BOOST_CHECK(cr::from(instanceIds).equals(cr::from({ 100 })));
 
-    logEntry.instanceId = 200;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(200, cr::raft::LogEntry(0, 1, "1"));
 
     instanceIds.clear();
     BOOST_CHECK_EQUAL(storage.getAllInstanceId(instanceIds), cr::raft::LogStorage::SUCCESS);
@@ -50,20 +43,16 @@ BOOST_AUTO_TEST_CASE(get)
 {
     cr::raft::MemLogStorage storage;
 
-    cr::raft::LogStorage::LogEntry getLogEntry;
+    cr::raft::LogEntry getLogEntry;
 
     BOOST_CHECK_EQUAL(storage.get(100, 0, getLogEntry), cr::raft::LogStorage::NO_INSTANCE);
 
-    cr::raft::LogStorage::LogEntry logEntry;
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(100, cr::raft::LogEntry(0, 1, "1"));
 
     BOOST_CHECK_EQUAL(storage.get(100, 0, getLogEntry), cr::raft::LogStorage::SUCCESS);
-    BOOST_CHECK_EQUAL(getLogEntry.instanceId, 100);
-    BOOST_CHECK_EQUAL(getLogEntry.logIndex, 0);
-    BOOST_CHECK_EQUAL(getLogEntry.termId, 1);
+    BOOST_CHECK_EQUAL(getLogEntry.getIndex(), 0);
+    BOOST_CHECK_EQUAL(getLogEntry.getTerm(), 1);
+    BOOST_CHECK_EQUAL(getLogEntry.getValue(), "1");
 
     BOOST_CHECK_EQUAL(storage.get(100, 1, getLogEntry), cr::raft::LogStorage::NO_LOG_INDEX);
 
@@ -79,30 +68,13 @@ BOOST_AUTO_TEST_CASE(append)
 {
     cr::raft::MemLogStorage storage;
 
-    cr::raft::LogStorage::LogEntry logEntry;
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 1;
-    logEntry.termId = 1;
+    BOOST_CHECK_EQUAL(storage.append(100, cr::raft::LogEntry(1, 1, "")), cr::raft::LogStorage::NO_INSTANCE);
 
-    BOOST_CHECK_EQUAL(storage.append(logEntry), cr::raft::LogStorage::NO_INSTANCE);
+    BOOST_CHECK_EQUAL(storage.append(100, cr::raft::LogEntry(0, 1, "")), cr::raft::LogStorage::SUCCESS);
 
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
+    BOOST_CHECK_EQUAL(storage.append(100, cr::raft::LogEntry(1, 1, "")), cr::raft::LogStorage::SUCCESS);
 
-    BOOST_CHECK_EQUAL(storage.append(logEntry), cr::raft::LogStorage::SUCCESS);
-
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 1;
-    logEntry.termId = 1;
-
-    BOOST_CHECK_EQUAL(storage.append(logEntry), cr::raft::LogStorage::SUCCESS);
-
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 3;
-    logEntry.termId = 1;
-
-    BOOST_CHECK_EQUAL(storage.append(logEntry), cr::raft::LogStorage::INDEX_ERROR);
+    BOOST_CHECK_EQUAL(storage.append(100, cr::raft::LogEntry(3, 1, "")), cr::raft::LogStorage::INDEX_ERROR);
 }
 
 BOOST_AUTO_TEST_CASE(del)
@@ -111,11 +83,7 @@ BOOST_AUTO_TEST_CASE(del)
 
     BOOST_CHECK_EQUAL(storage.del(100, 0), cr::raft::LogStorage::NO_INSTANCE);
 
-    cr::raft::LogStorage::LogEntry logEntry;
-    logEntry.instanceId = 100;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(100, cr::raft::LogEntry(0, 1, ""));
 
     BOOST_CHECK_EQUAL(storage.del(100, 1), cr::raft::LogStorage::INDEX_ERROR);
     BOOST_CHECK_EQUAL(storage.del(100, 0), cr::raft::LogStorage::SUCCESS);
@@ -131,19 +99,12 @@ BOOST_AUTO_TEST_CASE(getLastLogIndex)
     std::uint64_t lastLogIndex;
     BOOST_CHECK_EQUAL(storage.getLastLogIndex(instanceId, lastLogIndex), cr::raft::LogStorage::NO_INSTANCE);
 
-    cr::raft::LogStorage::LogEntry logEntry;
-    logEntry.instanceId = instanceId;
-    logEntry.logIndex = 0;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(instanceId, cr::raft::LogEntry(0, 1, ""));
 
     BOOST_CHECK_EQUAL(storage.getLastLogIndex(instanceId, lastLogIndex), cr::raft::LogStorage::SUCCESS);
     BOOST_CHECK_EQUAL(lastLogIndex, 0);
 
-    logEntry.instanceId = instanceId;
-    logEntry.logIndex = 1;
-    logEntry.termId = 1;
-    storage.append(logEntry);
+    storage.append(instanceId, cr::raft::LogEntry(1, 1, ""));
 
     BOOST_CHECK_EQUAL(storage.getLastLogIndex(instanceId, lastLogIndex), cr::raft::LogStorage::SUCCESS);
     BOOST_CHECK_EQUAL(lastLogIndex, 1);

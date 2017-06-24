@@ -15,7 +15,7 @@ namespace cr
             return false;
         }
 
-        LogStorage::Result LogStorage::putSnapshot(const Snapshot& snapshot)
+        LogStorage::Result LogStorage::putSnapshot(std::uint32_t instanceId, const Snapshot& snapshot)
         {
             return NO_SUPPORT;
         }

@@ -32,30 +32,27 @@ namespace cr
                 return NO_LOG_INDEX;
             }
             std::size_t vecLogIndex = static_cast<std::size_t>(logIndex);
-            logEntry.instanceId = instanceId;
-            logEntry.logIndex = logIndex;
-            logEntry.termId = logEntries[vecLogIndex].first;
-            logEntry.value = logEntries[vecLogIndex].second;
+            logEntry = logEntries[vecLogIndex];
             return SUCCESS;
         }
 
-        MemLogStorage::Result MemLogStorage::append(const LogEntry& logEntry)
+        MemLogStorage::Result MemLogStorage::append(std::uint32_t instanceId, const LogEntry& logEntry)
         {
-            auto instanceIter = logs_.find(logEntry.instanceId);
-            if (instanceIter == logs_.end() && logEntry.logIndex == 0)
+            auto instanceIter = logs_.find(instanceId);
+            if (instanceIter == logs_.end() && logEntry.getIndex() == 0)
             {
-                instanceIter = logs_.insert(decltype(logs_)::value_type(logEntry.instanceId, {})).first;
+                instanceIter = logs_.insert(decltype(logs_)::value_type(instanceId, {})).first;
             }
             if (instanceIter == logs_.end())
             {
                 return NO_INSTANCE;
             }
             auto& logEntries = instanceIter->second;
-            if (logEntry.logIndex != logEntries.size())
+            if (logEntry.getIndex() != logEntries.size())
             {
                 return INDEX_ERROR;
             }
-            logEntries.emplace_back(logEntry.termId, logEntry.value);
+            logEntries.emplace_back(logEntry);
             return SUCCESS;
         }
 

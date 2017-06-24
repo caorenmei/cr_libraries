@@ -6,6 +6,8 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 set(cr_raft_SRCS
+    log_entry.h
+    log_entry.cpp
     log_storage.h
     log_storage.cpp
     mem_log_storage.h
@@ -17,6 +19,7 @@ set(cr_raft_SRCS
 )
 
 set(cr_raft_HEADERS
+    log_entry.h
     log_storage.h
     mem_log_storage.h
     node.h
