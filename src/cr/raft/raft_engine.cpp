@@ -40,16 +40,24 @@ namespace cr
             return *this;
         }
 
-        std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
+        RaftEngine::Builder& RaftEngine::Builder::setStateMachine(std::shared_ptr<StateMachine> stateMachine)
         {
-            return std::make_shared<RaftEngine>(nodeId_, instanceId_, otherNodeIds_, storage_);
+            stateMachine_ = std::move(stateMachine);
+            return *this;
         }
 
-        RaftEngine::RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, std::shared_ptr<LogStorage> storage)
+        std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
+        {
+            return std::make_shared<RaftEngine>(nodeId_, instanceId_, otherNodeIds_, storage_, stateMachine_);
+        }
+
+        RaftEngine::RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, 
+            std::shared_ptr<LogStorage> storage, std::shared_ptr<StateMachine> stateMachine)
             : nodeId_(nodeId),
             instanceId_(instanceId),
             otherNodeIds_(std::move(otherNodeIds)),
-            storage_(std::move(storage))
+            storage_(std::move(storage)),
+            stateMachine_(std::move(stateMachine))
         {
             // 节点有效性判断
             std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
@@ -64,6 +72,10 @@ namespace cr
             if (storage_ == nullptr)
             {
                 CR_THROW(BuildException, "Log Storage is null");
+            }
+            if (stateMachine_ == nullptr)
+            {
+                CR_THROW(BuildException, "State Machine is null");
             }
         }
 

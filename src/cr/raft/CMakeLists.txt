@@ -18,6 +18,7 @@ set(cr_raft_SRCS
     mem_log_storage.cpp
     raft_engine.h
     raft_engine.cpp
+    state_machine.h
 )
 
 set(cr_raft_HEADERS
@@ -26,6 +27,7 @@ set(cr_raft_HEADERS
     log_storage.h
     mem_log_storage.h
     raft_engine.h
+    state_machine.h
 )
  
 add_library(cr_raft ${cr_raft_SRCS})

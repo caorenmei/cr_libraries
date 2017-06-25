@@ -8,23 +8,45 @@
 
 BOOST_AUTO_TEST_SUITE(RaftEngine)
 
+class SimpleStatMachine : public cr::raft::StateMachine
+{
+public:
+
+    virtual void execute(std::uint32_t instanceId, std::uint64_t logIndex, const std::string& value, boost::any ctx) override
+    {
+        value_ = value;
+    }
+
+    const std::string& getValue() const
+    {
+        return value_;
+    }
+
+private:
+
+    std::string value_;
+};
+
 BOOST_AUTO_TEST_CASE(build)
 {
     cr::raft::RaftEngine::Builder builder;
     builder.setNodeId(1)
         .setInstanceId(2)
         .setOtherNodeIds({ 2,3,4 })
-        .setLogStorage(std::make_shared<cr::raft::MemLogStorage>());
+        .setLogStorage(std::make_shared<cr::raft::MemLogStorage>())
+        .setStateMachine(std::make_shared<SimpleStatMachine>());
    
     BOOST_CHECK_NO_THROW(builder.build());
     BOOST_CHECK_THROW(builder.setOtherNodeIds({ 1,3,4 }) .build(), cr::raft::RaftEngine::BuildException);
     BOOST_CHECK_THROW(builder.setOtherNodeIds({ 2,2,4 }).build(), cr::raft::RaftEngine::BuildException);
-    BOOST_CHECK_THROW(builder.setLogStorage(nullptr).build(), cr::raft::RaftEngine::BuildException);
+    BOOST_CHECK_THROW(builder.setOtherNodeIds({ 2,3,4 }).setLogStorage(nullptr).build(), cr::raft::RaftEngine::BuildException);
+    BOOST_CHECK_THROW(builder.setLogStorage(std::make_shared<cr::raft::MemLogStorage>()).setStateMachine(nullptr).build(), cr::raft::RaftEngine::BuildException);
 
     auto raftEngine = builder.setNodeId(1)
         .setInstanceId(2)
         .setOtherNodeIds({ 2,3,4 })
         .setLogStorage(std::make_shared<cr::raft::MemLogStorage>())
+        .setStateMachine(std::make_shared<SimpleStatMachine>())
         .build();
 
     BOOST_CHECK_EQUAL(raftEngine->getNodeId(), 1);

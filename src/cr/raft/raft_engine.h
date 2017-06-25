@@ -9,6 +9,7 @@
 
 #include <cr/common/exception.h>
 #include <cr/raft/log_storage.h>
+#include <cr/raft/state_machine.h>
 
 namespace cr
 {
@@ -69,6 +70,12 @@ namespace cr
                 Builder& setLogStorage(std::shared_ptr<LogStorage> storage);
 
                 /**
+                 * 设置状态机
+                 * @param stateMachine 状态机
+                 */
+                Builder& setStateMachine(std::shared_ptr<StateMachine> stateMachine);
+
+                /**
                  * 构造Raft引擎
                  * @return Raft引擎, 非空成功
                  */
@@ -84,6 +91,8 @@ namespace cr
                 std::vector<std::uint32_t> otherNodeIds_;
                 // 日志存储接口
                 std::shared_ptr<LogStorage> storage_;
+                // 状态机
+                std::shared_ptr<StateMachine> stateMachine_;
             };
 
             /**
@@ -92,8 +101,10 @@ namespace cr
              * @param instanceId 实例ID
              * @param otherNodeIds 其它节点ID
              * @param storage 存储接口
+             * @param stateMachine 状态机
              */
-            RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, std::shared_ptr<LogStorage> storage);
+            RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, 
+                std::shared_ptr<LogStorage> storage, std::shared_ptr<StateMachine> stateMachine);
 
             /** 析构函数 */
             ~RaftEngine();
@@ -129,7 +140,8 @@ namespace cr
             std::vector<std::uint32_t> otherNodeIds_;
             // 存储接口
             std::shared_ptr<LogStorage> storage_;
-
+            // 状态机
+            std::shared_ptr<StateMachine> stateMachine_;
         };
     }
 }
