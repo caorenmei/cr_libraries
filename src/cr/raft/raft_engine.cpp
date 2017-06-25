@@ -73,16 +73,15 @@ namespace cr
 
         std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
         {
-            return std::make_shared<RaftEngine>(nodeId_, instanceId_, otherNodeIds_, storage_, stateMachine_);
+            return std::make_shared<RaftEngine>(*this);
         }
 
-        RaftEngine::RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, 
-            std::shared_ptr<LogStorage> storage, std::shared_ptr<StateMachine> stateMachine)
-            : nodeId_(nodeId),
-            instanceId_(instanceId),
-            otherNodeIds_(std::move(otherNodeIds)),
-            storage_(std::move(storage)),
-            stateMachine_(std::move(stateMachine)),
+        RaftEngine::RaftEngine(const Builder& builder)
+            : nodeId_(builder.getNodeId()),
+            instanceId_(builder.getInstanceId()),
+            otherNodeIds_(builder.getOtherNodeIds()),
+            storage_(builder.getLogStorage()),
+            stateMachine_(builder.getStateMachine()),
             currentTerm_(0),
             commitLogIndex_(0),
             lastApplied_(0)

@@ -127,14 +127,9 @@ namespace cr
 
             /**
              * 构造函数
-             * @param nodeId 节点ID
-             * @param instanceId 实例ID
-             * @param otherNodeIds 其它节点ID
-             * @param storage 存储接口
-             * @param stateMachine 状态机
+             * @param builder 构造器
              */
-            RaftEngine(std::uint32_t nodeId, std::uint32_t instanceId, std::vector<std::uint32_t> otherNodeIds, 
-                std::shared_ptr<LogStorage> storage, std::shared_ptr<StateMachine> stateMachine);
+            explicit RaftEngine(const Builder& builder);
 
             /** 析构函数 */
             ~RaftEngine();
