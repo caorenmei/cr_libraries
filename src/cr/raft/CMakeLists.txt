@@ -5,7 +5,11 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
+set(PROTO_LIST raft_msg.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_LIST})  
+
 set(cr_raft_SRCS
+    ${PROTO_HDRS} ${ROTO_SRCS}
     log_entry.h
     log_entry.cpp
     log_storage.h
@@ -19,6 +23,7 @@ set(cr_raft_SRCS
 )
 
 set(cr_raft_HEADERS
+    ${PROTO_HDRS}
     log_entry.h
     log_storage.h
     mem_log_storage.h

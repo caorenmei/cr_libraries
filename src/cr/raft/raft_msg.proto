@@ -1,0 +1,116 @@
+﻿syntax = "proto3";
+package cr.raft.pb;
+
+import "google/protobuf/any.proto";
+
+// 附加日志
+message LogAppendReq
+{
+    // 领导人的 Id，以便于跟随者重定向请求
+    uint32 leader_id = 1;
+    // 领导人的任期号
+    uint32 leader_term = 2;
+    // 新的日志条目紧随之前的索引值
+    uint64 prev_log_index = 3;
+    // prevLogIndex 条目的任期号
+    uint32 prev_log_term = 4;
+    // 准备存储的日志条目（表示心跳时为空；一次性发送多个是为了提高效率）
+    repeated bytes entries = 5;
+    // 领导人已经提交的日志的索引值
+    uint64 leader_commit = 6;
+}
+
+// 附加回复
+message LogAppendResp
+{
+    // 跟随者的 Id
+    uint32 follower_id = 1;
+    // 当前的任期号，用于领导人去更新自己
+    uint32 follower_term = 2;
+    // 跟随者包含了匹配上 prevLogIndex 和 prevLogTerm 的日志时为真
+    bool success = 3;  
+}
+
+// 请求投票
+message VoteReq
+{
+    // 候选人的 Id
+    uint32 candidate_id = 1;
+    // 候选人的最后日志条目的索引值
+    uint64 last_log_index = 2;
+    // 候选人最后日志条目的任期号
+    uint32 last_log_term = 3;
+}
+
+// 请求投票回复
+message VoteResp
+{
+    // 跟随者的 Id
+    uint32 follower_id = 1;
+    // 当前的任期号，用于领导人去更新自己
+    uint32 follower_term = 2;
+    // 候选人赢得了此张选票时为真
+    bool success = 3;
+}
+
+// 快照
+message CheckpointReq
+{
+    // 领导人的 Id，以便于跟随者重定向请求
+    uint32 leader_id = 1;
+    // 领导人的任期号
+    uint32 leader_term = 2;
+    // 快照中包含的最后日志条目的索引值
+    uint64 last_include_index = 3;
+    // 快照中包含的最后日志条目的任期号
+    uint32 last_include_term = 4;
+    // 分块在快照中的偏移量
+    uint32 offset = 5;
+    // 原始数据
+    bytes data = 6;
+    // 如果这是最后一个分块, 整个快照的校验码
+    uint32 ckecksum = 7;
+    // 如果这是最后一个分块则为 true
+    bool done = 8;
+}
+
+// 快照回复
+message CheckpointResp
+{
+    // 跟随者的 Id
+    uint32 follower_id = 1;
+    // 当前的任期号，用于领导人去更新自己
+    uint32 follower_term = 2;
+    // 分块在快照中的偏移量
+    uint32 offset = 3;
+    // 缺失的索引
+    repeated uint32 miss_offset = 4;
+}
+
+// raft 消息
+message RaftMsg
+{
+    // 消息类型
+    enum MsgType
+    {
+        // 附加日志请求
+        LOG_APPEND_REQ = 0;
+        //  附加日志回复
+        LOG_APPEND_RESP = 1;
+        // 请求投票
+        VOTE_REQ = 2;
+        // 请求投票回复
+        VOTE_RESP = 3;
+        // 快照
+        CHECKPOINT_REQ = 4;
+        // 快照回复
+        CHECKPOINT_RESP = 5;
+    }
+
+    // 消息类型
+    MsgType msg_type = 1;
+    // raft Id
+    uint32 dest_id = 2;
+    // 附加日志
+    google.protobuf.Any msg = 3   ;
+}
