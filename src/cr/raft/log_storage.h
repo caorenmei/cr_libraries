@@ -113,27 +113,6 @@ namespace cr
              */
             virtual Result getLastLogIndex(std::uint32_t instanceId, std::uint64_t& lastLogIndex) = 0;
 
-            /** 
-             * 是否支持快照 
-             * @return True支持快照，False其它
-             */
-            virtual bool isSupportSnapshot() const;
-
-            /** 
-             * 写入快照快照
-             * @param snapshot 快照接口
-             * @return 操作结果
-             */
-            virtual Result putSnapshot(std::uint32_t instanceId, const Snapshot& snapshot);
-
-            /**
-             * 读取快照
-             * @param instanceId 实例ID
-             * @param [out] snapshot 快照接口
-             * @return 操作结果
-             */
-            virtual Result getSnapshot(std::uint32_t instanceId, Snapshot& snapshot);
-
         };
     }
 }
