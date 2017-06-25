@@ -22,10 +22,20 @@ namespace cr
             return *this;
         }
 
+        std::uint32_t  RaftEngine::Builder::getNodeId() const
+        {
+            return nodeId_;
+        }
+
         RaftEngine::Builder& RaftEngine::Builder::setInstanceId(std::uint32_t instanceId)
         {
             instanceId_ = instanceId;
             return *this;
+        }
+
+        std::uint32_t RaftEngine::Builder::getInstanceId() const
+        {
+            return instanceId_;
         }
 
         RaftEngine::Builder& RaftEngine::Builder::setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds)
@@ -34,16 +44,31 @@ namespace cr
             return *this;
         }
 
+        const std::vector<std::uint32_t>& RaftEngine::Builder::getOtherNodeIds() const
+        {
+            return otherNodeIds_;
+        }
+
         RaftEngine::Builder& RaftEngine::Builder::setLogStorage(std::shared_ptr<LogStorage> storage)
         {
             storage_ = std::move(storage);
             return *this;
         }
 
+        const std::shared_ptr<LogStorage>& RaftEngine::Builder::getLogStorage() const
+        {
+            return storage_;
+        }
+
         RaftEngine::Builder& RaftEngine::Builder::setStateMachine(std::shared_ptr<StateMachine> stateMachine)
         {
             stateMachine_ = std::move(stateMachine);
             return *this;
+        }
+
+        const std::shared_ptr<StateMachine>&  RaftEngine::Builder::getStateMachine() const
+        {
+            return stateMachine_;
         }
 
         std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
@@ -57,7 +82,10 @@ namespace cr
             instanceId_(instanceId),
             otherNodeIds_(std::move(otherNodeIds)),
             storage_(std::move(storage)),
-            stateMachine_(std::move(stateMachine))
+            stateMachine_(std::move(stateMachine)),
+            currentTerm_(0),
+            commitLogIndex_(0),
+            lastApplied_(0)
         {
             // 节点有效性判断
             std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
@@ -97,7 +125,25 @@ namespace cr
             return otherNodeIds_;
         }
 
+        std::uint32_t RaftEngine::getCurrentTerm() const
+        {
+            return currentTerm_;
+        }
 
+        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
+        {
+            return votedFor_;
+        }
+
+        std::uint64_t RaftEngine::getCommitLogIndex() const
+        {
+            return commitLogIndex_;
+        }
+
+        std::uint64_t RaftEngine::getLastApplied() const
+        {
+            return lastApplied_;
+        }
 
     }
 }

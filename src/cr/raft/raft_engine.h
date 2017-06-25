@@ -2,10 +2,10 @@
 #define CR_RAFT_RAFT_ENGINE_H_
 
 #include <cstdint>
+#include <deque>
 #include <memory>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/circular_buffer.hpp>
+#include <boost/optional.hpp>
 
 #include <cr/common/exception.h>
 #include <cr/raft/log_storage.h>
@@ -49,11 +49,23 @@ namespace cr
                 Builder& setNodeId(std::uint32_t nodeId);
 
                 /**
+                 * 获取节点Id
+                 * @param 节点Id
+                 */
+                std::uint32_t getNodeId() const;
+
+                /**
                  * 设置实例Id
                  * @param instanceId 实例Id
                  * @reutrn this
                  */
                 Builder& setInstanceId(std::uint32_t instanceId);
+
+                /**
+                 * 获取实例Id
+                 * @return 实例Id
+                 */
+                std::uint32_t getInstanceId() const;
 
                 /**
                  * 设置其他节点Id
@@ -63,6 +75,12 @@ namespace cr
                 Builder& setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds);
 
                 /**
+                 * 获取其它节点Id
+                 * @return 其它节点Id
+                 */
+                const std::vector<std::uint32_t>& getOtherNodeIds() const;
+
+                /**
                  * 设置日志存储接口
                  * @param storage 日志存储接口
                  * @reutrn this
@@ -70,10 +88,22 @@ namespace cr
                 Builder& setLogStorage(std::shared_ptr<LogStorage> storage);
 
                 /**
+                 * 获取日志存储接口
+                 * @return 日志存储接口
+                 */
+                const std::shared_ptr<LogStorage>& getLogStorage() const;
+
+                /**
                  * 设置状态机
                  * @param stateMachine 状态机
                  */
                 Builder& setStateMachine(std::shared_ptr<StateMachine> stateMachine);
+
+                /**
+                 * 获取状态机接口
+                 * @return 状态机接口
+                 */
+                const std::shared_ptr<StateMachine>& getStateMachine() const;
 
                 /**
                  * 构造Raft引擎
@@ -130,7 +160,33 @@ namespace cr
              */
             const std::vector<std::uint32_t>& getOtherNodeIds() const;
 
+            /**
+             * 服务器当前的任期号
+             * @param 当前的任期号
+             */
+            std::uint32_t getCurrentTerm() const;
+
+            /**
+             * 获取当前选票的候选人Id
+             * @return 当前选票的候选人Id
+             */
+            boost::optional<std::uint32_t> getVotedFor() const;
+
+            /**
+             * 获取已知的最大的已经被提交的日志条目的索引值
+             * @return 已知的最大的已经被提交的日志条目的索引值
+             */
+            std::uint64_t getCommitLogIndex() const;
+
+            /**
+             * 获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
+             * @return 应用到状态机的日志条目索引值
+             */
+            std::uint64_t getLastApplied() const;
+
         private:
+
+            // 节点相关数据
 
             // 本节点ID
             std::uint32_t nodeId_;
@@ -142,6 +198,22 @@ namespace cr
             std::shared_ptr<LogStorage> storage_;
             // 状态机
             std::shared_ptr<StateMachine> stateMachine_;
+
+            // 所有服务器上持久存在的
+            
+            // 服务器最后一次知道的任期号（初始化为 0，持续递增）
+            std::uint32_t currentTerm_;
+            // 当前获取选票的候选人 Id
+            boost::optional<std::uint32_t> votedFor_;
+            // 日志条目集；每一个条目包含一个用户状态机执行的指令，和收到时的任期号
+            std::deque<LogEntry> entries_;
+
+            // 所有服务器上经常变的
+
+            // 已知的最大的已经被提交的日志条目的索引值
+            std::uint64_t commitLogIndex_;
+            // 最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
+            std::uint64_t lastApplied_;
         };
     }
 }
