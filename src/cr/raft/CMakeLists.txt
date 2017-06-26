@@ -19,6 +19,8 @@ set(cr_raft_SRCS
     mem_log_storage.cpp
     raft_engine.h
     raft_engine.cpp
+    raft_state.h
+    raft_state.cpp
     state_machine.h
 )
 
@@ -29,6 +31,7 @@ set(cr_raft_HEADERS
     log_storage.h
     mem_log_storage.h
     raft_engine.h
+    raft_state.h
     state_machine.h
 )
  
