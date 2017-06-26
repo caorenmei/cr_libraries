@@ -3,11 +3,81 @@
 #include <algorithm>
 
 #include <cr/common/throw.h>
+#include <cr/raft/exception.h>
 
 namespace cr
 {
     namespace raft
     {
+
+        RaftEngine::RaftEngine(const Builder& builder)
+            : nodeId_(builder.getNodeId()),
+            instanceId_(builder.getInstanceId()),
+            otherNodeIds_(builder.getOtherNodeIds()),
+            storage_(builder.getLogStorage()),
+            stateMachine_(builder.getStateMachine()),
+            currentTerm_(0),
+            commitLogIndex_(0),
+            lastApplied_(0)
+        {
+            // 节点有效性判断
+            std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
+            if (std::unique(otherNodeIds_.begin(), otherNodeIds_.end()) != otherNodeIds_.end())
+            {
+                CR_THROW(ArgumentException, "Has Repeated Other Node Id");
+            }
+            if (std::find(otherNodeIds_.begin(), otherNodeIds_.end(), nodeId_) != otherNodeIds_.end())
+            {
+                CR_THROW(ArgumentException, "Other Node Id List Container This Id");
+            }
+            if (storage_ == nullptr)
+            {
+                CR_THROW(ArgumentException, "Log Storage is null");
+            }
+            if (stateMachine_ == nullptr)
+            {
+                CR_THROW(ArgumentException, "State Machine is null");
+            }
+        }
+
+        RaftEngine::~RaftEngine()
+        {}
+
+        std::uint32_t RaftEngine::getNodeId() const
+        {
+            return nodeId_;
+        }
+
+        std::uint32_t RaftEngine::getInstanceId() const
+        {
+            return instanceId_;
+        }
+
+        const std::vector<std::uint32_t>& RaftEngine::getOtherNodeIds() const
+        {
+            return otherNodeIds_;
+        }
+
+        std::uint32_t RaftEngine::getCurrentTerm() const
+        {
+            return currentTerm_;
+        }
+
+        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
+        {
+            return votedFor_;
+        }
+
+        std::uint64_t RaftEngine::getCommitLogIndex() const
+        {
+            return commitLogIndex_;
+        }
+
+        std::uint64_t RaftEngine::getLastApplied() const
+        {
+            return lastApplied_;
+        }
+
         RaftEngine::Builder::Builder()
             : nodeId_(0),
             instanceId_(0)
@@ -74,74 +144,6 @@ namespace cr
         std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
         {
             return std::make_shared<RaftEngine>(*this);
-        }
-
-        RaftEngine::RaftEngine(const Builder& builder)
-            : nodeId_(builder.getNodeId()),
-            instanceId_(builder.getInstanceId()),
-            otherNodeIds_(builder.getOtherNodeIds()),
-            storage_(builder.getLogStorage()),
-            stateMachine_(builder.getStateMachine()),
-            currentTerm_(0),
-            commitLogIndex_(0),
-            lastApplied_(0)
-        {
-            // 节点有效性判断
-            std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
-            if (std::unique(otherNodeIds_.begin(), otherNodeIds_.end()) != otherNodeIds_.end())
-            {
-                CR_THROW(BuildException, "Has Repeated Other Node Id");
-            }
-            if (std::find(otherNodeIds_.begin(), otherNodeIds_.end(), nodeId_) != otherNodeIds_.end())
-            {
-                CR_THROW(BuildException, "Other Node Id List Container This Id");
-            }
-            if (storage_ == nullptr)
-            {
-                CR_THROW(BuildException, "Log Storage is null");
-            }
-            if (stateMachine_ == nullptr)
-            {
-                CR_THROW(BuildException, "State Machine is null");
-            }
-        }
-
-        RaftEngine::~RaftEngine()
-        {}
-
-        std::uint32_t RaftEngine::getNodeId() const
-        {
-            return nodeId_;
-        }
-
-        std::uint32_t RaftEngine::getInstanceId() const
-        {
-            return instanceId_;
-        }
-
-        const std::vector<std::uint32_t>& RaftEngine::getOtherNodeIds() const
-        {
-            return otherNodeIds_;
-        }
-
-        std::uint32_t RaftEngine::getCurrentTerm() const
-        {
-            return currentTerm_;
-        }
-
-        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
-        {
-            return votedFor_;
-        }
-
-        std::uint64_t RaftEngine::getCommitLogIndex() const
-        {
-            return commitLogIndex_;
-        }
-
-        std::uint64_t RaftEngine::getLastApplied() const
-        {
-            return lastApplied_;
         }
 
     }
