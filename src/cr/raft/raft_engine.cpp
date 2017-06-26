@@ -98,7 +98,7 @@ namespace cr
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             nowTime_ = nowTime;
-            std::size_t nextUpdateTime = currentState_->update(nowTime, outMessages);
+            std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
             if (nextState_ != nullptr)
             {
                 onTransitionState();
@@ -110,7 +110,7 @@ namespace cr
         std::int64_t RaftEngine::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
             nowTime_ = nowTime;
-            std::size_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
+            std::int64_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
             if (nextState_ != nullptr)
             {
                 onTransitionState();
@@ -126,74 +126,5 @@ namespace cr
             currentState_ = std::move(nextState_);
             currentState_->onEnter(prevState);
         }
-
-        RaftEngine::Builder::Builder()
-            : nodeId_(0),
-            instanceId_(0)
-        {}
-
-        RaftEngine::Builder::~Builder()
-        {}
-
-        RaftEngine::Builder& RaftEngine::Builder::setNodeId(std::uint32_t nodeId)
-        {
-            nodeId_ = nodeId;
-            return *this;
-        }
-
-        std::uint32_t  RaftEngine::Builder::getNodeId() const
-        {
-            return nodeId_;
-        }
-
-        RaftEngine::Builder& RaftEngine::Builder::setInstanceId(std::uint32_t instanceId)
-        {
-            instanceId_ = instanceId;
-            return *this;
-        }
-
-        std::uint32_t RaftEngine::Builder::getInstanceId() const
-        {
-            return instanceId_;
-        }
-
-        RaftEngine::Builder& RaftEngine::Builder::setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds)
-        {
-            otherNodeIds_ = std::move(otherNodeIds);
-            return *this;
-        }
-
-        const std::vector<std::uint32_t>& RaftEngine::Builder::getOtherNodeIds() const
-        {
-            return otherNodeIds_;
-        }
-
-        RaftEngine::Builder& RaftEngine::Builder::setLogStorage(std::shared_ptr<LogStorage> storage)
-        {
-            storage_ = std::move(storage);
-            return *this;
-        }
-
-        const std::shared_ptr<LogStorage>& RaftEngine::Builder::getLogStorage() const
-        {
-            return storage_;
-        }
-
-        RaftEngine::Builder& RaftEngine::Builder::setStateMachine(std::shared_ptr<StateMachine> stateMachine)
-        {
-            stateMachine_ = std::move(stateMachine);
-            return *this;
-        }
-
-        const std::shared_ptr<StateMachine>&  RaftEngine::Builder::getStateMachine() const
-        {
-            return stateMachine_;
-        }
-
-        std::shared_ptr<RaftEngine> RaftEngine::Builder::build()
-        {
-            return std::make_shared<RaftEngine>(*this);
-        }
-
     }
 }

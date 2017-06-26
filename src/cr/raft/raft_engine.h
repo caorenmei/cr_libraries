@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 
 #include <cr/raft/log_storage.h>
+#include <cr/raft/raft_engine_builder.h>
 #include <cr/raft/state_machine.h>
 
 namespace cr
@@ -36,7 +37,7 @@ namespace cr
             using RaftMsgPtr = std::shared_ptr<pb::RaftMsg>;
 
             /** Raft引擎构造器 */
-            class Builder;
+            using Builder = RaftEngineBuilder;
 
             /**
              * 构造函数
@@ -146,7 +147,7 @@ namespace cr
             std::shared_ptr<StateMachine> stateMachine_;
 
             // 所有服务器上持久存在的
-            
+
             // 服务器最后一次知道的任期号（初始化为 0，持续递增）
             std::uint32_t currentTerm_;
             // 当前获取选票的候选人 Id
@@ -169,101 +170,6 @@ namespace cr
             std::shared_ptr<RaftState> currentState_;
             // 下一个状态
             std::shared_ptr<RaftState> nextState_;
-        };
-
-        /** Raft引擎构造器 */
-        class RaftEngine::Builder
-        {
-        public:
-
-            /** 构造函数 */
-            Builder();
-
-            /** 析构函数 */
-            ~Builder();
-
-            /**
-             * 设置节点Id
-             * @param nodeId 节点Id
-             * @reutrn this
-             */
-            Builder& setNodeId(std::uint32_t nodeId);
-
-            /**
-             * 获取节点Id
-             * @param 节点Id
-             */
-            std::uint32_t getNodeId() const;
-
-            /**
-             * 设置实例Id
-             * @param instanceId 实例Id
-             * @reutrn this
-             */
-            Builder& setInstanceId(std::uint32_t instanceId);
-
-            /**
-             * 获取实例Id
-             * @return 实例Id
-             */
-            std::uint32_t getInstanceId() const;
-
-            /**
-             * 设置其他节点Id
-             * @param otherNodeIds 其它节点Id
-             * @reutrn this
-             */
-            Builder& setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds);
-
-            /**
-             * 获取其它节点Id
-             * @return 其它节点Id
-             */
-            const std::vector<std::uint32_t>& getOtherNodeIds() const;
-
-            /**
-             * 设置日志存储接口
-             * @param storage 日志存储接口
-             * @reutrn this
-             */
-            Builder& setLogStorage(std::shared_ptr<LogStorage> storage);
-
-            /**
-             * 获取日志存储接口
-             * @return 日志存储接口
-             */
-            const std::shared_ptr<LogStorage>& getLogStorage() const;
-
-            /**
-             * 设置状态机
-             * @param stateMachine 状态机
-             */
-            Builder& setStateMachine(std::shared_ptr<StateMachine> stateMachine);
-
-            /**
-             * 获取状态机接口
-             * @return 状态机接口
-             */
-            const std::shared_ptr<StateMachine>& getStateMachine() const;
-
-            /**
-             * 构造Raft引擎
-             * @return Raft引擎, 非空成功
-             */
-            std::shared_ptr<RaftEngine> build();
-
-        private:
-
-            // 本节点ID
-            std::uint32_t nodeId_;
-            // 实例Id
-            std::uint32_t instanceId_;
-            // 其它节点ID
-            std::vector<std::uint32_t> otherNodeIds_;
-            // 日志存储接口
-            std::shared_ptr<LogStorage> storage_;
-            // 状态机
-            std::shared_ptr<StateMachine> stateMachine_;
         };
     }
 }

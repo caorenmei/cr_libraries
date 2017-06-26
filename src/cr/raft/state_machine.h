@@ -3,8 +3,6 @@
 
 #include <boost/any.hpp>
 
-#include <cr/raft/raft_engine.h>
-
 namespace cr
 {
     namespace raft
