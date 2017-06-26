@@ -9,7 +9,7 @@ set(PROTO_LIST raft_msg.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_LIST})  
 
 set(cr_raft_SRCS
-    ${PROTO_HDRS} ${ROTO_SRCS}
+    ${PROTO_HDRS} ${PROTO_SRCS}
     exception.h
     log_entry.h
     log_entry.cpp
