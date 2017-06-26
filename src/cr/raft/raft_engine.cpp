@@ -4,6 +4,7 @@
 
 #include <cr/common/throw.h>
 #include <cr/raft/exception.h>
+#include <cr/raft/raft_state.h>
 
 namespace cr
 {
@@ -18,7 +19,8 @@ namespace cr
             stateMachine_(builder.getStateMachine()),
             currentTerm_(0),
             commitLogIndex_(0),
-            lastApplied_(0)
+            lastApplied_(0),
+            nowTime_(0)
         {
             // 节点有效性判断
             std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
@@ -76,6 +78,53 @@ namespace cr
         std::uint64_t RaftEngine::getLastApplied() const
         {
             return lastApplied_;
+        }
+
+        std::int64_t RaftEngine::getNowTime() const
+        {
+            return nowTime_;
+        }
+
+        const std::shared_ptr<RaftState>& RaftEngine::getCurrentState() const
+        {
+            return currentState_;
+        }
+
+        void RaftEngine::setNextState(std::shared_ptr<RaftState> nextState)
+        {
+            nextState_ = std::move(nextState);
+        }
+
+        std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
+        {
+            nowTime_ = nowTime;
+            std::size_t nextUpdateTime = currentState_->update(nowTime, outMessages);
+            if (nextState_ != nullptr)
+            {
+                onTransitionState();
+                nextUpdateTime = nowTime;
+            }
+            return nextUpdateTime;
+        }
+
+        std::int64_t RaftEngine::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
+        {
+            nowTime_ = nowTime;
+            std::size_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
+            if (nextState_ != nullptr)
+            {
+                onTransitionState();
+                nextUpdateTime = nowTime;
+            }
+            return nextUpdateTime;
+        }
+
+        void RaftEngine::onTransitionState()
+        {
+            currentState_->onLeave();
+            auto prevState = std::move(currentState_);
+            currentState_ = std::move(nextState_);
+            currentState_->onEnter(prevState);
         }
 
         RaftEngine::Builder::Builder()

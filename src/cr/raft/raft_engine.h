@@ -14,6 +14,16 @@ namespace cr
 {
     namespace raft
     {
+
+        namespace pb
+        {
+            /** raft 通信协议 */
+            class RaftMsg;
+        }
+
+        /** Raft状态机 */
+        class RaftState;
+
         /**
          * Raft算法引擎
          * 一个Raft算法引擎对应一个raft实例
@@ -21,6 +31,9 @@ namespace cr
         class RaftEngine
         {
         public:
+
+            /** raft消息包 */
+            using RaftMsgPtr = std::shared_ptr<pb::RaftMsg>;
 
             /** Raft引擎构造器 */
             class Builder;
@@ -79,7 +92,45 @@ namespace cr
              */
             std::uint64_t getLastApplied() const;
 
+            /**
+             * 获取当前时间戳
+             * @param 当前时间戳， 以毫秒计算
+             */
+            std::int64_t getNowTime() const;
+
+            /**
+             * 获取当前状态
+             * @param 当前状态
+             */
+            const std::shared_ptr<RaftState>& getCurrentState() const;
+
+            /**
+             * 设置下一个状态
+             * @param nextState 下一个状态
+             */
+            void setNextState(std::shared_ptr<RaftState> nextState);
+
+            /**
+             * 执行状态机逻辑
+             * @param nowTime 当前时间戳, ms
+             * @param outMessages 输出消息
+             * @return 下一次update的时间戳, ms
+             */
+            std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            /**
+             * 执行状态机逻辑
+             * @param nowTime 当前时间戳, ms
+             * @param inMessage 输入消息
+             * @param outMessages 输出消息
+             * @return 下一次update的时间戳, ms
+             */
+            std::int64_t update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages);
+
         private:
+
+            // 状态切换
+            void onTransitionState();
 
             // 节点相关数据
 
@@ -109,6 +160,15 @@ namespace cr
             std::uint64_t commitLogIndex_;
             // 最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             std::uint64_t lastApplied_;
+
+            // 状态机相关
+
+            // 当前时间戳
+            std::int64_t nowTime_;
+            // 当前状态
+            std::shared_ptr<RaftState> currentState_;
+            // 下一个状态
+            std::shared_ptr<RaftState> nextState_;
         };
 
         /** Raft引擎构造器 */
