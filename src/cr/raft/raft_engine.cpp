@@ -24,7 +24,6 @@ namespace cr
             currentTerm_(0),
             lastApplied_(0),
             nowTime_(0),
-            currentState_(std::make_shared<Replay>(*this)),
             currentEnumState_(REPLAY),
             nextEnumState_(REPLAY)
         {
@@ -69,6 +68,13 @@ namespace cr
         const std::shared_ptr<StateMachine>& RaftEngine::getStateMachine() const
         {
             return stateMachine_;
+        }
+
+        void RaftEngine::initialize()
+        {
+            CR_ASSERT(currentState_ == nullptr);
+            currentState_ = std::make_shared<Replay>(*this);
+            currentState_->onEnter(nullptr);
         }
 
         std::uint32_t RaftEngine::getCurrentTerm() const
@@ -116,6 +122,7 @@ namespace cr
                 onTransitionState();
                 nextUpdateTime = nowTime;
             }
+            CR_ASSERT(nextEnumState_ == currentEnumState_);
             return nextUpdateTime;
         }
 
@@ -128,6 +135,7 @@ namespace cr
                 onTransitionState();
                 nextUpdateTime = nowTime;
             }
+            CR_ASSERT(nextEnumState_ == currentEnumState_);
             return nextUpdateTime;
         }
 

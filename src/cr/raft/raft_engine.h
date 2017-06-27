@@ -89,6 +89,11 @@ namespace cr
             const std::shared_ptr<StateMachine>& getStateMachine() const;
 
             /**
+             * 初始化
+             */
+            void initialize();
+
+            /**
              * 服务器当前的任期号
              * @param 当前的任期号
              */

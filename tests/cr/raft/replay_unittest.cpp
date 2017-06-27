@@ -34,6 +34,7 @@ struct RaftEngineFixture
             .setLogStorage(logStrage)
             .setStateMachine(stateMachine)
             .build();
+        raftEngine->initialize();
     }
 
     ~RaftEngineFixture()
