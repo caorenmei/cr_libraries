@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <cr/common/assert.h>
 #include <cr/common/throw.h>
 #include <cr/raft/exception.h>
 #include <cr/raft/raft_state.h>
@@ -82,6 +83,12 @@ namespace cr
         std::uint64_t RaftEngine::getLastApplied() const
         {
             return lastApplied_;
+        }
+
+        std::uint64_t RaftEngine::getCacheBeginLogIndex() const
+        {
+            CR_ASSERT(!"Not Implements");
+            return 0;
         }
 
         std::int64_t RaftEngine::getNowTime() const

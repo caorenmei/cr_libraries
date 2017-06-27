@@ -100,6 +100,12 @@ namespace cr
             std::uint64_t getLastApplied() const;
 
             /**
+             * 获取缓存的日志起始索引
+             * @return 缓存的日志起始索引
+             */
+            std::uint64_t getCacheBeginLogIndex() const;
+
+            /**
              * 获取当前时间戳
              * @param 当前时间戳， 以毫秒计算
              */
