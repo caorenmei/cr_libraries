@@ -29,7 +29,7 @@ namespace cr
              * @param [out] instanceIds 实例ID列表
              * @return 操作结果
              */
-            virtual Result getAllInstanceId(std::vector<std::uint32_t>& instanceIds) override;
+            virtual int getAllInstanceId(std::vector<std::uint32_t>& instanceIds) override;
 
             /**
              * 获取一条日志
@@ -38,14 +38,14 @@ namespace cr
              * @param [out] logEntry 日志条目
              * @return 操作结果
              */
-            virtual Result get(std::uint32_t instanceId, std::uint64_t logIndex, LogEntry& logEntry) override;
+            virtual int get(std::uint32_t instanceId, std::uint64_t logIndex, LogEntry& logEntry) override;
 
             /**
              * 追加日志
              * @param logEntry 日志
              * @return 操作结果
              */
-            virtual Result append(std::uint32_t instanceId, const LogEntry& logEntry) override;
+            virtual int append(std::uint32_t instanceId, const LogEntry& logEntry) override;
 
             /**
              * 删除日志
@@ -53,14 +53,14 @@ namespace cr
              * @param startLogIndex 起始日志索引
              * @return 操作结果
              */
-            virtual Result del(std::uint32_t instanceId, std::uint64_t startLogIndex) override;
+            virtual int del(std::uint32_t instanceId, std::uint64_t startLogIndex) override;
 
             /**
              * 删除实例的所有日志
              * @param instanceId 实例ID
              * @return 操作结果
              */
-            virtual Result del(std::uint32_t instanceId) override;
+            virtual int del(std::uint32_t instanceId) override;
 
             /**
              * 获取最后的日志索引
@@ -68,7 +68,7 @@ namespace cr
              * @param lastLogIndex 最后的日志索引
              * @return 操作结果
              */
-            virtual Result getLastLogIndex(std::uint32_t instanceId, std::uint64_t& lastLogIndex) override;
+            virtual int getLastLogIndex(std::uint32_t instanceId, std::uint64_t& lastLogIndex) override;
 
         private:
 
