@@ -129,6 +129,9 @@ namespace cr
             std::int64_t update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages);
 
         private:
+        
+            // 状态机为友元类
+            friend class Replay;
 
             // 状态切换
             void onTransitionState();

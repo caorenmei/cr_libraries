@@ -23,6 +23,8 @@ set(cr_raft_SRCS
     raft_engine_builder.cpp
     raft_state.h
     raft_state.cpp
+    replay.h
+    replay.cpp
     state_machine.h
 )
 
@@ -36,6 +38,7 @@ set(cr_raft_HEADERS
     raft_engine.h
     raft_engine_builder.h
     raft_state.h
+    replay.h
     state_machine.h
 )
  
