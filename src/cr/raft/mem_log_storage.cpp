@@ -14,18 +14,18 @@ namespace cr
 
         int MemLogStorage::get(std::uint64_t logIndex, LogEntry& logEntry)
         {
-            if (logIndex >= logEntries_.size())
+            if (logIndex < 1 || logIndex > logEntries_.size())
             {
                 return error::LOG_INDEX_ERROR;
             }
             std::size_t vecLogIndex = static_cast<std::size_t>(logIndex);
-            logEntry = logEntries_[vecLogIndex];
+            logEntry = logEntries_[vecLogIndex - 1];
             return error::SUCCESS;
         }
 
         int MemLogStorage::append(const LogEntry& logEntry)
         {
-            if (logEntry.getIndex() != logEntries_.size())
+            if (logEntry.getIndex() < 1 || logEntry.getIndex() > logEntries_.size() + 1)
             {
                 return error::LOG_INDEX_ERROR;
             }
@@ -35,22 +35,18 @@ namespace cr
 
         int MemLogStorage::del(std::uint64_t startIndex)
         {
-            if (startIndex >= logEntries_.size())
+            if (startIndex < 1 || startIndex > logEntries_.size())
             {
                 return error::LOG_INDEX_ERROR;
             }
             std::size_t vecLogIndex = static_cast<std::size_t>(startIndex);
-            logEntries_.erase(logEntries_.begin() + vecLogIndex, logEntries_.end());
+            logEntries_.erase(logEntries_.begin() + vecLogIndex - 1, logEntries_.end());
             return error::SUCCESS;
         }
 
         int MemLogStorage::getLastIndex(std::uint64_t& logIndex)
         {
-            if (logEntries_.empty())
-            {
-                return error::NO_LOG_INDEX;
-            }
-            logIndex = static_cast<std::uint64_t>(logEntries_.size() - 1);
+            logIndex = static_cast<std::uint64_t>(logEntries_.size());
             return error::SUCCESS;
         }
     }

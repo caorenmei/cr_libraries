@@ -26,7 +26,7 @@ namespace cr
 
             /**
              * 获取一条日志
-             * @param logIndex 日志ID，从0开始
+             * @param logIndex 日志ID，从1开始
              * @param [out] logEntry 日志条目
              * @return 操作结果
              */
