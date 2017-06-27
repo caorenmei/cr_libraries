@@ -7,11 +7,18 @@ namespace cr
 {
     namespace raft
     {
-        /** 构造异常 */
-        class ArgumentException : public cr::Exception
+        /** Raft异常 */
+        class RaftException : public cr::Exception
         {
         public:
             using cr::Exception::Exception;
+        };
+
+        /** 参数异常 */
+        class ArgumentException : public RaftException
+        {
+        public:
+            using RaftException::RaftException;
         };
     }
 }
