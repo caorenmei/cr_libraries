@@ -14,12 +14,12 @@ namespace cr
                 SUCCESS,
                 /** 不支持的操作 */
                 NOT_SUPPORT,
+                /** IO异常 */
+                IO_ERROR,
                 /** 序号错误 */
                 LOG_INDEX_ERROR,
                 /** 日志数据错误 */
                 LOG_DATA_ERROR,
-                /** 没有该实例  */
-                NO_INSTANCE,
                 /** 没有该日志  */
                 NO_LOG_INDEX,
                 /** 实例没有日志  */

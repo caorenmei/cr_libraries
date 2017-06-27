@@ -24,55 +24,38 @@ namespace cr
             MemLogStorage(const MemLogStorage&) = delete;
             MemLogStorage& operator=(const MemLogStorage&) = delete;
 
-            /** 
-             * 获取所有的实例ID
-             * @param [out] instanceIds 实例ID列表
-             * @return 操作结果
-             */
-            virtual int getAllInstanceId(std::vector<std::uint32_t>& instanceIds) override;
-
             /**
              * 获取一条日志
-             * @param instanceId 一个raft实例ID
              * @param logIndex 日志ID，从0开始
              * @param [out] logEntry 日志条目
              * @return 操作结果
              */
-            virtual int get(std::uint32_t instanceId, std::uint64_t logIndex, LogEntry& logEntry) override;
+            virtual int get(std::uint64_t logIndex, LogEntry& logEntry) override;
 
             /**
              * 追加日志
              * @param logEntry 日志
              * @return 操作结果
              */
-            virtual int append(std::uint32_t instanceId, const LogEntry& logEntry) override;
+            virtual int append(const LogEntry& logEntry) override;
 
             /**
              * 删除日志
-             * @param instanceId 实例ID
              * @param startLogIndex 起始日志索引
              * @return 操作结果
              */
-            virtual int del(std::uint32_t instanceId, std::uint64_t startLogIndex) override;
-
-            /**
-             * 删除实例的所有日志
-             * @param instanceId 实例ID
-             * @return 操作结果
-             */
-            virtual int del(std::uint32_t instanceId) override;
+            virtual int del(std::uint64_t startIndex) override;
 
             /**
              * 获取最后的日志索引
-             * @param instanceId 实例ID
              * @param lastLogIndex 最后的日志索引
              * @return 操作结果
              */
-            virtual int getLastLogIndex(std::uint32_t instanceId, std::uint64_t& lastLogIndex) override;
+            virtual int getLastIndex(std::uint64_t& lastIndex) override;
 
         private:
 
-            std::unordered_map<std::uint32_t, std::vector<LogEntry>> logs_;
+            std::vector<LogEntry> logEntries_;
         };
     }
 }
