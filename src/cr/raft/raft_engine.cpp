@@ -96,16 +96,6 @@ namespace cr
             return nowTime_;
         }
 
-        const std::shared_ptr<RaftState>& RaftEngine::getCurrentState() const
-        {
-            return currentState_;
-        }
-
-        void RaftEngine::setNextState(std::shared_ptr<RaftState> nextState)
-        {
-            nextState_ = std::move(nextState);
-        }
-
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             nowTime_ = nowTime;
@@ -128,6 +118,16 @@ namespace cr
                 nextUpdateTime = nowTime;
             }
             return nextUpdateTime;
+        }
+
+        const std::shared_ptr<RaftState>& RaftEngine::getCurrentState() const
+        {
+            return currentState_;
+        }
+
+        void RaftEngine::setNextState(std::shared_ptr<RaftState> nextState)
+        {
+            nextState_ = std::move(nextState);
         }
 
         void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)

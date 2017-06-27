@@ -112,18 +112,6 @@ namespace cr
             std::int64_t getNowTime() const;
 
             /**
-             * 获取当前状态
-             * @param 当前状态
-             */
-            const std::shared_ptr<RaftState>& getCurrentState() const;
-
-            /**
-             * 设置下一个状态
-             * @param nextState 下一个状态
-             */
-            void setNextState(std::shared_ptr<RaftState> nextState);
-
-            /**
              * 执行状态机逻辑
              * @param nowTime 当前时间戳, ms
              * @param outMessages 输出消息
@@ -144,6 +132,18 @@ namespace cr
         
             /* 状态机为友元类 */
             friend class Replay;
+
+            /**
+             * 获取当前状态
+             * @param 当前状态
+             */
+            const std::shared_ptr<RaftState>& getCurrentState() const;
+
+            /**
+             * 设置下一个状态
+             * @param nextState 下一个状态
+             */
+            void setNextState(std::shared_ptr<RaftState> nextState);
 
             /*
              * 设置当前任期编号
