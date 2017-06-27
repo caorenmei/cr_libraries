@@ -22,7 +22,6 @@ namespace cr
             storage_(builder.getLogStorage()),
             stateMachine_(builder.getStateMachine()),
             currentTerm_(0),
-            commitLogIndex_(0),
             lastApplied_(0),
             nowTime_(0),
             currentState_(std::make_shared<Replay>(*this)),
@@ -84,7 +83,7 @@ namespace cr
 
         std::uint64_t RaftEngine::getCommitLogIndex() const
         {
-            return commitLogIndex_;
+            return storage_->getLastIndex();
         }
 
         std::uint64_t RaftEngine::getLastApplied() const
@@ -168,11 +167,6 @@ namespace cr
         void RaftEngine::setVotedFor(boost::optional<std::uint32_t> voteFor)
         {
             votedFor_ = voteFor;
-        }
-
-        void RaftEngine::setCommitLogIndex(std::uint64_t commitIndex)
-        {
-            commitLogIndex_ = commitIndex;
         }
 
         void RaftEngine::setLastApplied(std::uint64_t lastApplied)

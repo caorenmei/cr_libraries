@@ -179,12 +179,6 @@ namespace cr
             void setVotedFor(boost::optional<std::uint32_t> voteFor);
 
             /*
-             * 设置被提交的日志条目的索引值
-             * @param commitIndex 被提交的日志条目的索引值
-             */
-            void setCommitLogIndex(std::uint64_t commitIndex);
-
-            /*
              * 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
              * @param lastApplied 应用到状态机的日志条目索引值
              */
@@ -212,8 +206,6 @@ namespace cr
 
             // 所有服务器上经常变的
 
-            // 已知的最大的已经被提交的日志条目的索引值
-            std::uint64_t commitLogIndex_;
             // 最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             std::uint64_t lastApplied_;
 

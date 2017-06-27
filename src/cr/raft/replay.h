@@ -49,8 +49,6 @@ namespace cr
              */
             virtual std::int64_t update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages) override;
 
-        private:
-
         };
     }
 }

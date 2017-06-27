@@ -44,7 +44,6 @@ set(cr_raft_HEADERS
     mem_log_storage.h
     raft_engine.h
     raft_engine_builder.h
-    raft_state.h
     state_machine.h
 )
  
