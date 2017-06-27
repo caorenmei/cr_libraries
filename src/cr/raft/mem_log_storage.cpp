@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include <cr/common/throw.h>
-#include <cr/raft/error_code.h>
 #include <cr/raft/exception.h>
 
 namespace cr

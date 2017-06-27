@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <cr/common/streams.h>
-#include <cr/raft/error_code.h>
 #include <cr/raft/exception.h>
 #include <cr/raft/mem_log_storage.h>
 
