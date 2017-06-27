@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include <cr/common/assert_error.h>
 #include <cr/common/streams.h>
 #include <cr/raft/exception.h>
 #include <cr/raft/mem_log_storage.h>
@@ -20,6 +21,29 @@ public:
     }
 
     std::vector<std::string> entries;
+};
+
+struct RaftEngineFixture
+{
+    RaftEngineFixture()
+    {
+        cr::raft::RaftEngine::Builder builder;
+        logStrage = std::make_shared<cr::raft::MemLogStorage>();
+        stateMachine = std::make_shared<SimpleStatMachine>();
+        raftEngine = builder.setNodeId(1)
+            .setOtherNodeIds({ 2,3,4 })
+            .setLogStorage(logStrage)
+            .setStateMachine(stateMachine)
+            .build();
+    }
+
+    ~RaftEngineFixture()
+    {}
+
+    std::vector<cr::raft::RaftEngine::RaftMsgPtr> outMessages;
+    std::shared_ptr<cr::raft::MemLogStorage> logStrage;
+    std::shared_ptr<SimpleStatMachine> stateMachine;
+    std::shared_ptr<cr::raft::RaftEngine> raftEngine;
 };
 
 BOOST_AUTO_TEST_CASE(build)
@@ -48,6 +72,14 @@ BOOST_AUTO_TEST_CASE(build)
     BOOST_CHECK(!raftEngine->getVotedFor());
     BOOST_CHECK_EQUAL(raftEngine->getCommitLogIndex(), 0);
     BOOST_CHECK_EQUAL(raftEngine->getLastApplied(), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(initialize, RaftEngineFixture)
+{
+    BOOST_CHECK_THROW(raftEngine->update(0, nullptr, outMessages), cr::AssertError);
+    BOOST_CHECK_NO_THROW(raftEngine->initialize());
+    BOOST_CHECK_THROW(raftEngine->initialize(), cr::AssertError);
+    BOOST_CHECK_NO_THROW(raftEngine->update(0, nullptr, outMessages));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

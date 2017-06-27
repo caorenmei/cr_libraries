@@ -115,6 +115,7 @@ namespace cr
 
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
+            CR_ASSERT(currentState_ != nullptr);
             nowTime_ = nowTime;
             std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
             if (nextEnumState_ != currentEnumState_)
@@ -128,6 +129,7 @@ namespace cr
 
         std::int64_t RaftEngine::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
+            CR_ASSERT(currentState_ != nullptr);
             nowTime_ = nowTime;
             std::int64_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
             if (nextEnumState_ != currentEnumState_)
