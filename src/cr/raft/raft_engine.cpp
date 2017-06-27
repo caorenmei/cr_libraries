@@ -24,7 +24,10 @@ namespace cr
             currentTerm_(0),
             commitLogIndex_(0),
             lastApplied_(0),
-            nowTime_(0)
+            nowTime_(0),
+            currentState_(std::make_shared<Replay>(*this)),
+            currentEnumState_(REPLAY),
+            nextEnumState_(REPLAY)
         {
             // 节点有效性判断
             std::sort(otherNodeIds_.begin(), otherNodeIds_.end());

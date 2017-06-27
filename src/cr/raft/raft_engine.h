@@ -151,6 +151,9 @@ namespace cr
         
             /* 状态机为友元类 */
             friend class Replay;
+            friend class Follower;
+            friend class Candidate;
+            friend class Leader;
 
             /*
              * 设置下一个状态
