@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
+#include <vector>
 
 #include <cr/common/streams.h>
 #include <cr/raft/exception.h>
@@ -13,19 +14,12 @@ class SimpleStatMachine : public cr::raft::StateMachine
 {
 public:
 
-    virtual void execute(std::uint32_t instanceId, std::uint64_t logIndex, const std::string& value, boost::any ctx) override
+    virtual void execute(std::uint64_t logIndex, const std::string& value, boost::any ctx) override
     {
-        value_ = value;
+        entries.push_back(value);
     }
 
-    const std::string& getValue() const
-    {
-        return value_;
-    }
-
-private:
-
-    std::string value_;
+    std::vector<std::string> entries;
 };
 
 BOOST_AUTO_TEST_CASE(build)
