@@ -130,6 +130,14 @@ namespace cr
             nextState_ = std::move(nextState);
         }
 
+        void RaftEngine::onTransitionState()
+        {
+            currentState_->onLeave();
+            auto prevState = std::move(currentState_);
+            currentState_ = std::move(nextState_);
+            currentState_->onEnter(std::move(prevState));
+        }
+
         void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)
         {
             currentTerm_ = currentTerm;
@@ -148,14 +156,6 @@ namespace cr
         void RaftEngine::setLastApplied(std::uint64_t lastApplied)
         {
             lastApplied_ = lastApplied;
-        }
-
-        void RaftEngine::onTransitionState()
-        {
-            currentState_->onLeave();
-            auto prevState = std::move(currentState_);
-            currentState_ = std::move(nextState_);
-            currentState_->onEnter(prevState);
         }
     }
 }

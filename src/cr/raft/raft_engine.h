@@ -133,17 +133,22 @@ namespace cr
             /* 状态机为友元类 */
             friend class Replay;
 
-            /**
+            /*
              * 获取当前状态
              * @param 当前状态
              */
             const std::shared_ptr<RaftState>& getCurrentState() const;
 
-            /**
+            /*
              * 设置下一个状态
              * @param nextState 下一个状态
              */
             void setNextState(std::shared_ptr<RaftState> nextState);
+
+            /*
+             * 状态切换
+             */
+            void onTransitionState();
 
             /*
              * 设置当前任期编号
@@ -168,11 +173,6 @@ namespace cr
              * @param lastApplied 应用到状态机的日志条目索引值
              */
             void setLastApplied(std::uint64_t lastApplied);
-
-            /*
-             * 状态切换
-             */
-            void onTransitionState();
 
             // 节点相关数据
 
