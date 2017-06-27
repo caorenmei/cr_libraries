@@ -64,6 +64,18 @@ namespace cr
             const std::vector<std::uint32_t>& getOtherNodeIds() const;
 
             /**
+             * 获取日志存储接口
+             * @return 日志存储接口
+             */
+            const std::shared_ptr<LogStorage>& getLogStorage() const;
+
+            /**
+             * 获取状态机接口
+             * @return 状态机接口
+             */
+            const std::shared_ptr<StateMachine>& getStateMachine() const;
+
+            /**
              * 服务器当前的任期号
              * @param 当前的任期号
              */
@@ -124,10 +136,36 @@ namespace cr
 
         private:
         
-            // 状态机为友元类
+            /* 状态机为友元类 */
             friend class Replay;
 
-            // 状态切换
+            /*
+             * 设置当前任期编号
+             * @param currentTerm 当前任期编号
+             */
+            void setCurrentTerm(std::uint32_t currentTerm);
+
+            /*
+             * 设置当前选票的候选人Id
+             * @param voteFor 当前选票的候选人Id
+             */
+            void setVotedFor(boost::optional<std::uint32_t> voteFor);
+
+            /*
+             * 设置被提交的日志条目的索引值
+             * @param commitIndex 被提交的日志条目的索引值
+             */
+            void setCommitLogIndex(std::uint64_t commitIndex);
+
+            /*
+             * 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
+             * @param lastApplied 应用到状态机的日志条目索引值
+             */
+            void setLastApplied(std::uint64_t lastApplied);
+
+            /*
+             * 状态切换
+             */
             void onTransitionState();
 
             // 节点相关数据

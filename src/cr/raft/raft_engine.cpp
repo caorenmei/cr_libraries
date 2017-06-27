@@ -54,6 +54,16 @@ namespace cr
             return otherNodeIds_;
         }
 
+        const std::shared_ptr<LogStorage>& RaftEngine::getLogStorage() const
+        {
+            return storage_;
+        }
+
+        const std::shared_ptr<StateMachine>& RaftEngine::getStateMachine() const
+        {
+            return stateMachine_;
+        }
+
         std::uint32_t RaftEngine::getCurrentTerm() const
         {
             return currentTerm_;
@@ -111,6 +121,26 @@ namespace cr
                 nextUpdateTime = nowTime;
             }
             return nextUpdateTime;
+        }
+
+        void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)
+        {
+            currentTerm_ = currentTerm;
+        }
+
+        void RaftEngine::setVotedFor(boost::optional<std::uint32_t> voteFor)
+        {
+            votedFor_ = voteFor;
+        }
+
+        void RaftEngine::setCommitLogIndex(std::uint64_t commitIndex)
+        {
+            commitLogIndex_ = commitIndex;
+        }
+
+        void RaftEngine::setLastApplied(std::uint64_t lastApplied)
+        {
+            lastApplied_ = lastApplied;
         }
 
         void RaftEngine::onTransitionState()
