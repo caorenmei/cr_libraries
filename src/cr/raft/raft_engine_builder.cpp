@@ -7,8 +7,7 @@ namespace cr
     namespace raft
     {
         RaftEngineBuilder::RaftEngineBuilder()
-            : nodeId_(0),
-            instanceId_(0)
+            : nodeId_(0)
         {}
 
         RaftEngineBuilder::~RaftEngineBuilder()
@@ -23,17 +22,6 @@ namespace cr
         std::uint32_t  RaftEngineBuilder::getNodeId() const
         {
             return nodeId_;
-        }
-
-        RaftEngineBuilder& RaftEngineBuilder::setInstanceId(std::uint32_t instanceId)
-        {
-            instanceId_ = instanceId;
-            return *this;
-        }
-
-        std::uint32_t RaftEngineBuilder::getInstanceId() const
-        {
-            return instanceId_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds)

@@ -41,19 +41,6 @@ namespace cr
             std::uint32_t getNodeId() const;
 
             /**
-             * 设置实例Id
-             * @param instanceId 实例Id
-             * @reutrn this
-             */
-            RaftEngineBuilder& setInstanceId(std::uint32_t instanceId);
-
-            /**
-             * 获取实例Id
-             * @return 实例Id
-             */
-            std::uint32_t getInstanceId() const;
-
-            /**
              * 设置其他节点Id
              * @param otherNodeIds 其它节点Id
              * @reutrn this
@@ -101,8 +88,6 @@ namespace cr
 
             // 本节点ID
             std::uint32_t nodeId_;
-            // 实例Id
-            std::uint32_t instanceId_;
             // 其它节点ID
             std::vector<std::uint32_t> otherNodeIds_;
             // 日志存储接口

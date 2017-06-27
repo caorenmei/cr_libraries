@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(build)
 {
     cr::raft::RaftEngine::Builder builder;
     builder.setNodeId(1)
-        .setInstanceId(2)
         .setOtherNodeIds({ 2,3,4 })
         .setLogStorage(std::make_shared<cr::raft::MemLogStorage>())
         .setStateMachine(std::make_shared<SimpleStatMachine>());
@@ -44,14 +43,12 @@ BOOST_AUTO_TEST_CASE(build)
     BOOST_CHECK_THROW(builder.setLogStorage(std::make_shared<cr::raft::MemLogStorage>()).setStateMachine(nullptr).build(), cr::raft::ArgumentException);
 
     auto raftEngine = builder.setNodeId(1)
-        .setInstanceId(2)
         .setOtherNodeIds({ 2,3,4 })
         .setLogStorage(std::make_shared<cr::raft::MemLogStorage>())
         .setStateMachine(std::make_shared<SimpleStatMachine>())
         .build();
 
     BOOST_CHECK_EQUAL(raftEngine->getNodeId(), 1);
-    BOOST_CHECK_EQUAL(raftEngine->getInstanceId(), 2);
     BOOST_CHECK(cr::from(raftEngine->getOtherNodeIds()).sorted().equals(cr::from({ 2,3,4 })));
     BOOST_CHECK_EQUAL(raftEngine->getCurrentTerm(), 0);
     BOOST_CHECK(!raftEngine->getVotedFor());

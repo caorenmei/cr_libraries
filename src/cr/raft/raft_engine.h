@@ -58,12 +58,6 @@ namespace cr
             std::uint32_t getNodeId() const;
 
             /**
-             * 获取实例Id
-             * @return 实例Id
-             */
-            std::uint32_t getInstanceId() const;
-
-            /**
              * 获取其它节点Id
              * @return 其它节点Id
              */
@@ -140,8 +134,6 @@ namespace cr
 
             // 本节点ID
             std::uint32_t nodeId_;
-            // 实例Id
-            std::uint32_t instanceId_;
             // 其它节点ID
             std::vector<std::uint32_t> otherNodeIds_;
             // 存储接口

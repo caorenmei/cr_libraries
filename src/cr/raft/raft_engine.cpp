@@ -13,7 +13,6 @@ namespace cr
 
         RaftEngine::RaftEngine(const Builder& builder)
             : nodeId_(builder.getNodeId()),
-            instanceId_(builder.getInstanceId()),
             otherNodeIds_(builder.getOtherNodeIds()),
             storage_(builder.getLogStorage()),
             stateMachine_(builder.getStateMachine()),
@@ -48,11 +47,6 @@ namespace cr
         std::uint32_t RaftEngine::getNodeId() const
         {
             return nodeId_;
-        }
-
-        std::uint32_t RaftEngine::getInstanceId() const
-        {
-            return instanceId_;
         }
 
         const std::vector<std::uint32_t>& RaftEngine::getOtherNodeIds() const
