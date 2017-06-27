@@ -20,6 +20,31 @@ namespace cr
         public:
             using RaftException::RaftException;
         };
+
+        /** 日志存储异常 */
+        class StoreException : public RaftException
+        {
+        public:
+
+            using RaftException::RaftException;
+
+            /**
+             * 构造函数
+             * @param message 错误消息
+             * @param errorCode 错误码
+             */
+            StoreException(std::string message, int errorCode);
+
+            /**
+             * 获取错误码
+             * @param 错误码
+             */
+            int getErrorCode() const;
+
+        private:
+
+            int errorCode_;
+        };
     }
 }
 
