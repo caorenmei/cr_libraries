@@ -1,5 +1,5 @@
-﻿#ifndef CR_RAFT_FOLLOWER_H_
-#define CR_RAFT_FOLLOWER_H_
+﻿#ifndef CR_RAFT_CANDIDATE_H_
+#define CR_RAFT_CANDIDATE_H_
 
 #include <cr/raft/raft_state.h>
 
@@ -7,8 +7,8 @@ namespace cr
 {
     namespace raft
     {
-        /** 跟随者状态 */
-        class Follower : public RaftState
+        /** 候选者状态 */
+        class Candidate : public RaftState
         {
         public:
 
@@ -16,10 +16,10 @@ namespace cr
              * 构造函数
              * @param engine Raft引擎
              */
-            explicit Follower(RaftEngine& engine);
+            explicit Candidate(RaftEngine& engine);
 
             /** 析构函数 */
-            ~Follower();
+            ~Candidate();
 
             /**
              * 进入状态调用

@@ -39,6 +39,19 @@ namespace cr
             /** Raft引擎构造器 */
             using Builder = RaftEngineBuilder;
 
+            /** 当前状态 */
+            enum State
+            {
+                /** 日志回放状态 */
+                REPLAY,
+                /** 跟随者状态 */
+                FOLLOWER,
+                /** 候选者状态 */
+                CANDIDATE,
+                /** 领导者状态 */
+                LEADER,
+            };
+
             /**
              * 构造函数
              * @param builder 构造器
@@ -111,6 +124,12 @@ namespace cr
              */
             std::int64_t getNowTime() const;
 
+            /*
+             * 获取当前状态
+             * @param 当前状态
+             */
+            State getCurrentState() const;
+
             /**
              * 执行状态机逻辑
              * @param nowTime 当前时间戳, ms
@@ -134,16 +153,10 @@ namespace cr
             friend class Replay;
 
             /*
-             * 获取当前状态
-             * @param 当前状态
-             */
-            const std::shared_ptr<RaftState>& getCurrentState() const;
-
-            /*
              * 设置下一个状态
              * @param nextState 下一个状态
              */
-            void setNextState(std::shared_ptr<RaftState> nextState);
+            void setNextState(State nextState);
 
             /*
              * 状态切换
@@ -207,8 +220,9 @@ namespace cr
             std::int64_t nowTime_;
             // 当前状态
             std::shared_ptr<RaftState> currentState_;
+            State currentEnumState_;
             // 下一个状态
-            std::shared_ptr<RaftState> nextState_;
+            State nextEnumState_;
         };
     }
 }

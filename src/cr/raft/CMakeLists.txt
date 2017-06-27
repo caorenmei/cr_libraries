@@ -10,8 +10,15 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
 
 set(cr_raft_SRCS
     ${PROTO_HDRS} ${PROTO_SRCS}
+    candidate.h
+    candidate.cpp
     error_code.h
     exception.h
+    exception.cpp
+    follower.h
+    follower.cpp
+    leader.h
+    leader.cpp
     log_entry.h
     log_entry.cpp
     log_storage.h
@@ -38,7 +45,6 @@ set(cr_raft_HEADERS
     raft_engine.h
     raft_engine_builder.h
     raft_state.h
-    replay.h
     state_machine.h
 )
  

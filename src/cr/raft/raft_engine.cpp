@@ -4,8 +4,12 @@
 
 #include <cr/common/assert.h>
 #include <cr/common/throw.h>
+#include <cr/raft/candidate.h>
 #include <cr/raft/exception.h>
+#include <cr/raft/follower.h>
+#include <cr/raft/leader.h>
 #include <cr/raft/raft_state.h>
+#include <cr/raft/replay.h>
 
 namespace cr
 {
@@ -96,11 +100,16 @@ namespace cr
             return nowTime_;
         }
 
+        RaftEngine::State RaftEngine::getCurrentState() const
+        {
+            return currentEnumState_;
+        }
+
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             nowTime_ = nowTime;
             std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
-            if (nextState_ != nullptr)
+            if (nextEnumState_ != currentEnumState_)
             {
                 onTransitionState();
                 nextUpdateTime = nowTime;
@@ -112,7 +121,7 @@ namespace cr
         {
             nowTime_ = nowTime;
             std::int64_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
-            if (nextState_ != nullptr)
+            if (nextEnumState_ != currentEnumState_)
             {
                 onTransitionState();
                 nextUpdateTime = nowTime;
@@ -120,22 +129,32 @@ namespace cr
             return nextUpdateTime;
         }
 
-        const std::shared_ptr<RaftState>& RaftEngine::getCurrentState() const
+        void RaftEngine::setNextState(State nextState)
         {
-            return currentState_;
-        }
-
-        void RaftEngine::setNextState(std::shared_ptr<RaftState> nextState)
-        {
-            nextState_ = std::move(nextState);
+            nextEnumState_ = nextState;
         }
 
         void RaftEngine::onTransitionState()
         {
             currentState_->onLeave();
             auto prevState = std::move(currentState_);
-            currentState_ = std::move(nextState_);
+            switch (nextEnumState_)
+            {
+            case FOLLOWER:
+                currentState_ = std::make_shared<Follower>(*this);
+                break;
+            case CANDIDATE:
+                currentState_ = std::make_shared<Candidate>(*this);
+                break;
+            case LEADER:
+                currentState_ = std::make_shared<Leader>(*this);
+                break;
+            default:
+                CR_ASSERT(!"Exception State")(static_cast<int>(currentEnumState_))(static_cast<int>(nextEnumState_));
+                break;
+            }
             currentState_->onEnter(std::move(prevState));
+            currentEnumState_ = nextEnumState_;
         }
 
         void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)
