@@ -45,35 +45,30 @@ BOOST_AUTO_TEST_CASE(del)
 {
     cr::raft::MemLogStorage storage;
 
-    BOOST_CHECK_THROW(storage.del(0), cr::raft::StoreException);
+    BOOST_CHECK_NO_THROW(storage.del(0));
     BOOST_CHECK_THROW(storage.del(1), cr::raft::StoreException);
 
     storage.append(cr::raft::LogEntry(1, 1, ""));
 
     BOOST_CHECK_THROW(storage.del(2), cr::raft::StoreException);
     BOOST_CHECK_NO_THROW(storage.del(1));
-    BOOST_CHECK_THROW(storage.del(0), cr::raft::StoreException);
+    BOOST_CHECK_NO_THROW(storage.del(0));
 }
 
 BOOST_AUTO_TEST_CASE(getLastIndex)
 {
     cr::raft::MemLogStorage storage;
 
-    std::uint64_t lastLogIndex;
-    BOOST_CHECK_NO_THROW(storage.getLastIndex(lastLogIndex));
-    BOOST_CHECK_EQUAL(lastLogIndex, 0);
+    BOOST_CHECK_EQUAL(storage.getLastIndex(), 0);
 
     storage.append(cr::raft::LogEntry(1, 1, ""));
-    BOOST_CHECK_NO_THROW(storage.getLastIndex(lastLogIndex));
-    BOOST_CHECK_EQUAL(lastLogIndex, 1);
+    BOOST_CHECK_EQUAL(storage.getLastIndex(), 1);
 
     storage.append(cr::raft::LogEntry(2, 1, ""));
-    BOOST_CHECK_NO_THROW(storage.getLastIndex(lastLogIndex));
-    BOOST_CHECK_EQUAL(lastLogIndex, 2);
+    BOOST_CHECK_EQUAL(storage.getLastIndex(), 2);
 
     storage.del(1);
-    BOOST_CHECK_NO_THROW(storage.getLastIndex(lastLogIndex));
-    BOOST_CHECK_EQUAL(lastLogIndex, 0);
+    BOOST_CHECK_EQUAL(storage.getLastIndex(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

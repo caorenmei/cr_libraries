@@ -51,10 +51,10 @@ namespace cr
 
             /**
              * 获取最后的日志索引
-             * @param lastLogIndex 最后的日志索引
+             * @return lastLogIndex 最后的日志索引
              * @exception StoreException 异常发生
              */
-            virtual void getLastIndex(std::uint64_t& lastIndex) = 0;
+            virtual std::uint64_t getLastIndex() = 0;
 
         };
     }
