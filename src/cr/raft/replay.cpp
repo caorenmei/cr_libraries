@@ -24,7 +24,7 @@ namespace cr
 
         }
 
-        std::int64_t Replay::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
+        std::int64_t Replay::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
             const auto& logStorage = getEngine().getLogStorage();
             const auto& stateMachine = getEngine().getStateMachine();
@@ -45,11 +45,6 @@ namespace cr
                 getEngine().setNextState(RaftEngine::FOLLOWER);
             }
             return nowTime;
-        }
-
-        std::int64_t Replay::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
-        {
-            return update(nowTime, outMessages);
         }
     }
 }
