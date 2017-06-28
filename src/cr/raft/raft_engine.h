@@ -160,33 +160,19 @@ namespace cr
             friend class Candidate;
             friend class Leader;
 
-            /*
-             * 设置下一个状态
-             * @param nextState 下一个状态
-             */
+            // 设置下一个状态
             void setNextState(State nextState);
 
-            /*
-             * 状态切换
-             */
+            // 状态切换
             void onTransitionState();
 
-            /*
-             * 设置当前任期编号
-             * @param currentTerm 当前任期编号
-             */
+            // 设置当前任期编号
             void setCurrentTerm(std::uint32_t currentTerm);
 
-            /*
-             * 设置当前选票的候选人Id
-             * @param voteFor 当前选票的候选人Id
-             */
+            // 设置当前选票的候选人Id
             void setVotedFor(boost::optional<std::uint32_t> voteFor);
 
-            /*
-             * 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
-             * @param lastApplied 应用到状态机的日志条目索引值
-             */
+            // 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             void setLastApplied(std::uint64_t lastApplied);
 
             // 节点相关数据
