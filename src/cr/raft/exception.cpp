@@ -4,12 +4,12 @@ namespace cr
 {
     namespace raft
     {
-        StoreException::StoreException(std::string message, int errorCode)
-            : RaftException(std::move(message)),
+        RaftException::RaftException(std::string message, int errorCode)
+            : Exception(std::move(message)),
             errorCode_(errorCode)
         {}
 
-        int StoreException::getErrorCode() const
+        int RaftException::getErrorCode() const
         {
             return errorCode_;
         }
