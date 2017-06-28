@@ -7,7 +7,8 @@ namespace cr
     namespace raft
     {
         RaftEngineBuilder::RaftEngineBuilder()
-            : nodeId_(0)
+            : nodeId_(0),
+            electionTimeout_(0)
         {}
 
         RaftEngineBuilder::~RaftEngineBuilder()
@@ -55,6 +56,28 @@ namespace cr
         const std::shared_ptr<StateMachine>&  RaftEngineBuilder::getStateMachine() const
         {
             return stateMachine_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(std::uint32_t electionTimeout)
+        {
+            electionTimeout_ = electionTimeout;
+            return *this;
+        }
+
+        std::uint32_t RaftEngineBuilder::getElectionTimeout() const
+        {
+            return electionTimeout_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setVoteTimeout(const std::pair<std::uint32_t, std::uint32_t>& voteTimeout)
+        {
+            voteTimeout_ = voteTimeout;
+            return *this;
+        }
+
+        const std::pair<std::uint32_t, std::uint32_t>& RaftEngineBuilder::getVoteTimeout() const
+        {
+            return voteTimeout_;
         }
 
         std::shared_ptr<RaftEngine> RaftEngineBuilder::build()

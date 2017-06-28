@@ -136,6 +136,18 @@ namespace cr
             State getCurrentState() const;
 
             /**
+             * 获取选举超时时间
+             * @return 选举超时时间，毫秒
+             */
+            std::uint32_t getElectionTimeout() const;
+
+            /**
+             * 获取投票超时时间
+             * @return 投票超时时间，毫秒
+             */
+            const std::pair<std::uint32_t, std::uint32_t>& getVoteTimeout() const;
+
+            /**
              * 执行状态机逻辑
              * @param nowTime 当前时间戳, ms
              * @param outMessages 输出消息
@@ -209,6 +221,10 @@ namespace cr
             State currentEnumState_;
             // 下一个状态
             State nextEnumState_;
+            // 选举超时时间
+            std::uint32_t electionTimeout_;
+            // 投票超时时间
+            std::pair<std::uint32_t, std::uint32_t> voteTimeout_;
         };
     }
 }

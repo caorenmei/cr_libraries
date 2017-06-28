@@ -25,7 +25,9 @@ namespace cr
             lastApplied_(0),
             nowTime_(0),
             currentEnumState_(REPLAY),
-            nextEnumState_(REPLAY)
+            nextEnumState_(REPLAY),
+            electionTimeout_(builder.getElectionTimeout()),
+            voteTimeout_(builder.getVoteTimeout())
         {
             // 节点有效性判断
             std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
@@ -44,6 +46,14 @@ namespace cr
             if (stateMachine_ == nullptr)
             {
                 CR_THROW(ArgumentException, "State Machine is null");
+            }
+            if (electionTimeout_ == 0)
+            {
+                CR_THROW(ArgumentException, "Election Timeout is 0");
+            }
+            if (voteTimeout_.first == 0 || voteTimeout_.second < voteTimeout_.first)
+            {
+                CR_THROW(ArgumentException, "Vote Timeout Range error");
             }
         }
 
@@ -111,6 +121,16 @@ namespace cr
         RaftEngine::State RaftEngine::getCurrentState() const
         {
             return currentEnumState_;
+        }
+
+        std::uint32_t RaftEngine::getElectionTimeout() const
+        {
+            return electionTimeout_;
+        }
+
+        const std::pair<std::uint32_t, std::uint32_t>& RaftEngine::getVoteTimeout() const
+        {
+            return voteTimeout_;
         }
 
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)

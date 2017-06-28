@@ -34,6 +34,8 @@ struct RaftEngineFixture
             .setOtherNodeIds({ 2,3,4 })
             .setLogStorage(logStrage)
             .setStateMachine(stateMachine)
+            .setElectionTimeout(2000)
+            .setVoteTimeout(std::make_pair(100, 200))
             .build();
     }
 
@@ -48,17 +50,27 @@ struct RaftEngineFixture
 
 BOOST_AUTO_TEST_CASE(build)
 {
+    auto logStrage = std::make_shared<cr::raft::MemLogStorage>();
+    auto stateMachine = std::make_shared<SimpleStatMachine>();
     cr::raft::RaftEngine::Builder builder;
     builder.setNodeId(1)
         .setOtherNodeIds({ 2,3,4 })
-        .setLogStorage(std::make_shared<cr::raft::MemLogStorage>())
-        .setStateMachine(std::make_shared<SimpleStatMachine>());
+        .setLogStorage(logStrage)
+        .setStateMachine(stateMachine)
+        .setElectionTimeout(2000)
+        .setVoteTimeout(std::make_pair(100, 200));
    
     BOOST_CHECK_NO_THROW(builder.build());
     BOOST_CHECK_THROW(builder.setOtherNodeIds({ 1,3,4 }) .build(), cr::raft::ArgumentException);
     BOOST_CHECK_THROW(builder.setOtherNodeIds({ 2,2,4 }).build(), cr::raft::ArgumentException);
     BOOST_CHECK_THROW(builder.setOtherNodeIds({ 2,3,4 }).setLogStorage(nullptr).build(), cr::raft::ArgumentException);
-    BOOST_CHECK_THROW(builder.setLogStorage(std::make_shared<cr::raft::MemLogStorage>()).setStateMachine(nullptr).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setLogStorage(logStrage).setStateMachine(nullptr).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setStateMachine(stateMachine).setElectionTimeout(0).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setElectionTimeout(2000).setVoteTimeout(std::make_pair(0, 0)).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setVoteTimeout(std::make_pair(0, 200)).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setVoteTimeout(std::make_pair(200, 0)).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(builder.setVoteTimeout(std::make_pair(200, 100)).build(), cr::raft::ArgumentException);
+    BOOST_CHECK_NO_THROW(builder.setVoteTimeout(std::make_pair(200, 200)).build());
 
     auto raftEngine = builder.setNodeId(1)
         .setOtherNodeIds({ 2,3,4 })

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 #include <boost/optional.hpp>
 
@@ -79,6 +80,30 @@ namespace cr
             const std::shared_ptr<StateMachine>& getStateMachine() const;
 
             /**
+             * 设置选举超时时间
+             * @param electionTimeout 选举超时时间，毫秒
+             */
+            RaftEngineBuilder& setElectionTimeout(std::uint32_t electionTimeout);
+
+            /**
+             * 获取选举超时时间
+             * @return 选举超时时间，毫秒
+             */
+            std::uint32_t getElectionTimeout() const;
+
+            /**
+             * 设置投票超时时间
+             * @param electionTimeout 投票超时时间，毫秒
+             */
+            RaftEngineBuilder& setVoteTimeout(const std::pair<std::uint32_t, std::uint32_t>& voteTimeout);
+
+            /**
+             * 获取投票超时时间
+             * @return 投票超时时间，毫秒
+             */
+            const std::pair<std::uint32_t, std::uint32_t>& getVoteTimeout() const;
+
+            /**
              * 构造Raft引擎
              * @return Raft引擎, 非空成功
              */
@@ -94,6 +119,10 @@ namespace cr
             std::shared_ptr<LogStorage> storage_;
             // 状态机
             std::shared_ptr<StateMachine> stateMachine_;
+            // 超时时间
+            std::uint32_t electionTimeout_;
+            // 投票超时时间
+            std::pair<std::uint32_t, std::uint32_t> voteTimeout_;
         };
     }
 }
