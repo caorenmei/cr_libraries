@@ -24,6 +24,8 @@ namespace cr
 
         private:
 
+            std::int64_t lastHeartbeatTime_;
+
         };
     }
 }

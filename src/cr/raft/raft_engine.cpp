@@ -123,6 +123,11 @@ namespace cr
             return currentEnumState_;
         }
 
+        const boost::optional<std::uint32_t>& RaftEngine::getLeaderId() const
+        {
+            return leaderId_;
+        }
+
         std::uint32_t RaftEngine::getElectionTimeout() const
         {
             return electionTimeout_;
@@ -188,6 +193,11 @@ namespace cr
         void RaftEngine::setLastApplied(std::uint64_t lastApplied)
         {
             lastApplied_ = lastApplied;
+        }
+
+        void RaftEngine::setLeaderId(boost::optional<std::uint32_t> leaderId)
+        {
+            leaderId_ = leaderId;
         }
     }
 }

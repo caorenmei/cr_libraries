@@ -136,6 +136,12 @@ namespace cr
             State getCurrentState() const;
 
             /**
+             * 获取当前的领导者Id
+             * @return 领导者Id
+             */
+            const boost::optional<std::uint32_t>& getLeaderId() const;
+
+            /**
              * 获取选举超时时间
              * @return 选举超时时间，毫秒
              */
@@ -179,6 +185,9 @@ namespace cr
             // 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             void setLastApplied(std::uint64_t lastApplied);
 
+            // 设置领导者Id
+            void setLeaderId(boost::optional<std::uint32_t> leaderId);
+
             // 节点相关数据
 
             // 本节点ID
@@ -203,6 +212,12 @@ namespace cr
 
             // 最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             std::uint64_t lastApplied_;
+            // 领导者Id
+            boost::optional<std::uint32_t> leaderId_;
+            // 选举超时时间
+            std::uint32_t electionTimeout_;
+            // 投票超时时间
+            std::pair<std::uint32_t, std::uint32_t> voteTimeout_;
 
             // 状态机相关
 
@@ -213,10 +228,6 @@ namespace cr
             State currentEnumState_;
             // 下一个状态
             State nextEnumState_;
-            // 选举超时时间
-            std::uint32_t electionTimeout_;
-            // 投票超时时间
-            std::pair<std::uint32_t, std::uint32_t> voteTimeout_;
         };
     }
 }

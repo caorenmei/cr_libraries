@@ -1,14 +1,16 @@
-#include <cr/raft/follower.h>
+﻿#include <cr/raft/follower.h>
 
 #include <cr/common/assert.h>
 #include <cr/raft/raft_engine.h>
+#include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
     namespace raft
     {
         Follower::Follower(RaftEngine& engine)
-            : RaftState(engine)
+            : RaftState(engine),
+            lastHeartbeatTime_(0)
         {}
 
         Follower::~Follower()
@@ -16,7 +18,7 @@ namespace cr
 
         void Follower::onEnter(std::shared_ptr<RaftState> prevState)
         {
-            
+            lastHeartbeatTime_ = getEngine().getNowTime();
         }
 
         void Follower::onLeave()
@@ -26,7 +28,20 @@ namespace cr
 
         std::int64_t Follower::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
-            return nowTime;
+            // 选举超时
+            if (lastHeartbeatTime_ + getEngine().getElectionTimeout() <= nowTime)
+            {
+                getEngine().setNextState(RaftEngine::CANDIDATE);
+                return nowTime;
+            }
+            
+            // 更新心跳时间
+            if (inMessage != nullptr && inMessage->msg_type() == pb::RaftMsg::LOG_APPEND_REQ)
+            {
+                lastHeartbeatTime_ = nowTime;
+            }
+            // 选举超时时间之前需要update
+            return std::max<std::int64_t>(lastHeartbeatTime_ + getEngine().getElectionTimeout() / 2, nowTime);
         }
     }
 }
