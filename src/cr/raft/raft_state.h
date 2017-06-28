@@ -50,14 +50,6 @@ namespace cr
             /**
              * 执行状态机逻辑
              * @param nowTime 当前时间戳, ms
-             * @param outMessages 输出消息
-             * @return 下一次update的时间戳, ms
-             */
-            virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
-
-            /**
-             * 执行状态机逻辑
-             * @param nowTime 当前时间戳, ms
              * @param inMessage 输入消息
              * @param outMessages 输出消息
              * @return 下一次update的时间戳, ms

@@ -24,11 +24,6 @@ namespace cr
 
         }
 
-        std::int64_t Leader::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
-        {
-            return nowTime;
-        }
-
         std::int64_t Leader::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
             return nowTime;

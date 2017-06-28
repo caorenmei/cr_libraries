@@ -24,11 +24,6 @@ namespace cr
 
         }
 
-        std::int64_t Follower::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
-        {
-            return nowTime;
-        }
-
         std::int64_t Follower::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
         {
             return nowTime;

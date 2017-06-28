@@ -15,10 +15,5 @@ namespace cr
         {
             return engine_;
         }
-
-        std::int64_t RaftState::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
-        {
-            return update(nowTime, nullptr, outMessages);
-        }
     }
 }
