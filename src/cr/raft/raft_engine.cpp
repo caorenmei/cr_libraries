@@ -71,7 +71,7 @@ namespace cr
 
         bool RaftEngine::isBuddyNodeId(std::uint32_t nodeId) const
         {
-            return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) != buddyNodeIds_.end();
+            return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
         }
 
         const std::shared_ptr<LogStorage>& RaftEngine::getLogStorage() const

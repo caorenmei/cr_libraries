@@ -23,6 +23,9 @@ namespace cr
 
             virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
+            // 最后的心跳时间
+            std::int64_t getLastHeartbeatTime() const;
+
         private:
 
             // 消息处理
@@ -34,6 +37,7 @@ namespace cr
             // 请求投票
             void onVoteReqHandler(const pb::VoteReq& request, std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
+            // 最后心跳时间
             std::int64_t lastHeartbeatTime_;
 
         };

@@ -25,6 +25,10 @@ namespace cr
         /** Raft状态机 */
         class RaftState;
 
+        /** 调试访问器，可以访问类的私有成员 */
+        template <typename T>
+        class DebugVisitor;
+
         /**
          * Raft算法引擎
          * 一个Raft算法引擎对应一个raft实例
@@ -179,8 +183,12 @@ namespace cr
             std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
         private:
+
+            // 调试模式
+            template <typename T>
+            friend class DebugVisitor;
         
-            /* 状态机为友元类 */
+            // 状态机为友元类 
             friend class Follower;
             friend class Candidate;
             friend class Leader;
