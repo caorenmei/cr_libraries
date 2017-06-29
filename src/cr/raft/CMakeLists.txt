@@ -18,9 +18,8 @@ set(cr_raft_SRCS
     follower.cpp
     leader.h
     leader.cpp
-    log_entry.h
-    log_entry.cpp
     log_storage.h
+    log_storage.cpp
     mem_log_storage.h
     mem_log_storage.cpp
     raft_engine.h
@@ -35,7 +34,6 @@ set(cr_raft_SRCS
 set(cr_raft_HEADERS
     ${PROTO_HDRS}
     exception.h
-    log_entry.h
     log_storage.h
     mem_log_storage.h
     raft_engine.h
