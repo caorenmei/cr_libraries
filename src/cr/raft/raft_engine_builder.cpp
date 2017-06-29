@@ -27,13 +27,13 @@ namespace cr
 
         RaftEngineBuilder& RaftEngineBuilder::setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds)
         {
-            otherNodeIds_ = std::move(otherNodeIds);
+            buddyNodeIds_ = std::move(otherNodeIds);
             return *this;
         }
 
-        const std::vector<std::uint32_t>& RaftEngineBuilder::getOtherNodeIds() const
+        const std::vector<std::uint32_t>& RaftEngineBuilder::getBuddyNodeIds() const
         {
-            return otherNodeIds_;
+            return buddyNodeIds_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setLogStorage(std::shared_ptr<LogStorage> storage)

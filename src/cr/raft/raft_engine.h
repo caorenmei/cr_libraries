@@ -72,7 +72,13 @@ namespace cr
              * 获取其它节点Id
              * @return 其它节点Id
              */
-            const std::vector<std::uint32_t>& getOtherNodeIds() const;
+            const std::vector<std::uint32_t>& getBuddyNodeIds() const;
+
+            /**
+             * 判断是不是伙伴Id
+             * @return True 是, False 其它
+             */
+            bool isBuddyNodeId(std::uint32_t nodeId) const;
 
             /**
              * 获取日志存储接口
@@ -202,7 +208,7 @@ namespace cr
             // 本节点ID
             std::uint32_t nodeId_;
             // 其它节点ID
-            std::vector<std::uint32_t> otherNodeIds_;
+            std::vector<std::uint32_t> buddyNodeIds_;
             // 存储接口
             std::shared_ptr<LogStorage> storage_;
             // 状态机

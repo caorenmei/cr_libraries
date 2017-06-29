@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(build)
         .build();
 
     BOOST_CHECK_EQUAL(raftEngine->getNodeId(), 1);
-    BOOST_CHECK(cr::from(raftEngine->getOtherNodeIds()).sorted().equals(cr::from({ 2,3,4 })));
+    BOOST_CHECK(cr::from(raftEngine->getBuddyNodeIds()).sorted().equals(cr::from({ 2,3,4 })));
     BOOST_CHECK_EQUAL(raftEngine->getCurrentTerm(), 0);
     BOOST_CHECK(!raftEngine->getVotedFor());
     BOOST_CHECK_EQUAL(raftEngine->getCommitLogIndex(), 0);

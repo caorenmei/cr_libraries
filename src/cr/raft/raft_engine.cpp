@@ -17,7 +17,7 @@ namespace cr
 
         RaftEngine::RaftEngine(const Builder& builder)
             : nodeId_(builder.getNodeId()),
-            otherNodeIds_(builder.getOtherNodeIds()),
+            buddyNodeIds_(builder.getBuddyNodeIds()),
             storage_(builder.getLogStorage()),
             stateMachine_(builder.getStateMachine()),
             currentTerm_(0),
@@ -29,12 +29,12 @@ namespace cr
             voteTimeout_(builder.getVoteTimeout())
         {
             // 节点有效性判断
-            std::sort(otherNodeIds_.begin(), otherNodeIds_.end());
-            if (std::unique(otherNodeIds_.begin(), otherNodeIds_.end()) != otherNodeIds_.end())
+            std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
+            if (std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) != buddyNodeIds_.end())
             {
                 CR_THROW(ArgumentException, "Has Repeated Other Node Id");
             }
-            if (std::find(otherNodeIds_.begin(), otherNodeIds_.end(), nodeId_) != otherNodeIds_.end())
+            if (std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) != buddyNodeIds_.end())
             {
                 CR_THROW(ArgumentException, "Other Node Id List Container This Id");
             }
@@ -64,9 +64,14 @@ namespace cr
             return nodeId_;
         }
 
-        const std::vector<std::uint32_t>& RaftEngine::getOtherNodeIds() const
+        const std::vector<std::uint32_t>& RaftEngine::getBuddyNodeIds() const
         {
-            return otherNodeIds_;
+            return buddyNodeIds_;
+        }
+
+        bool RaftEngine::isBuddyNodeId(std::uint32_t nodeId) const
+        {
+            return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) != buddyNodeIds_.end();
         }
 
         const std::shared_ptr<LogStorage>& RaftEngine::getLogStorage() const
