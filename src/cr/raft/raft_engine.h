@@ -42,8 +42,6 @@ namespace cr
             /** 当前状态 */
             enum State
             {
-                /** 日志回放状态 */
-                REPLAY,
                 /** 跟随者状态 */
                 FOLLOWER,
                 /** 候选者状态 */
@@ -165,7 +163,6 @@ namespace cr
         private:
         
             /* 状态机为友元类 */
-            friend class Replay;
             friend class Follower;
             friend class Candidate;
             friend class Leader;

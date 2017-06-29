@@ -29,8 +29,6 @@ set(cr_raft_SRCS
     raft_engine_builder.cpp
     raft_state.h
     raft_state.cpp
-    replay.h
-    replay.cpp
     state_machine.h
 )
 

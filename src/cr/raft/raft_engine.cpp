@@ -9,7 +9,6 @@
 #include <cr/raft/follower.h>
 #include <cr/raft/leader.h>
 #include <cr/raft/raft_state.h>
-#include <cr/raft/replay.h>
 
 namespace cr
 {
@@ -24,8 +23,8 @@ namespace cr
             currentTerm_(0),
             lastApplied_(0),
             nowTime_(0),
-            currentEnumState_(REPLAY),
-            nextEnumState_(REPLAY),
+            currentEnumState_(FOLLOWER),
+            nextEnumState_(FOLLOWER),
             electionTimeout_(builder.getElectionTimeout()),
             voteTimeout_(builder.getVoteTimeout())
         {
@@ -83,7 +82,7 @@ namespace cr
         void RaftEngine::initialize()
         {
             CR_ASSERT(currentState_ == nullptr);
-            currentState_ = std::make_shared<Replay>(*this);
+            currentState_ = std::make_shared<Follower>(*this);
             currentState_->onEnter(nullptr);
         }
 
