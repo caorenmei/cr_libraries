@@ -163,20 +163,26 @@ namespace cr
         std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(currentState_ != nullptr);
-            if (nowTime >= nowTime_)
+            if (nowTime < nowTime_)
             {
-                nowTime_ = nowTime;
-                std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
-                CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-                if (nextEnumState_ != currentEnumState_)
-                {
-                    onTransitionState();
-                    nextUpdateTime = nowTime;
-                }
-                CR_ASSERT(nextEnumState_ == currentEnumState_);
-                return nextUpdateTime;
+                return nowTime_;
             }
-            return nowTime_;
+            nowTime_ = nowTime;
+            std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
+            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
+            if (nextEnumState_ != currentEnumState_)
+            {
+                onTransitionState();
+                nextUpdateTime = nowTime;
+            }
+            CR_ASSERT(nextEnumState_ == currentEnumState_);
+            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
+            if (!messages_.empty())
+            {
+                return nowTime_;
+            }
+            return nextUpdateTime;
+            
         }
 
         void RaftEngine::setNextState(State nextState)
