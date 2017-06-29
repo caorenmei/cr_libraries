@@ -26,7 +26,7 @@ namespace cr
 
         }
 
-        std::int64_t Follower::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
+        std::int64_t Follower::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             // 选举超时
             if (lastHeartbeatTime_ + getEngine().getElectionTimeout() <= nowTime)
@@ -35,11 +35,6 @@ namespace cr
                 return nowTime;
             }
             
-            // 更新心跳时间
-            if (inMessage != nullptr && inMessage->msg_type() == pb::RaftMsg::LOG_APPEND_REQ)
-            {
-                lastHeartbeatTime_ = nowTime;
-            }
             // 选举超时时间之前需要update
             return std::max<std::int64_t>(lastHeartbeatTime_ + getEngine().getElectionTimeout() / 2, nowTime);
         }

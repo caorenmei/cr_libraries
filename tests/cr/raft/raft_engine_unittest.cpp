@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(build)
 
 BOOST_FIXTURE_TEST_CASE(initialize, RaftEngineFixture)
 {
-    BOOST_CHECK_THROW(raftEngine->update(0, nullptr, outMessages), cr::AssertError);
+    BOOST_CHECK_THROW(raftEngine->update(0, outMessages), cr::AssertError);
     BOOST_CHECK_NO_THROW(raftEngine->initialize());
     BOOST_CHECK_THROW(raftEngine->initialize(), cr::AssertError);
-    BOOST_CHECK_NO_THROW(raftEngine->update(0, nullptr, outMessages));
+    BOOST_CHECK_NO_THROW(raftEngine->update(0, outMessages));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

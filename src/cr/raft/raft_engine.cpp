@@ -137,11 +137,28 @@ namespace cr
             return voteTimeout_;
         }
 
-        std::int64_t RaftEngine::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
+        void RaftEngine::pushMessage(RaftMsgPtr message)
+        {
+            CR_ASSERT(message != nullptr)(nodeId_);
+            messages_.emplace_back(std::move(message));
+        }
+
+        RaftEngine::RaftMsgPtr RaftEngine::popMessage()
+        {
+            RaftMsgPtr message;
+            if (!messages_.empty())
+            {
+                message = std::move(messages_.front());
+                messages_.pop_front();
+            }
+            return message;
+        }
+
+        std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(currentState_ != nullptr);
             nowTime_ = nowTime;
-            std::int64_t nextUpdateTime = currentState_->update(nowTime, std::move(inMessage), outMessages);
+            std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
             if (nextEnumState_ != currentEnumState_)
             {
                 onTransitionState();

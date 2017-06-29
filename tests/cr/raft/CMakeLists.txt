@@ -7,6 +7,7 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 set(cr_raft_unittest_SRCS
     unittest_main.cpp
+    follower_unittest.cpp
     mem_log_storage_unittest.cpp
     raft_engine_unittest.cpp
 )

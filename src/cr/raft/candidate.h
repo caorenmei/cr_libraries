@@ -20,7 +20,7 @@ namespace cr
 
             virtual void onLeave() override;
 
-            virtual std::int64_t update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages) override;
+            virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
         private:
 

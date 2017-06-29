@@ -24,7 +24,7 @@ namespace cr
 
         }
 
-        std::int64_t Candidate::update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages)
+        std::int64_t Candidate::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             return nowTime;
         }

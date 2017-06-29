@@ -152,13 +152,24 @@ namespace cr
             const std::pair<std::uint32_t, std::uint32_t>& getVoteTimeout() const;
 
             /**
+             * 加入消息到队列，等待后续处理
+             * @param message rpc消息
+             */
+            void pushMessage(RaftMsgPtr message);
+
+            /**
+             * 从队列弹出消息
+             * @return rpc消息
+             */
+            RaftMsgPtr popMessage();
+
+            /**
              * 执行状态机逻辑
              * @param nowTime 当前时间戳, ms
-             * @param inMessage 输入消息
              * @param outMessages 输出消息
              * @return 下一次update的时间戳, ms
              */
-            std::int64_t update(std::int64_t nowTime, RaftMsgPtr inMessage, std::vector<RaftMsgPtr>& outMessages);
+            std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
         private:
         
@@ -195,6 +206,8 @@ namespace cr
             std::shared_ptr<LogStorage> storage_;
             // 状态机
             std::shared_ptr<StateMachine> stateMachine_;
+            // 消息队列
+            std::deque<RaftMsgPtr> messages_;
 
             // 所有服务器上持久存在的
 
