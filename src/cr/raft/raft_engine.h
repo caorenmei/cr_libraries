@@ -88,8 +88,9 @@ namespace cr
 
             /**
              * 初始化
+             * @param nowTime 当前时间
              */
-            void initialize();
+            void initialize(std::int64_t nowTime);
 
             /**
              * 服务器当前的任期号

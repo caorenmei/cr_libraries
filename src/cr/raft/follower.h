@@ -2,6 +2,7 @@
 #define CR_RAFT_FOLLOWER_H_
 
 #include <cr/raft/raft_state.h>
+#include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
@@ -23,6 +24,15 @@ namespace cr
             virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
         private:
+
+            // 消息处理
+            void dispatchMessage(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            // 追加日志
+            void onLogAppendReqHandler(const pb::LogAppendReq& request, std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            // 请求投票
+            void onVoteReqHandler(const pb::VoteReq& request, std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
             std::int64_t lastHeartbeatTime_;
 

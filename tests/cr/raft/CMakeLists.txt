@@ -19,5 +19,6 @@ target_link_libraries(cr_raft_unittest
     cr_common
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${PROTOBUF_LIBRARIES}
 )
 add_test(cr_raft_unittest cr_raft_unittest)
