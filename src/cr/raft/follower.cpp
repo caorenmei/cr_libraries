@@ -110,10 +110,13 @@ namespace cr
                 && request.candidate_term() >= currentTerm)
             {
                 auto voteFor = getEngine().getVotedFor();
-                if (!voteFor || *voteFor == request.candidate_id() || request.candidate_term() > currentTerm)
+                if (!voteFor || request.candidate_term() > currentTerm)
                 {
                     voteFor = request.candidate_id();
                     getEngine().setVotedFor(voteFor);
+                }
+                if (*voteFor == request.candidate_id())
+                {
                     voteResp.set_success(true);
                 }
                 // 更新任期
