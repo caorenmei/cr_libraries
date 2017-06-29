@@ -46,7 +46,7 @@ namespace cr
              * 获取日志任期编号
              * @return 日志任期编号 
              */
-            std::uint32_t getTerm() const;
+            std::uint32_t getTermByIndex() const;
 
             /**
              * 设置日志任期编号
@@ -97,6 +97,14 @@ namespace cr
              * @exception StoreException 异常发生
              */
             virtual void get(std::uint64_t logIndex, LogEntry& logEntry) = 0;
+
+            /**
+             * 获取日志任期信息
+             * @param logIndex 日志ID，从1开始
+             * @return 任期
+             * @exception StoreException 异常发生
+             */
+            virtual std::uint32_t getTermByIndex(std::uint64_t logIndex) = 0;
 
             /**
              * 追加日志

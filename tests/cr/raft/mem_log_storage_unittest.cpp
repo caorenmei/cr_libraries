@@ -15,18 +15,23 @@ BOOST_AUTO_TEST_CASE(get)
     cr::raft::LogEntry getLogEntry;
 
     BOOST_CHECK_THROW(storage.get(0, getLogEntry), cr::raft::StoreException);
+    BOOST_CHECK_THROW(storage.getTermByIndex(0), cr::raft::StoreException);
     BOOST_CHECK_THROW(storage.get(1, getLogEntry), cr::raft::StoreException);
+    BOOST_CHECK_THROW(storage.getTermByIndex(0), cr::raft::StoreException);
 
     storage.append(cr::raft::LogEntry(1, 1, "1"));
     BOOST_CHECK_THROW(storage.get(0, getLogEntry), cr::raft::StoreException);
     BOOST_CHECK_NO_THROW(storage.get(1, getLogEntry));
+    BOOST_CHECK_EQUAL(storage.getTermByIndex(1), 1);
     BOOST_CHECK_EQUAL(getLogEntry.getIndex(), 1);
-    BOOST_CHECK_EQUAL(getLogEntry.getTerm(), 1);
+    BOOST_CHECK_EQUAL(getLogEntry.getTermByIndex(), 1);
     BOOST_CHECK_EQUAL(getLogEntry.getValue(), "1");
 
     storage.del(1);
     BOOST_CHECK_THROW(storage.get(0, getLogEntry), cr::raft::StoreException);
+    BOOST_CHECK_THROW(storage.getTermByIndex(0), cr::raft::StoreException);
     BOOST_CHECK_THROW(storage.get(1, getLogEntry), cr::raft::StoreException);
+    BOOST_CHECK_THROW(storage.getTermByIndex(0), cr::raft::StoreException);
 }
 
 BOOST_AUTO_TEST_CASE(append)

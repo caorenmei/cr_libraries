@@ -25,6 +25,16 @@ namespace cr
             logEntry = logEntries_[vecLogIndex - 1];
         }
 
+        std::uint32_t MemLogStorage::getTermByIndex(std::uint64_t logIndex)
+        {
+            if (logIndex < 1 || logIndex > logEntries_.size())
+            {
+                CR_THROW(StoreException, "Log Index Out Of Bound", error::LOG_INDEX_ERROR);
+            }
+            std::size_t vecLogIndex = static_cast<std::size_t>(logIndex);
+            return logEntries_[vecLogIndex - 1].getTermByIndex();
+        }
+
         void MemLogStorage::append(const LogEntry& logEntry)
         {
             if (logEntry.getIndex() < 1 || logEntry.getIndex() > logEntries_.size() + 1)

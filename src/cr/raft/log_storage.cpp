@@ -27,7 +27,7 @@ namespace cr
             index_ = index;
         }
 
-        std::uint32_t LogEntry::getTerm() const
+        std::uint32_t LogEntry::getTermByIndex() const
         {
             return term_;
         }

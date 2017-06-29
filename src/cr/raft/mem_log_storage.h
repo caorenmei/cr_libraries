@@ -33,6 +33,14 @@ namespace cr
             virtual void get(std::uint64_t logIndex, LogEntry& logEntry) override;
 
             /**
+             * 获取日志任期信息
+             * @param logIndex 日志ID，从1开始
+             * @return 任期
+             * @exception StoreException 异常发生
+             */
+            virtual std::uint32_t getTermByIndex(std::uint64_t logIndex) override;
+
+            /**
              * 追加日志
              * @param logEntry 日志
              * @exception StoreException 异常发生
