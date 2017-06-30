@@ -100,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     voteReq.set_last_log_index(0);
     voteReq.set_last_log_term(0);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(2, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 0);
     BOOST_CHECK_EQUAL(follower->getLastHeartbeatTime(), 1);
@@ -108,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     // 第一轮投票，肯定成功
     voteReq.set_candidate_id(2);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(3, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(follower->getLastHeartbeatTime(), 3);
@@ -123,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     // 已经投过票，再次投票成功
     voteReq.set_candidate_id(2);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(3, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -134,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     // 已经投过票，同一任期其它节点投票失败
     voteReq.set_candidate_id(3);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(4, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -146,7 +146,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     // 已经投过票，新增任期投票成功
     voteReq.set_candidate_term(2);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(5, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -160,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     logStrage->append({ 1, 1, "0" });
     logStrage->append({ 2, 2, "0" });
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(6, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -172,7 +172,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     voteReq.set_last_log_index(1);
     voteReq.set_last_log_term(2);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(7, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -184,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     voteReq.set_last_log_index(2);
     voteReq.set_last_log_term(2);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(7, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     voteReq.set_last_log_index(2);
     voteReq.set_last_log_term(3);
     raftMsg.mutable_msg()->PackFrom(voteReq);
-    raftEngine->pushMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
+    raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(7, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);

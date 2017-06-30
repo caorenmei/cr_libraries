@@ -143,10 +143,16 @@ namespace cr
             return voteTimeout_;
         }
 
-        void RaftEngine::pushMessage(RaftMsgPtr message)
+        void RaftEngine::pushTailMessage(RaftMsgPtr message)
         {
             CR_ASSERT(message != nullptr)(nodeId_);
-            messages_.emplace_back(std::move(message));
+            messages_.push_back(std::move(message));
+        }
+
+        void RaftEngine::pushFrontMessage(RaftMsgPtr message)
+        {
+            CR_ASSERT(message != nullptr)(nodeId_);
+            messages_.push_front(std::move(message));
         }
 
         RaftEngine::RaftMsgPtr RaftEngine::popMessage()

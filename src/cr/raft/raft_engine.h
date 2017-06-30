@@ -166,7 +166,13 @@ namespace cr
              * 加入消息到队列，等待后续处理
              * @param message rpc消息
              */
-            void pushMessage(RaftMsgPtr message);
+            void pushTailMessage(RaftMsgPtr message);
+
+            /**
+             * 加入消息到队列头部，等待后续处理
+             * @param message rpc消息
+             */
+            void pushFrontMessage(RaftMsgPtr message);
 
             /**
              * 从队列弹出消息
