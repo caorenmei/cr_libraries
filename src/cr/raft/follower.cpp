@@ -114,7 +114,11 @@ namespace cr
                 {
                     break;
                 }
-
+                // 更新commitIndex
+                if (!updateCommitIndex(request))
+                {
+                    break;
+                }
                 // success
                 success = true;
             } while (0);
@@ -166,6 +170,18 @@ namespace cr
             {
                 logIndex = logIndex + 1;
                 getEngine().appendLog(logIndex, request.entries(i));
+            }
+            return true;
+        }
+
+        bool Follower::updateCommitIndex(const pb::LogAppendReq& request)
+        {
+            std::uint64_t commitIndex = getEngine().getCommitIndex();
+            std::uint64_t lastLogIndex = getEngine().getLastLogIndex();
+            if (request.leader_commit() > commitIndex)
+            {
+                commitIndex = std::max(request.leader_commit(), lastLogIndex);
+                getEngine().setCommitIndex(commitIndex);
             }
             return true;
         }

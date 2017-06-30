@@ -46,8 +46,8 @@ namespace cr
             // 附加日志
             bool appendLog(const pb::LogAppendReq& request);
 
-            // 校验追加日志任期
-            bool checkAppendLogTerm(std::uint64_t logIndex);
+            // 应用日志
+            bool updateCommitIndex(const pb::LogAppendReq& request);
 
             // 回执
             void logAppendResp(bool success, std::vector<RaftMsgPtr>& outMessages);

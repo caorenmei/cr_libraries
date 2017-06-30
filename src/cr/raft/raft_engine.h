@@ -130,7 +130,7 @@ namespace cr
              * 获取已知的最大的已经被提交的日志条目的索引值
              * @return 已知的最大的已经被提交的日志条目的索引值
              */
-            std::uint64_t getCommitLogIndex() const;
+            std::uint64_t getCommitIndex() const;
 
             /**
              * 获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）

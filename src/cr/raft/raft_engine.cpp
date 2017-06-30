@@ -117,7 +117,7 @@ namespace cr
             return 0;
         }
 
-        std::uint64_t RaftEngine::getCommitLogIndex() const
+        std::uint64_t RaftEngine::getCommitIndex() const
         {
             return commitIndex_;
         }
