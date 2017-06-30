@@ -115,28 +115,28 @@ namespace cr
             boost::optional<std::uint32_t> getVotedFor() const;
 
             /**
+             * 获取最后的日志条目索引值
+             * @return 最后的日志条目索引值
+             */
+            std::uint64_t getLastLogIndex() const;
+
+            /**
+             * 获取日志条目任期
+             * @return日志条目任期
+             */
+            std::uint32_t getLogTerm(std::uint64_t logIndex) const;
+
+            /**
              * 获取已知的最大的已经被提交的日志条目的索引值
              * @return 已知的最大的已经被提交的日志条目的索引值
              */
             std::uint64_t getCommitLogIndex() const;
 
             /**
-             * 获取已知的最大的已经被提交的日志条目的任期
-             * @return 已知的最大的已经被提交的日志条目的任期
-             */
-            std::uint32_t getCommitLogTerm() const;
-
-            /**
              * 获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
              * @return 应用到状态机的日志条目索引值
              */
             std::uint64_t getLastApplied() const;
-
-            /**
-             * 获取缓存的日志起始索引
-             * @return 缓存的日志起始索引
-             */
-            std::uint64_t getCacheBeginLogIndex() const;
 
             /**
              * 获取当前时间戳
@@ -218,7 +218,10 @@ namespace cr
             void setVotedFor(boost::optional<std::uint32_t> voteFor);
 
             // 设置获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
-            void setLastApplied(std::uint64_t lastApplied);
+            void setCommitIndex(std::uint64_t commitIndex);
+
+            // 追加日志
+            void appendLog(std::uint64_t logIndex, const std::string& value);
 
             // 设置领导者Id
             void setLeaderId(boost::optional<std::uint32_t> leaderId);
@@ -247,6 +250,8 @@ namespace cr
 
             // 所有服务器上经常变的
 
+            // 已知的最大的已经被提交的日志条目的索引值
+            std::uint64_t commitIndex_;
             // 最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
             std::uint64_t lastApplied_;
             // 领导者Id

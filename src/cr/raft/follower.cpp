@@ -114,6 +114,7 @@ namespace cr
                 {
                     break;
                 }
+
                 // success
                 success = true;
             } while (0);
@@ -148,15 +149,11 @@ namespace cr
 
         bool Follower::checkPrevLogTerm(const pb::LogAppendReq& request)
         {
-            std::uint64_t lastLogIndex = getEngine().getCommitLogIndex();
+            std::uint64_t lastLogIndex = getEngine().getLastLogIndex();
             if (lastLogIndex >= request.prev_log_index())
             {
-                std::uint32_t prevLogTerm = 0;
-                if (lastLogIndex > 0)
-                {
-                    prevLogTerm = getEngine().getLogStorage()->getTermByIndex(request.prev_log_index());
-                }
-                return prevLogTerm == request.prev_log_term();
+                std::uint32_t prevLogTerm = getEngine().getLogTerm(request.prev_log_index());
+                return request.prev_log_term() == prevLogTerm;
             }
             return false;
         }
@@ -168,24 +165,7 @@ namespace cr
             for (int i = 0; i < request.entries_size(); ++i)
             {
                 logIndex = logIndex + 1;
-                checkAppendLogTerm(logIndex);
-                if (logIndex > getEngine().getCommitLogIndex())
-                {
-                    getEngine().getLogStorage()->append({ logIndex , currentTerm, request.entries(i) });
-                }
-            }
-            return true;
-        }
-
-        bool Follower::checkAppendLogTerm(std::uint64_t logIndex)
-        {
-            if (logIndex <= getEngine().getCommitLogIndex())
-            {
-                std::uint32_t logTerm = getEngine().getLogStorage()->getTermByIndex(logIndex);
-                if (logTerm != getEngine().getCurrentTerm())
-                {
-                    getEngine().getLogStorage()->del(logIndex);
-                }
+                getEngine().appendLog(logIndex, request.entries(i));
             }
             return true;
         }
@@ -195,8 +175,9 @@ namespace cr
             pb::LogAppendResp response;
             response.set_follower_id(getEngine().getNodeId());
             response.set_follower_term(getEngine().getCurrentTerm());
-            response.set_last_log_index(getEngine().getCommitLogIndex());
-            response.set_last_log_term(getEngine().getCommitLogTerm());
+            std::uint64_t lastLogIndex = getEngine().getLastLogIndex();
+            response.set_last_log_index(lastLogIndex);
+            response.set_last_log_term(getEngine().getLogTerm(lastLogIndex));
             response.set_success(success);
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
@@ -216,8 +197,8 @@ namespace cr
             }
             // 本节点状态
             std::uint32_t currentTerm = getEngine().getCurrentTerm();
-            std::uint64_t lastLogIndex = getEngine().getCommitLogIndex();
-            std::uint32_t lastLogTerm = getEngine().getCommitLogTerm();
+            std::uint64_t lastLogIndex = getEngine().getLastLogIndex();
+            std::uint32_t lastLogTerm = getEngine().getLogTerm(lastLogIndex);
             // 投票
             bool success = false;
             if (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)
@@ -253,11 +234,12 @@ namespace cr
             response.set_follower_id(getEngine().getNodeId());
             response.set_candidate_term(request.candidate_term());
             response.set_follower_term(getEngine().getCurrentTerm());
-            // 应答
+
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_node_id(request.candidate_id());
             raftMsg->set_msg_type(pb::RaftMsg::VOTE_RESP);
             raftMsg->mutable_msg()->PackFrom(response);
+
             outMessages.push_back(std::move(raftMsg));
         }
     }

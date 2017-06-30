@@ -21,6 +21,7 @@ namespace cr
             storage_(builder.getLogStorage()),
             stateMachine_(builder.getStateMachine()),
             currentTerm_(0),
+            commitIndex_(0),
             lastApplied_(0),
             nowTime_(0),
             currentEnumState_(FOLLOWER),
@@ -102,30 +103,28 @@ namespace cr
             return votedFor_;
         }
 
-        std::uint64_t RaftEngine::getCommitLogIndex() const
+        std::uint64_t RaftEngine::getLastLogIndex() const
         {
             return storage_->getLastIndex();
         }
 
-        std::uint32_t RaftEngine::getCommitLogTerm() const
+        std::uint32_t RaftEngine::getLogTerm(std::uint64_t logIndex) const
         {
-            std::uint64_t lastLogIndex = storage_->getLastIndex();
-            if (lastLogIndex != 0)
+            if (logIndex != 0)
             {
-                return storage_->getTermByIndex(lastLogIndex);
+                return storage_->getTermByIndex(logIndex);
             }
             return 0;
+        }
+
+        std::uint64_t RaftEngine::getCommitLogIndex() const
+        {
+            return commitIndex_;
         }
 
         std::uint64_t RaftEngine::getLastApplied() const
         {
             return lastApplied_;
-        }
-
-        std::uint64_t RaftEngine::getCacheBeginLogIndex() const
-        {
-            CR_ASSERT(!"Not Implements");
-            return 0;
         }
 
         std::int64_t RaftEngine::getNowTime() const
@@ -184,6 +183,7 @@ namespace cr
                 return nowTime_;
             }
             nowTime_ = nowTime;
+            // 更新状态机
             std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
             CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
             if (nextEnumState_ != currentEnumState_)
@@ -193,7 +193,16 @@ namespace cr
             }
             CR_ASSERT(nextEnumState_ == currentEnumState_);
             CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-            if (!messages_.empty())
+            // 应用日志
+            if (lastApplied_ < commitIndex_)
+            {
+                ++lastApplied_;
+                LogEntry logEntry;
+                storage_->get(lastApplied_, logEntry);
+                stateMachine_->execute(logEntry.getIndex(), logEntry.getValue(), boost::any());
+            }
+            // 有消息没处理完，立即update
+            if (!messages_.empty() || lastApplied_ < commitIndex_)
             {
                 return nowTime_;
             }
@@ -239,9 +248,22 @@ namespace cr
             votedFor_ = voteFor;
         }
 
-        void RaftEngine::setLastApplied(std::uint64_t lastApplied)
+        void RaftEngine::setCommitIndex(std::uint64_t commitIndex)
         {
-            lastApplied_ = lastApplied;
+            commitIndex_ = commitIndex;
+        }
+
+        void RaftEngine::appendLog(std::uint64_t logIndex, const std::string& value)
+        {
+            if (logIndex <= storage_->getLastIndex())
+            {
+                std::uint32_t logTerm = storage_->getTermByIndex(logIndex);
+                if (logTerm != currentTerm_)
+                {
+                    storage_->del(logIndex);
+                }
+            }
+            storage_->append({ logIndex, currentTerm_, value });
         }
 
         void RaftEngine::setLeaderId(boost::optional<std::uint32_t> leaderId)
