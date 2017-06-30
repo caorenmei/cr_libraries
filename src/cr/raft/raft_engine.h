@@ -121,6 +121,12 @@ namespace cr
             std::uint64_t getCommitLogIndex() const;
 
             /**
+             * 获取已知的最大的已经被提交的日志条目的任期
+             * @return 已知的最大的已经被提交的日志条目的任期
+             */
+            std::uint32_t getCommitLogTerm() const;
+
+            /**
              * 获取最后被应用到状态机的日志条目索引值（初始化为 0，持续递增）
              * @return 应用到状态机的日志条目索引值
              */

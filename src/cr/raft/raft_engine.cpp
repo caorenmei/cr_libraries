@@ -107,6 +107,16 @@ namespace cr
             return storage_->getLastIndex();
         }
 
+        std::uint32_t RaftEngine::getCommitLogTerm() const
+        {
+            std::uint64_t lastLogIndex = storage_->getLastIndex();
+            if (lastLogIndex != 0)
+            {
+                return storage_->getTermByIndex(lastLogIndex);
+            }
+            return 0;
+        }
+
         std::uint64_t RaftEngine::getLastApplied() const
         {
             return lastApplied_;
