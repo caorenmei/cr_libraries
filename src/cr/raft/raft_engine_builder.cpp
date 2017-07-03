@@ -8,7 +8,8 @@ namespace cr
     {
         RaftEngineBuilder::RaftEngineBuilder()
             : nodeId_(0),
-            electionTimeout_(0)
+            logWindowSize_(1),
+            maxPacketLength_(1)
         {}
 
         RaftEngineBuilder::~RaftEngineBuilder()
@@ -25,7 +26,7 @@ namespace cr
             return nodeId_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setOtherNodeIds(std::vector<std::uint32_t> otherNodeIds)
+        RaftEngineBuilder& RaftEngineBuilder::setBuddyNodeIds(std::vector<std::uint32_t> otherNodeIds)
         {
             buddyNodeIds_ = std::move(otherNodeIds);
             return *this;
@@ -36,48 +37,67 @@ namespace cr
             return buddyNodeIds_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setLogStorage(std::shared_ptr<LogStorage> storage)
+        RaftEngineBuilder& RaftEngineBuilder::setStorage(std::shared_ptr<Storage> storage)
         {
             storage_ = std::move(storage);
             return *this;
         }
 
-        const std::shared_ptr<LogStorage>& RaftEngineBuilder::getLogStorage() const
+        const std::shared_ptr<Storage>& RaftEngineBuilder::getStorage() const
         {
             return storage_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setStateMachine(std::shared_ptr<StateMachine> stateMachine)
+        RaftEngineBuilder& RaftEngineBuilder::setEexcuteCallback(std::function<void(std::uint64_t, const std::string&)> cb)
         {
-            stateMachine_ = std::move(stateMachine);
+            executeCallback_ = std::move(cb);
             return *this;
         }
 
-        const std::shared_ptr<StateMachine>&  RaftEngineBuilder::getStateMachine() const
+        const std::function<void(std::uint64_t, const std::string&)>& RaftEngineBuilder::getEexcuteCallback() const
         {
-            return stateMachine_;
+            return executeCallback_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(std::uint32_t electionTimeout)
+        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(const std::pair<std::uint32_t, std::uint32_t>& electionTimeout)
         {
             electionTimeout_ = electionTimeout;
             return *this;
         }
 
-        std::uint32_t RaftEngineBuilder::getElectionTimeout() const
+        const std::pair<std::uint32_t, std::uint32_t>& RaftEngineBuilder::getElectionTimeout() const
         {
             return electionTimeout_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setVoteTimeout(const std::pair<std::uint32_t, std::uint32_t>& voteTimeout)
+        RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint32_t()> random)
         {
-            voteTimeout_ = voteTimeout;
-            return *this;
+            random_ = std::move(random);
         }
 
-        const std::pair<std::uint32_t, std::uint32_t>& RaftEngineBuilder::getVoteTimeout() const
+        const std::function<std::uint32_t()>& RaftEngineBuilder::getRandom() const
         {
-            return voteTimeout_;
+            return random_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint32_t logWindowSize)
+        {
+            logWindowSize_ = logWindowSize;
+        }
+
+        std::uint32_t RaftEngineBuilder::getLogWindowSize() const
+        {
+            return logWindowSize_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint32_t maxPacketSize)
+        {
+            maxPacketLength_ = maxPacketSize;
+        }
+
+        std::uint32_t RaftEngineBuilder::getMaxPacketLength() const
+        {
+            return maxPacketLength_;
         }
 
         std::shared_ptr<RaftEngine> RaftEngineBuilder::build()

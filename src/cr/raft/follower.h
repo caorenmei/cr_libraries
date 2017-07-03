@@ -1,6 +1,8 @@
 ﻿#ifndef CR_RAFT_FOLLOWER_H_
 #define CR_RAFT_FOLLOWER_H_
 
+#include <utility>
+
 #include <cr/raft/raft_state.h>
 #include <cr/raft/raft_msg.pb.h>
 
@@ -8,7 +10,7 @@ namespace cr
 {
     namespace raft
     {
-        /** 跟随者状态 */
+
         class Follower : public RaftState
         {
         public:
@@ -21,46 +23,37 @@ namespace cr
 
             virtual void onLeave() override;
 
-            virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
-
-            // 最后的心跳时间
-            std::int64_t getLastHeartbeatTime() const;
+            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
         private:
 
-            // 消息处理
-            void dispatchMessage(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+            void updateNextElectionTime(std::uint64_t nowTime);
 
-            // 追加日志
-            void onLogAppendReqHandler(const pb::LogAppendReq& request, std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+            bool checkElectionTimeout(std::uint64_t nowTime);
 
-            // 校验任期号
-            bool checkLeaderTerm(const pb::LogAppendReq& request);
+            void processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
-            // 校验领导者Id
-            bool checkLeaderId(const pb::LogAppendReq& request);
+            void onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr raftMsg, std::vector<RaftMsgPtr>& outMessages);
 
-            // 校验日志一致性
-            bool checkPrevLogTerm(const pb::LogAppendReq& request);
+            bool checkLeaderTerm(std::uint32_t leaderId, const pb::LogAppendReq& request);
 
-            // 附加日志
-            bool appendLog(const pb::LogAppendReq& request);
+            void updateLeaderId(std::uint32_t leaderId, const pb::LogAppendReq& request);
 
-            // 应用日志
-            bool updateCommitIndex(const pb::LogAppendReq& request);
+            bool checkPrevLogTerm(std::uint32_t leaderId, const pb::LogAppendReq& request);
 
-            // 回执
-            void logAppendResp(bool success, std::vector<RaftMsgPtr>& outMessages);
+            void appendLog(std::uint32_t leaderId, const pb::LogAppendReq& request);
 
-            // 请求投票
-            void onVoteReqHandler(const pb::VoteReq& request, std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+            void updateCommitIndex(std::uint32_t leaderId, const pb::LogAppendReq& request);
 
-            // 投票应答
-            void voteResp(const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages);
+            void logAppendResp(std::uint32_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages);
 
-            // 最后心跳时间
-            std::int64_t lastHeartbeatTime_;
+            void onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr raftMsg, std::vector<RaftMsgPtr>& outMessages);
 
+            void voteResp(std::uint32_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages);
+
+            void setNewerTerm(std::uint32_t newerTerm);
+
+            std::uint64_t nextElectionTime_;
         };
     }
 }

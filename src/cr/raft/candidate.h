@@ -1,13 +1,15 @@
 ﻿#ifndef CR_RAFT_CANDIDATE_H_
 #define CR_RAFT_CANDIDATE_H_
 
+#include <set>
+#include <map>
+
 #include <cr/raft/raft_state.h>
 
 namespace cr
 {
     namespace raft
     {
-        /** 候选者状态 */
         class Candidate : public RaftState
         {
         public:
@@ -20,10 +22,30 @@ namespace cr
 
             virtual void onLeave() override;
 
-            virtual std::int64_t update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
+            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
         private:
 
+            void updateNextElectionTime(std::uint64_t nowTime);
+
+            bool checkElectionTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            void processVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            bool processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            bool onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
+
+            bool onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
+
+            bool onVoteRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
+
+            bool checkVoteGranted(std::uint64_t nowTime);
+
+            void setNewerTerm(std::uint32_t newerTerm);
+
+            std::uint64_t nextElectionTime_;
+            std::set<std::uint32_t> grantNodeIds_;
         };
     }
 }

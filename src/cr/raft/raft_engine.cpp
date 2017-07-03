@@ -18,43 +18,29 @@ namespace cr
         RaftEngine::RaftEngine(const Builder& builder)
             : nodeId_(builder.getNodeId()),
             buddyNodeIds_(builder.getBuddyNodeIds()),
-            storage_(builder.getLogStorage()),
-            stateMachine_(builder.getStateMachine()),
+            storage_(builder.getStorage()),
+            executeCallback_(builder.getEexcuteCallback()),
+            random_(builder.getRandom()),
+            logWindowSize_(builder.getLogWindowSize()),
+            maxPacketLength_(builder.getMaxPacketLength()),
             currentTerm_(0),
             commitIndex_(0),
             lastApplied_(0),
             nowTime_(0),
             currentEnumState_(FOLLOWER),
             nextEnumState_(FOLLOWER),
-            electionTimeout_(builder.getElectionTimeout()),
-            voteTimeout_(builder.getVoteTimeout())
+            electionTimeout_(builder.getElectionTimeout())
         {
-            // 节点有效性判断
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
-            if (std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) != buddyNodeIds_.end())
-            {
-                CR_THROW(ArgumentException, "Has Repeated Other Node Id");
-            }
-            if (std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) != buddyNodeIds_.end())
-            {
-                CR_THROW(ArgumentException, "Other Node Id List Container This Id");
-            }
-            if (storage_ == nullptr)
-            {
-                CR_THROW(ArgumentException, "Log Storage is null");
-            }
-            if (stateMachine_ == nullptr)
-            {
-                CR_THROW(ArgumentException, "State Machine is null");
-            }
-            if (electionTimeout_ == 0)
-            {
-                CR_THROW(ArgumentException, "Election Timeout is 0");
-            }
-            if (voteTimeout_.first == 0 || voteTimeout_.second < voteTimeout_.first)
-            {
-                CR_THROW(ArgumentException, "Vote Timeout Range error");
-            }
+            // 节点有效性判断
+            CR_ASSERT(std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
+            CR_ASSERT(std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
+            CR_ASSERT(storage_ != nullptr);
+            CR_ASSERT(executeCallback_ != nullptr);
+            CR_ASSERT(electionTimeout_.first != 0 && electionTimeout_.first <= electionTimeout_.second);
+            CR_ASSERT(random_ != nullptr);
+            CR_ASSERT(logWindowSize_ >= 1);
+            CR_ASSERT(maxPacketLength_ >= 1);
         }
 
         RaftEngine::~RaftEngine()
@@ -75,17 +61,17 @@ namespace cr
             return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
         }
 
-        const std::shared_ptr<LogStorage>& RaftEngine::getLogStorage() const
+        const std::shared_ptr<Storage>& RaftEngine::getStorage() const
         {
             return storage_;
         }
 
-        const std::shared_ptr<StateMachine>& RaftEngine::getStateMachine() const
+        std::uint64_t RaftEngine::getNowTime() const
         {
-            return stateMachine_;
+            return nowTime_;
         }
 
-        void RaftEngine::initialize(std::int64_t nowTime)
+        void RaftEngine::initialize(std::uint64_t nowTime)
         {
             CR_ASSERT(nowTime >= 0 && currentState_ == nullptr)(nowTime)(currentState_.get());
             nowTime_ = nowTime;
@@ -93,28 +79,59 @@ namespace cr
             currentState_->onEnter(nullptr);
         }
 
-        std::uint32_t RaftEngine::getCurrentTerm() const
+        std::uint64_t RaftEngine::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            return currentTerm_;
-        }
-
-        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
-        {
-            return votedFor_;
-        }
-
-        std::uint64_t RaftEngine::getLastLogIndex() const
-        {
-            return storage_->getLastIndex();
-        }
-
-        std::uint32_t RaftEngine::getLogTerm(std::uint64_t logIndex) const
-        {
-            if (logIndex != 0)
+            CR_ASSERT(currentState_ != nullptr);
+            if (nowTime < nowTime_)
             {
-                return storage_->getTermByIndex(logIndex);
+                return nowTime_;
             }
-            return 0;
+            nowTime_ = nowTime;
+
+            auto nextUpdateTime = currentState_->update(nowTime, outMessages);
+            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
+            if (nextEnumState_ != currentEnumState_)
+            {
+                onTransitionState();
+                nextUpdateTime = nowTime;
+            }
+            CR_ASSERT(nextEnumState_ == currentEnumState_);
+            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
+
+            if (lastApplied_ < commitIndex_)
+            {
+                ++lastApplied_;
+                auto entries = storage_->getEntries(lastApplied_, lastApplied_);
+                for (auto&& entry : entries)
+                {
+                    executeCallback_(entry.getIndex(), entry.getValue());
+                }
+            }
+
+            if (!messages_.empty() || lastApplied_ < commitIndex_)
+            {
+                return nowTime_;
+            }
+            return nextUpdateTime;
+        }
+
+        std::deque<RaftEngine::RaftMsgPtr>& RaftEngine::getMessageQueue()
+        {
+            return messages_;
+        }
+
+        std::uint32_t RaftEngine::getMinElectionTimeout() const
+        {
+            return electionTimeout_.first;
+        }
+
+        void RaftEngine::execute(std::string value)
+        {
+            if (currentEnumState_ == LEADER)
+            {
+                auto lastLogIndex = storage_->getLastIndex();
+                storage_->append({ lastLogIndex + 1, currentTerm_, std::move(value) });
+            }
         }
 
         std::uint64_t RaftEngine::getCommitIndex() const
@@ -127,14 +144,19 @@ namespace cr
             return lastApplied_;
         }
 
-        std::int64_t RaftEngine::getNowTime() const
-        {
-            return nowTime_;
-        }
-
         RaftEngine::State RaftEngine::getCurrentState() const
         {
             return currentEnumState_;
+        }
+
+        std::uint32_t RaftEngine::getCurrentTerm() const
+        {
+            return currentTerm_;
+        }
+
+        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
+        {
+            return votedFor_;
         }
 
         const boost::optional<std::uint32_t>& RaftEngine::getLeaderId() const
@@ -142,72 +164,14 @@ namespace cr
             return leaderId_;
         }
 
-        std::uint32_t RaftEngine::getElectionTimeout() const
+        std::uint32_t RaftEngine::getLogWindowSize() const
         {
-            return electionTimeout_;
+            return logWindowSize_;
         }
 
-        const std::pair<std::uint32_t, std::uint32_t>& RaftEngine::getVoteTimeout() const
+        std::uint32_t RaftEngine::getMaxPacketLength() const
         {
-            return voteTimeout_;
-        }
-
-        void RaftEngine::pushTailMessage(RaftMsgPtr message)
-        {
-            CR_ASSERT(message != nullptr)(nodeId_);
-            messages_.push_back(std::move(message));
-        }
-
-        void RaftEngine::pushFrontMessage(RaftMsgPtr message)
-        {
-            CR_ASSERT(message != nullptr)(nodeId_);
-            messages_.push_front(std::move(message));
-        }
-
-        RaftEngine::RaftMsgPtr RaftEngine::popMessage()
-        {
-            RaftMsgPtr message;
-            if (!messages_.empty())
-            {
-                message = std::move(messages_.front());
-                messages_.pop_front();
-            }
-            return message;
-        }
-
-        std::int64_t RaftEngine::update(std::int64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
-        {
-            CR_ASSERT(currentState_ != nullptr);
-            if (nowTime < nowTime_)
-            {
-                return nowTime_;
-            }
-            nowTime_ = nowTime;
-            // 更新状态机
-            std::int64_t nextUpdateTime = currentState_->update(nowTime, outMessages);
-            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-            if (nextEnumState_ != currentEnumState_)
-            {
-                onTransitionState();
-                nextUpdateTime = nowTime;
-            }
-            CR_ASSERT(nextEnumState_ == currentEnumState_);
-            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-            // 应用日志
-            if (lastApplied_ < commitIndex_)
-            {
-                ++lastApplied_;
-                LogEntry logEntry;
-                storage_->get(lastApplied_, logEntry);
-                stateMachine_->execute(logEntry.getIndex(), logEntry.getValue(), boost::any());
-            }
-            // 有消息没处理完，立即update
-            if (!messages_.empty() || lastApplied_ < commitIndex_)
-            {
-                return nowTime_;
-            }
-            return nextUpdateTime;
-            
+            return maxPacketLength_;
         }
 
         void RaftEngine::setNextState(State nextState)
@@ -240,6 +204,7 @@ namespace cr
 
         void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)
         {
+            CR_ASSERT(currentTerm_ <= currentTerm)(currentTerm_)(currentTerm);
             currentTerm_ = currentTerm;
         }
 
@@ -250,25 +215,23 @@ namespace cr
 
         void RaftEngine::setCommitIndex(std::uint64_t commitIndex)
         {
+            CR_ASSERT(commitIndex_ <= commitIndex_)(commitIndex)(commitIndex_);
             commitIndex_ = commitIndex;
-        }
-
-        void RaftEngine::appendLog(std::uint64_t logIndex, const std::string& value)
-        {
-            if (logIndex <= storage_->getLastIndex())
-            {
-                std::uint32_t logTerm = storage_->getTermByIndex(logIndex);
-                if (logTerm != currentTerm_)
-                {
-                    storage_->del(logIndex);
-                }
-            }
-            storage_->append({ logIndex, currentTerm_, value });
         }
 
         void RaftEngine::setLeaderId(boost::optional<std::uint32_t> leaderId)
         {
             leaderId_ = leaderId;
+        }
+
+        std::uint32_t RaftEngine::randomElectionTimeout() const
+        {
+            auto electionTime = electionTimeout_.first;
+            if (electionTimeout_.first < electionTimeout_.second)
+            {
+                electionTime += random_() % (electionTimeout_.second - electionTimeout_.first);
+            } 
+            return electionTime;
         }
     }
 }

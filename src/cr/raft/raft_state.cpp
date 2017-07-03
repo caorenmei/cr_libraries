@@ -5,15 +5,10 @@ namespace cr
     namespace raft
     {
         RaftState::RaftState(RaftEngine& engine)
-            : engine_(engine)
+            : engine(engine)
         {}
 
         RaftState::~RaftState()
         {}
-
-        RaftEngine& RaftState::getEngine()
-        {
-            return engine_;
-        }
     }
 }

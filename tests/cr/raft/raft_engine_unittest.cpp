@@ -34,8 +34,7 @@ struct RaftEngineFixture
             .setOtherNodeIds({ 2,3,4 })
             .setLogStorage(logStrage)
             .setStateMachine(stateMachine)
-            .setElectionTimeout(2000)
-            .setVoteTimeout(std::make_pair(100, 200))
+            .setElectionTimeout(std::make_pair(100, 200))
             .build();
     }
 

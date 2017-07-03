@@ -53,8 +53,7 @@ struct RaftEngineFixture
             .setOtherNodeIds({ 2,3,4 })
             .setLogStorage(logStrage)
             .setStateMachine(stateMachine)
-            .setElectionTimeout(500)
-            .setVoteTimeout(std::make_pair(100, 200))
+            .setElectionTimeout(std::make_pair(100, 200))
             .build();
         raftEngine->initialize(1);
     }
@@ -71,16 +70,15 @@ struct RaftEngineFixture
 
 BOOST_FIXTURE_TEST_CASE(electionTimeout, RaftEngineFixture)
 {
+    auto follower = cr::raft::DebugVisitor<GetFollower>().get(*raftEngine);
+
     raftEngine->update(1, outMessages);
     BOOST_CHECK_EQUAL(raftEngine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    raftEngine->update(builder.getElectionTimeout() / 2, outMessages);
+    raftEngine->update(follower->getNextElectionTime() - 1, outMessages);
     BOOST_CHECK_EQUAL(raftEngine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    raftEngine->update(builder.getElectionTimeout(), outMessages);
-    BOOST_CHECK_EQUAL(raftEngine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
-
-    raftEngine->update(builder.getElectionTimeout() + 1, outMessages);
+    raftEngine->update(follower->getNextElectionTime(), outMessages);
     BOOST_CHECK_EQUAL(raftEngine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 }
 
@@ -103,7 +101,6 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(2, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 0);
-    BOOST_CHECK_EQUAL(follower->getLastHeartbeatTime(), 1);
 
     // 第一轮投票，肯定成功
     voteReq.set_candidate_id(2);
@@ -111,7 +108,6 @@ BOOST_FIXTURE_TEST_CASE(voteFor, RaftEngineFixture)
     raftEngine->pushTailMessage(std::make_shared<cr::raft::pb::RaftMsg>(raftMsg));
     raftEngine->update(3, outMessages);
     BOOST_CHECK_EQUAL(outMessages.size(), 1);
-    BOOST_CHECK_EQUAL(follower->getLastHeartbeatTime(), 3);
     BOOST_CHECK_EQUAL(outMessages[0]->msg_type(), cr::raft::pb::RaftMsg::VOTE_RESP);
     BOOST_CHECK(outMessages[0]->msg().UnpackTo(&voteResp));
     BOOST_CHECK(voteResp.success());

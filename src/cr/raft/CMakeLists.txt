@@ -18,17 +18,16 @@ set(cr_raft_SRCS
     follower.cpp
     leader.h
     leader.cpp
-    log_storage.h
-    log_storage.cpp
-    mem_log_storage.h
-    mem_log_storage.cpp
+    storage.h
+    storage.cpp
+    mem_storage.h
+    mem_storage.cpp
     raft_engine.h
     raft_engine.cpp
     raft_engine_builder.h
     raft_engine_builder.cpp
     raft_state.h
     raft_state.cpp
-    state_machine.h
 )
 
 set(cr_raft_HEADERS
@@ -38,7 +37,6 @@ set(cr_raft_HEADERS
     mem_log_storage.h
     raft_engine.h
     raft_engine_builder.h
-    state_machine.h
 )
  
 add_library(cr_raft ${cr_raft_SRCS})
