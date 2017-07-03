@@ -207,11 +207,9 @@ namespace cr
             auto logWindowSize = engine.getLogWindowSize();
             auto maxPacketLenth = engine.getMaxPacketLength();
             logWindowSize = std::max(static_cast<std::uint32_t>(nextLogIndex - relayLogIndex), logWindowSize);
-            std::uint32_t logPacketLength = 0;
-            while ((nextLogIndex <= lastLogIndex) && (nextLogIndex - relayLogIndex <= logWindowSize) && (logPacketLength < maxPacketLenth))
+            while ((nextLogIndex <= lastLogIndex) && (nextLogIndex - relayLogIndex <= logWindowSize) && (request.ByteSize() < maxPacketLenth))
             {
                 auto entries = engine.getStorage()->getEntries(nextLogIndex, nextLogIndex);
-                logPacketLength = logPacketLength + entries[0].getValue().size();
                 *request.add_entries() = std::move(entries[0].getValue());
                 nextLogIndex = nextLogIndex + 1;
             }
