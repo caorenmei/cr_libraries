@@ -13,7 +13,6 @@ set(cr_raft_SRCS
     candidate.h
     candidate.cpp
     exception.h
-    exception.cpp
     follower.h
     follower.cpp
     leader.h
