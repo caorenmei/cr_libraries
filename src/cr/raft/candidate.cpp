@@ -71,16 +71,15 @@ namespace cr
             auto lastLogTerm = engine.getStorage()->getLastTerm();
             for (auto buddyNodeId : engine.getBuddyNodeIds())
             {
-                pb::VoteReq request;
-                request.set_candidate_term(currentTerm);
-                request.set_last_log_index(lastLogIndex);
-                request.set_last_log_term(lastLogTerm);
-
                 auto raftMsg = std::make_shared<pb::RaftMsg>();
                 raftMsg->set_from_node_id(engine.getNodeId());
                 raftMsg->set_dest_node_id(buddyNodeId);
                 raftMsg->set_msg_type(pb::RaftMsg::VOTE_REQ);
-                request.SerializeToString(raftMsg->mutable_msg());
+
+                auto& request = *(raftMsg->mutable_vote_req());
+                request.set_candidate_term(currentTerm);
+                request.set_last_log_index(lastLogIndex);
+                request.set_last_log_term(lastLogTerm);
 
                 outMessages.push_back(std::move(raftMsg));
             }
@@ -109,57 +108,51 @@ namespace cr
 
         bool Candidate::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::LogAppendReq request;
-            if (request.ParseFromString(message->msg()))
+            CR_ASSERT(message->has_log_append_req());
+            auto& request = message->log_append_req();
+            if (engine.getCurrentTerm() <= request.leader_term())
             {
-                if (engine.getCurrentTerm() <= request.leader_term())
-                {
-                    engine.getMessageQueue().push_front(std::move(message));
-                    engine.setNextState(RaftEngine::FOLLOWER);
-                    engine.setVotedFor(boost::none);
-                    return true;
-                }
+                engine.getMessageQueue().push_front(std::move(message));
+                engine.setNextState(RaftEngine::FOLLOWER);
+                engine.setVotedFor(boost::none);
+                return true;
             }
             return false;
         }
 
         bool Candidate::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::VoteReq request;
-            if (request.ParseFromString(message->msg()))
+            CR_ASSERT(message->has_vote_req());
+            auto& request = message->vote_req();
+            if (engine.getCurrentTerm() < request.candidate_term())
             {
-                if (engine.getCurrentTerm() < request.candidate_term())
-                {
-                    engine.getMessageQueue().push_front(std::move(message));
-                    setNewerTerm(request.candidate_term());
-                    return true;
-                }
+                engine.getMessageQueue().push_front(std::move(message));
+                setNewerTerm(request.candidate_term());
+                return true;
             }
             return false;
         }
 
         bool Candidate::onVoteRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            
-            pb::VoteResp response;
-            if (response.ParseFromString(message->msg()))
+            auto followerId = message->from_node_id();
+            auto currentTerm = engine.getCurrentTerm();
+
+            CR_ASSERT(message->has_vote_resp());
+            auto& response = message->vote_resp();
+            if (currentTerm == response.candidate_term() && response.success())
             {
-                auto followerId = message->from_node_id();
-                auto currentTerm = engine.getCurrentTerm();
-                if (currentTerm == response.candidate_term() && response.success())
+                grantNodeIds_.insert(followerId);
+                if (checkVoteGranted(nowTime))
                 {
-                    grantNodeIds_.insert(followerId);
-                    if (checkVoteGranted(nowTime))
-                    {
-                        return true;
-                    }
-                }
-                else if (currentTerm < response.follower_term())
-                {
-                    currentTerm = response.follower_term();
-                    setNewerTerm(currentTerm);
                     return true;
                 }
+            }
+            else if (currentTerm < response.follower_term())
+            {
+                currentTerm = response.follower_term();
+                setNewerTerm(currentTerm);
+                return true;
             }
             return false;
         }

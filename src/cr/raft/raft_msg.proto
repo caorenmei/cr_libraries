@@ -51,36 +51,6 @@ message VoteResp
     bool success = 3;
 }
 
-// 快照
-message CheckpointReq
-{
-    // 领导人的任期号
-    uint32 leader_term = 1;
-    // 快照中包含的最后日志条目的索引值
-    uint64 last_include_index = 2;
-    // 快照中包含的最后日志条目的任期号
-    uint32 last_include_term = 3;
-    // 分块在快照中的偏移量
-    uint32 offset = 4;
-    // 原始数据
-    bytes data = 5;
-    // 如果这是最后一个分块, 整个快照的校验码
-    uint32 ckecksum = 6;
-    // 如果这是最后一个分块则为 true
-    bool done = 7;
-}
-
-// 快照回复
-message CheckpointResp
-{
-    // 当前的任期号，用于领导人去更新自己
-    uint32 follower_term = 1;
-    // 分块在快照中的偏移量
-    uint32 offset = 2;
-    // 缺失的索引
-    repeated uint32 miss_offset = 3;
-}
-
 // raft 消息
 message RaftMsg
 {
@@ -95,10 +65,6 @@ message RaftMsg
         VOTE_REQ = 2;
         // 请求投票回复
         VOTE_RESP = 3;
-        // 快照
-        CHECKPOINT_REQ = 4;
-        // 快照回复
-        CHECKPOINT_RESP = 5;
     }
     // 源节点Id
     uint32 from_node_id = 1;
@@ -109,5 +75,11 @@ message RaftMsg
     // 消息类型
     MsgType msg_type = 4;
     // 附加日志
-    bytes msg = 5;
+    LogAppendReq log_append_req = 5;
+    // 附加日志回复
+    LogAppendResp log_append_resp = 6;
+    // 请求投票
+    VoteReq vote_req = 7;
+    // 请求投票回复
+    VoteResp vote_resp = 8;
 }

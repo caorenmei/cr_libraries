@@ -89,60 +89,56 @@ namespace cr
 
         bool Leader::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::LogAppendReq request;
-            if (request.ParseFromString(message->msg()))
+            CR_ASSERT(message->has_log_append_req());
+            auto& request = message->log_append_req();
+            if (request.leader_term() > engine.getCurrentTerm())
             {
-                if (request.leader_term() > engine.getCurrentTerm())
-                {
-                    engine.getMessageQueue().push_front(std::move(message));
-                    setNewerTerm(request.leader_term());
-                    return true;
-                }
+                engine.getMessageQueue().push_front(std::move(message));
+                setNewerTerm(request.leader_term());
+                return true;
             }
             return false;
         }
 
         bool Leader::onLogAppendRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::LogAppendResp response;
-            if (response.ParseFromString(message->msg()))
+            auto currentTerm = engine.getCurrentTerm();
+
+            CR_ASSERT(message->has_log_append_resp());
+            auto& response = message->log_append_resp();
+
+            if (response.follower_term() == currentTerm)
             {
-                auto currentTerm = engine.getCurrentTerm();
-                if (response.follower_term() == currentTerm)
+                auto nodeId = message->from_node_id();
+                auto& node = nodes_[nodeId];
+                if (response.success())
                 {
-                    auto nodeId = message->from_node_id();
-                    auto& node = nodes_[nodeId];
-                    if (response.success())
-                    {
-                        node.matchLogIndex = std::max(node.matchLogIndex, response.last_log_index());
-                        node.replyLogindex = std::max(node.replyLogindex, response.last_log_index());
-                    }
-                    else
-                    {
-                        node.nextLogIndex = response.last_log_index() + 1;
-                        node.replyLogindex = response.last_log_index();
-                    }
+                    node.matchLogIndex = std::max(node.matchLogIndex, response.last_log_index());
+                    node.replyLogindex = std::max(node.replyLogindex, response.last_log_index());
                 }
-                else if (response.follower_term() > currentTerm)
+                else
                 {
-                    setNewerTerm(response.follower_term());
-                    return true;
+                    node.nextLogIndex = response.last_log_index() + 1;
+                    node.replyLogindex = response.last_log_index();
                 }
+            }
+            else if (response.follower_term() > currentTerm)
+            {
+                setNewerTerm(response.follower_term());
+                return true;
             }
             return false;
         }
 
         bool Leader::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::VoteReq request;
-            if (request.ParseFromString(message->msg()))
+            CR_ASSERT(message->has_vote_req());
+            auto& request = message->vote_req();
+            if (request.candidate_term() > engine.getCurrentTerm())
             {
-                if (request.candidate_term() > engine.getCurrentTerm())
-                {
-                    engine.getMessageQueue().push_front(std::move(message));
-                    setNewerTerm(request.candidate_term());
-                    return true;
-                }
+                engine.getMessageQueue().push_front(std::move(message));
+                setNewerTerm(request.candidate_term());
+                return true;
             }
             return false;
         }
@@ -188,8 +184,13 @@ namespace cr
             auto commitIndex = engine.getCommitIndex();
             auto prevLogIndex = node.nextLogIndex - 1;
             auto prevLogTerm = engine.getStorage()->getTermByIndex(prevLogIndex);
-            
-            pb::LogAppendReq request;
+
+            auto raftMsg = std::make_shared<pb::RaftMsg>();
+            raftMsg->set_from_node_id(engine.getNodeId());
+            raftMsg->set_dest_node_id(node.nodeId);
+            raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_REQ);
+
+            auto& request = *(raftMsg->mutable_log_append_req());
             request.set_leader_term(currentTerm);
             request.set_prev_log_index(prevLogIndex);
             request.set_prev_log_term(prevLogTerm);
@@ -205,12 +206,6 @@ namespace cr
                 *request.add_entries() = std::move(entries[0].getValue());
                 node.nextLogIndex = node.nextLogIndex + 1;
             }
-
-            auto raftMsg = std::make_shared<pb::RaftMsg>();
-            raftMsg->set_from_node_id(engine.getNodeId());
-            raftMsg->set_dest_node_id(node.nodeId);
-            raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_REQ);
-            request.SerializeToString(raftMsg->mutable_msg());
 
             outMessages.push_back(std::move(raftMsg));
         }

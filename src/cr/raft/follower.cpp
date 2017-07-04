@@ -83,23 +83,21 @@ namespace cr
         void Follower::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto leaderId = message->from_node_id();
-            pb::LogAppendReq request;
-            if (request.ParseFromString(message->msg()))
+            CR_ASSERT(message->has_log_append_req());
+            auto& request = message->log_append_req();
+            bool success = false;
+            if (checkLeaderTerm(leaderId, request))
             {
-                bool success = false;
-                if (checkLeaderTerm(leaderId, request))
+                updateNextElectionTime(nowTime);
+                updateLeaderId(leaderId, request);
+                if (checkPrevLogTerm(leaderId, request))
                 {
-                    updateNextElectionTime(nowTime);
-                    updateLeaderId(leaderId, request);
-                    if (checkPrevLogTerm(leaderId, request))
-                    {
-                        appendLog(leaderId, request);
-                        updateCommitIndex(leaderId, request);
-                        success = true;
-                    }  
+                    appendLog(leaderId, request);
+                    updateCommitIndex(leaderId, request);
+                    success = true;
                 }
-                logAppendResp(leaderId, success, outMessages);
             }
+            logAppendResp(leaderId, success, outMessages);
         }
 
         bool Follower::checkLeaderTerm(std::uint32_t leaderId, const pb::LogAppendReq& request)
@@ -166,16 +164,15 @@ namespace cr
             auto currentTerm = engine.getCurrentTerm();
             auto lastLogIndex = engine.getStorage()->getLastIndex();
 
-            pb::LogAppendResp response;
-            response.set_follower_term(currentTerm);
-            response.set_last_log_index(lastLogIndex);
-            response.set_success(success);
-
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
             raftMsg->set_dest_node_id(leaderId);
             raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_RESP);
-            response.SerializeToString(raftMsg->mutable_msg());
+
+            auto& response = *(raftMsg->mutable_log_append_resp());
+            response.set_follower_term(currentTerm);
+            response.set_last_log_index(lastLogIndex);
+            response.set_success(success);
 
             outMessages.push_back(std::move(raftMsg));
         }
@@ -183,47 +180,45 @@ namespace cr
         void Follower::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto candidateId = message->from_node_id();
-            pb::VoteReq request;
-            if (request.ParseFromString(message->msg()))
-            {
-                auto currentTerm = engine.getCurrentTerm();
-                auto lastLogIndex = engine.getStorage()->getLastIndex();
-                auto lastLogTerm = engine.getStorage()->getLastTerm();
+            auto currentTerm = engine.getCurrentTerm();
+            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogTerm = engine.getStorage()->getLastTerm();
 
-                bool success = false;
-                if (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)
-                    && request.candidate_term() >= currentTerm)
+            CR_ASSERT(message->has_vote_req());
+            auto& request = message->vote_req();
+
+            bool success = false;
+            if (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)
+                && request.candidate_term() >= currentTerm)
+            {
+                if (currentTerm < request.candidate_term())
                 {
-                    if (currentTerm < request.candidate_term())
-                    {
-                        currentTerm = request.candidate_term();
-                        setNewerTerm(request.candidate_term());
-                    }
-                    auto voteFor = engine.getVotedFor();
-                    if (!voteFor)
-                    {
-                        voteFor = candidateId;
-                        engine.setVotedFor(voteFor);
-                    }
-                    success = (*voteFor == candidateId);
+                    currentTerm = request.candidate_term();
+                    setNewerTerm(request.candidate_term());
                 }
-                updateNextElectionTime(nowTime);
-                voteResp(candidateId, request, success, outMessages);
+                auto voteFor = engine.getVotedFor();
+                if (!voteFor)
+                {
+                    voteFor = candidateId;
+                    engine.setVotedFor(voteFor);
+                }
+                success = (*voteFor == candidateId);
             }
+            updateNextElectionTime(nowTime);
+            voteResp(candidateId, request, success, outMessages);
         }
 
         void Follower::voteResp(std::uint32_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
-            pb::VoteResp response;
-            response.set_success(success);
-            response.set_candidate_term(request.candidate_term());
-            response.set_follower_term(engine.getCurrentTerm());
-
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
             raftMsg->set_dest_node_id(candidateId);
             raftMsg->set_msg_type(pb::RaftMsg::VOTE_RESP);
-            raftMsg->SerializeToString(raftMsg->mutable_msg());
+
+            auto& response = *(raftMsg->mutable_vote_resp());
+            response.set_success(success);
+            response.set_candidate_term(request.candidate_term());
+            response.set_follower_term(engine.getCurrentTerm());
 
             outMessages.push_back(std::move(raftMsg));
         }
