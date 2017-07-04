@@ -14,6 +14,8 @@ namespace cr
         {
         public:
 
+            struct node;
+
             explicit Leader(RaftEngine& engine);
 
             ~Leader();
@@ -24,7 +26,7 @@ namespace cr
 
             virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
-            std::uint64_t updateNextHeartbeatTime(std::uint32_t buddyNodeId, std::uint64_t nowTime);
+            void updateNextHeartbeatTime(node& node, std::uint64_t nowTime);
 
             std::uint64_t checkHeartbeatTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
@@ -40,14 +42,19 @@ namespace cr
 
             void processLogAppend(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
-            void logAppendReq(std::uint32_t buddyNodeId, std::vector<RaftMsgPtr>& outMessages);
+            void logAppendReq(node& node, std::vector<RaftMsgPtr>& outMessages);
 
             void setNewerTerm(std::uint32_t newerTerm);
 
-            std::map<std::uint32_t, std::uint64_t> nextHeartbeatTime_;
-            std::map<std::uint32_t, std::uint64_t> nextLogIndexs_;
-            std::map<std::uint32_t, std::uint64_t> relayLogIndexs_;
-            std::map<std::uint32_t, std::uint64_t> matchLogIndexs_;
+            struct node
+            {
+                std::uint32_t nodeId;
+                std::uint64_t nextTickTime;
+                std::uint64_t nextLogIndex;
+                std::uint64_t replyLogindex;
+                std::uint64_t matchLogIndex;
+            };
+            std::map<std::uint32_t, node> nodes_;
         };
     }
 }
