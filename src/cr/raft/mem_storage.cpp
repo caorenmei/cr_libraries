@@ -12,38 +12,38 @@ namespace cr
 
         void MemStorage::append(const Entry& entry)
         {
-            if (entry.getIndex() == entries_.size() && entry.getTerm() >= lastTerm())
+            if (entry.getIndex() != lastIndex() + 1 || entry.getTerm() < lastTerm())
             {
-                entries_.push_back(entry);
+                CR_THROW(cr::raft::StoreException, "Entry Index Out of Bound");
             }
-            CR_THROW(cr::raft::StoreException, "Entry Index Out of Bound");
+            entries_.push_back(entry);
         }
 
         void MemStorage::remove(std::uint64_t startIndex)
         {
-            if(startIndex >= 1 && startIndex <= entries_.size())
+            if(startIndex < 1 || startIndex > lastIndex())
             {
-                entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
+                CR_THROW(cr::raft::StoreException, "Start Index Out of Bound");
             }
-            CR_THROW(cr::raft::StoreException, "Start Index Out of Bound");
+            entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
         }
 
         std::vector<Entry> MemStorage::entries(std::uint64_t startIndex, std::uint64_t stopIndex)
         {
-            if (startIndex <= stopIndex && startIndex >= 1 && stopIndex <= entries_.size())
+            if (startIndex < 1 || startIndex > stopIndex || stopIndex > lastIndex())
             {
-                return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
+                CR_THROW(cr::raft::StoreException, "Start Index or Stop Index Out of Bound");
             }
-            CR_THROW(cr::raft::StoreException, "Start Index or Stop Index Out of Bound");
+            return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
         }
 
         std::uint32_t MemStorage::term(std::uint64_t index)
         {
-            if (index <= entries_.size())
+            if (index < 1 || index > lastIndex())
             {
-                return entries_[static_cast<std::size_t>(index - 1)].getTerm();
+                CR_THROW(cr::raft::StoreException, "Log Index Out of Bound");
             }
-            CR_THROW(cr::raft::StoreException, "Log Index Out of Bound");
+            return entries_[static_cast<std::size_t>(index - 1)].getTerm();
         }
 
         std::uint64_t MemStorage::lastIndex()
