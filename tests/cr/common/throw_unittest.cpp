@@ -31,4 +31,28 @@ BOOST_AUTO_TEST_CASE(throw_macro)
     }
 }
 
+BOOST_AUTO_TEST_CASE(if_throw_macro)
+{
+    std::exception_ptr eptr;
+    try
+    {
+        CR_IF_THROW(1 != 1, cr::Error, "hello");
+    }
+    catch (...)
+    {
+        eptr = std::current_exception();
+    }
+    BOOST_REQUIRE(eptr == nullptr);
+
+    try
+    {
+        CR_IF_THROW(1 == 1, cr::Error, "hello");
+    }
+    catch (...)
+    {
+        eptr = std::current_exception();
+    }
+    BOOST_REQUIRE(eptr != nullptr);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
