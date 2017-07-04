@@ -22,12 +22,12 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->getLastIndex();
             for (auto nodeId : engine.getBuddyNodeIds())
             {
-                auto& node = nodes_[nodeId];
-                node.nodeId = nodeId;
-                node.nextTickTime = engine.getNowTime();;
-                node.nextLogIndex = lastLogIndex + 1;
-                node.replyLogindex = lastLogIndex;
-                node.matchLogIndex = 0;
+                auto& BuddyNode = nodes_[nodeId];
+                BuddyNode.nodeId = nodeId;
+                BuddyNode.nextUpdateTime = engine.getNowTime();;
+                BuddyNode.nextLogIndex = lastLogIndex + 1;
+                BuddyNode.replyLogindex = lastLogIndex;
+                BuddyNode.matchLogIndex = 0;
             }
         }
 
@@ -46,24 +46,24 @@ namespace cr
             return nextUpdateTime;
         }
 
-        void Leader::updateNextHeartbeatTime(node& node, std::uint64_t nowTime)
+        void Leader::updateNextUpdateTime(BuddyNode& BuddyNode, std::uint64_t nowTime)
         {
-            node.nextTickTime = nowTime + engine.getMinElectionTimeout() / 2;
+            BuddyNode.nextUpdateTime = nowTime + engine.getMinElectionTimeout() / 2;
         }
 
         std::uint64_t Leader::checkHeartbeatTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto minNextHeartbeatTime = nowTime + engine.getMinElectionTimeout();
-            for (auto&& node : nodes_)
+            auto minNextUpdateTime = nowTime + engine.getMinElectionTimeout();
+            for (auto&& BuddyNode : nodes_)
             {
-                if (node.second.nextTickTime <= nowTime)
+                if (BuddyNode.second.nextUpdateTime <= nowTime)
                 {
-                    logAppendReq(node.second, outMessages);
-                    updateNextHeartbeatTime(node.second, nowTime);
+                    logAppendReq(BuddyNode.second, outMessages);
+                    updateNextUpdateTime(BuddyNode.second, nowTime);
                 }
-                minNextHeartbeatTime = std::min(minNextHeartbeatTime, node.second.nextTickTime);
+                minNextUpdateTime = std::min(minNextUpdateTime, BuddyNode.second.nextUpdateTime);
             }
-            return minNextHeartbeatTime;
+            return minNextUpdateTime;
         }
 
         bool Leader::processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
@@ -110,16 +110,16 @@ namespace cr
             if (response.follower_term() == currentTerm)
             {
                 auto nodeId = message->from_node_id();
-                auto& node = nodes_[nodeId];
+                auto& BuddyNode = nodes_[nodeId];
                 if (response.success())
                 {
-                    node.matchLogIndex = std::max(node.matchLogIndex, response.last_log_index());
-                    node.replyLogindex = std::max(node.replyLogindex, response.last_log_index());
+                    BuddyNode.matchLogIndex = std::max(BuddyNode.matchLogIndex, response.last_log_index());
+                    BuddyNode.replyLogindex = std::max(BuddyNode.replyLogindex, response.last_log_index());
                 }
                 else
                 {
-                    node.nextLogIndex = response.last_log_index() + 1;
-                    node.replyLogindex = response.last_log_index();
+                    BuddyNode.nextLogIndex = response.last_log_index() + 1;
+                    BuddyNode.replyLogindex = response.last_log_index();
                 }
             }
             else if (response.follower_term() > currentTerm)
@@ -149,9 +149,9 @@ namespace cr
             newCommitIndexs.reserve(1 + nodes_.size());
             auto lastLogIndex = engine.getStorage()->getLastIndex();
             newCommitIndexs.push_back(lastLogIndex);
-            for (auto&& node : nodes_)
+            for (auto&& BuddyNode : nodes_)
             {
-                newCommitIndexs.push_back(node.second.matchLogIndex);
+                newCommitIndexs.push_back(BuddyNode.second.matchLogIndex);
             }
             std::sort(newCommitIndexs.begin(), newCommitIndexs.end(), std::greater_equal<std::uint64_t>());
             std::size_t newCommitIndexIndex = static_cast<std::size_t>((1 + nodes_.size()) / 2);
@@ -167,27 +167,27 @@ namespace cr
             auto logWindowSize = engine.getLogWindowSize();
             auto commitIndex = engine.getCommitIndex();
             auto lastLogIndex = engine.getStorage()->getLastIndex();
-            for (auto&& node : nodes_)
+            for (auto&& BuddyNode : nodes_)
             {
-                if ((node.second.nextLogIndex - node.second.replyLogindex <= logWindowSize && node.second.nextLogIndex <= lastLogIndex)
-                    || (node.second.matchLogIndex <= node.second.nextLogIndex && node.second.matchLogIndex < commitIndex))
+                if ((BuddyNode.second.nextLogIndex - BuddyNode.second.replyLogindex <= logWindowSize && BuddyNode.second.nextLogIndex <= lastLogIndex)
+                    || (BuddyNode.second.matchLogIndex <= BuddyNode.second.nextLogIndex && BuddyNode.second.matchLogIndex < commitIndex))
                 {
-                    logAppendReq(node.second, outMessages);
-                    updateNextHeartbeatTime(node.second, nowTime);
+                    logAppendReq(BuddyNode.second, outMessages);
+                    updateNextUpdateTime(BuddyNode.second, nowTime);
                 }
             }
         }
 
-        void Leader::logAppendReq(node& node, std::vector<RaftMsgPtr>& outMessages)
+        void Leader::logAppendReq(BuddyNode& BuddyNode, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto commitIndex = engine.getCommitIndex();
-            auto prevLogIndex = node.nextLogIndex - 1;
+            auto prevLogIndex = BuddyNode.nextLogIndex - 1;
             auto prevLogTerm = engine.getStorage()->getTermByIndex(prevLogIndex);
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
-            raftMsg->set_dest_node_id(node.nodeId);
+            raftMsg->set_dest_node_id(BuddyNode.nodeId);
             raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_REQ);
 
             auto& request = *(raftMsg->mutable_log_append_req());
@@ -199,12 +199,12 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->getLastIndex();
             auto logWindowSize = engine.getLogWindowSize();
             auto maxPacketLenth = engine.getMaxPacketLength();
-            logWindowSize = std::max<std::uint32_t>(node.nextLogIndex - node.replyLogindex, logWindowSize);
-            while ((node.nextLogIndex <= lastLogIndex) && (node.nextLogIndex - node.replyLogindex <= logWindowSize) && (request.ByteSize() < maxPacketLenth))
+            logWindowSize = std::max<std::uint32_t>(BuddyNode.nextLogIndex - BuddyNode.replyLogindex, logWindowSize);
+            while ((BuddyNode.nextLogIndex <= lastLogIndex) && (BuddyNode.nextLogIndex - BuddyNode.replyLogindex <= logWindowSize) && (request.ByteSize() < maxPacketLenth))
             {
-                auto entries = engine.getStorage()->getEntries(node.nextLogIndex, node.nextLogIndex);
+                auto entries = engine.getStorage()->getEntries(BuddyNode.nextLogIndex, BuddyNode.nextLogIndex);
                 *request.add_entries() = std::move(entries[0].getValue());
-                node.nextLogIndex = node.nextLogIndex + 1;
+                BuddyNode.nextLogIndex = BuddyNode.nextLogIndex + 1;
             }
 
             outMessages.push_back(std::move(raftMsg));
