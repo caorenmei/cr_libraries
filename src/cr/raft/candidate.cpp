@@ -140,7 +140,7 @@ namespace cr
 
             CR_ASSERT(message->has_vote_resp());
             auto& response = message->vote_resp();
-            if (currentTerm == response.candidate_term() && response.success())
+            if (currentTerm == response.follower_term() && response.success())
             {
                 grantNodeIds_.insert(followerId);
                 if (checkVoteGranted(nowTime))

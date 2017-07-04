@@ -108,7 +108,7 @@ namespace cr
                 currentTerm = request.leader_term();
                 setNewerTerm(currentTerm);
             }
-            return request.leader_term() == currentTerm;
+            return request.leader_term() != 0 && request.leader_term() == currentTerm;
         }
 
         void Follower::updateLeaderId(std::uint32_t leaderId, const pb::LogAppendReq& request)
@@ -128,12 +128,11 @@ namespace cr
                 lastLogIndex = request.prev_log_index();
                 engine.getStorage()->remove(lastLogIndex + 1);
             }
-            if (request.prev_log_index() == lastLogIndex)
+            if (request.prev_log_index() == lastLogIndex && engine.getStorage()->lastTerm() != request.prev_log_term())
             {
-                auto lastLogTerm = engine.getStorage()->lastTerm();
-                return request.prev_log_term() == lastLogTerm;
+                engine.getStorage()->remove(lastLogIndex);
             }
-            return false;
+            return request.prev_log_index() == lastLogIndex && request.prev_log_term() == engine.getStorage()->lastTerm();;
         }
 
         void Follower::appendLog(std::uint32_t leaderId, const pb::LogAppendReq& request)
@@ -217,7 +216,6 @@ namespace cr
 
             auto& response = *(raftMsg->mutable_vote_resp());
             response.set_success(success);
-            response.set_candidate_term(request.candidate_term());
             response.set_follower_term(engine.getCurrentTerm());
 
             outMessages.push_back(std::move(raftMsg));

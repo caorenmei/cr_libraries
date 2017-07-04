@@ -21,6 +21,13 @@ namespace cr
         public:
             using RaftException::RaftException;
         };
+
+        /** 投票异常 */
+        class VoteException : public RaftException
+        {
+        public:
+            using RaftException::RaftException;
+        };
     }
 }
 

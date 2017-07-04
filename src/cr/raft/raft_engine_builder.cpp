@@ -73,6 +73,7 @@ namespace cr
         RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint32_t()> random)
         {
             random_ = std::move(random);
+            return *this;
         }
 
         const std::function<std::uint32_t()>& RaftEngineBuilder::getRandom() const
@@ -83,6 +84,7 @@ namespace cr
         RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint32_t logWindowSize)
         {
             logWindowSize_ = logWindowSize;
+            return *this;
         }
 
         std::uint32_t RaftEngineBuilder::getLogWindowSize() const
@@ -93,6 +95,7 @@ namespace cr
         RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint32_t maxPacketSize)
         {
             maxPacketLength_ = maxPacketSize;
+            return *this;
         }
 
         std::uint32_t RaftEngineBuilder::getMaxPacketLength() const

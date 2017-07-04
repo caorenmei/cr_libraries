@@ -23,7 +23,7 @@ namespace cr
             random_(builder.getRandom()),
             logWindowSize_(builder.getLogWindowSize()),
             maxPacketLength_(builder.getMaxPacketLength()),
-            currentTerm_(0),
+            currentTerm_(storage_->lastTerm()),
             commitIndex_(0),
             lastApplied_(0),
             nowTime_(0),
