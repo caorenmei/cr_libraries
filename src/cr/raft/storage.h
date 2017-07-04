@@ -43,9 +43,9 @@ namespace cr
         {
         public:
 
-            Storage() {}
+            Storage() = default;
 
-            virtual ~Storage() {}
+            virtual ~Storage() = default;
 
             virtual void append(const Entry& entry) = 0;
 

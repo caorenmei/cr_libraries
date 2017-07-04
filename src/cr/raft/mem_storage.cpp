@@ -21,11 +21,7 @@ namespace cr
 
         void MemStorage::remove(std::uint64_t startIndex)
         {
-            if (startIndex == 0)
-            {
-                entries_.clear();
-            }
-            else if(startIndex <= entries_.size())
+            if(startIndex >= 1 && startIndex <= entries_.size())
             {
                 entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
             }
@@ -43,11 +39,7 @@ namespace cr
 
         std::uint32_t MemStorage::term(std::uint64_t index)
         {
-            if (index == 0)
-            {
-                return 0;
-            }
-            else if (index <= entries_.size())
+            if (index <= entries_.size())
             {
                 return entries_[static_cast<std::size_t>(index - 1)].getTerm();
             }

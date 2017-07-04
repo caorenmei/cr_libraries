@@ -183,7 +183,7 @@ namespace cr
             auto currentTerm = engine.getCurrentTerm();
             auto commitIndex = engine.getCommitIndex();
             auto prevLogIndex = BuddyNode.nextLogIndex - 1;
-            auto prevLogTerm = engine.getStorage()->term(prevLogIndex);
+            auto prevLogTerm = prevLogIndex != 0 ? engine.getStorage()->term(prevLogIndex) : 0;
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());

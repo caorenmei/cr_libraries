@@ -15,6 +15,8 @@ namespace cr
         {
         public:
 
+            MemStorage() = default;
+
             MemStorage(const MemStorage&) = delete;
             MemStorage& operator=(const MemStorage&) = delete;
 
