@@ -24,8 +24,6 @@ namespace cr
 
             virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
-        private:
-
             std::uint64_t updateNextHeartbeatTime(std::uint32_t buddyNodeId, std::uint64_t nowTime);
 
             std::uint64_t checkHeartbeatTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);

@@ -25,8 +25,6 @@ namespace cr
 
             virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
 
-        private:
-
             void updateNextElectionTime(std::uint64_t nowTime);
 
             bool checkElectionTimeout(std::uint64_t nowTime);
