@@ -188,8 +188,8 @@ namespace cr
             auto& request = message->vote_req();
 
             bool success = false;
-            if (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)
-                && request.candidate_term() >= currentTerm)
+            if ((request.candidate_term() >= currentTerm && request.candidate_term() > 0)
+                && (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)))
             {
                 if (currentTerm < request.candidate_term())
                 {
