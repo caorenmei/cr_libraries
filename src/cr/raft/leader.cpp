@@ -19,7 +19,7 @@ namespace cr
 
         void Leader::onEnter(std::shared_ptr<RaftState> prevState)
         {
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             for (auto nodeId : engine.getBuddyNodeIds())
             {
                 auto& BuddyNode = nodes_[nodeId];
@@ -147,7 +147,7 @@ namespace cr
         {
             std::vector<std::uint64_t> newCommitIndexs;
             newCommitIndexs.reserve(1 + nodes_.size());
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             newCommitIndexs.push_back(lastLogIndex);
             for (auto&& BuddyNode : nodes_)
             {
@@ -166,7 +166,7 @@ namespace cr
         {
             auto logWindowSize = engine.getLogWindowSize();
             auto commitIndex = engine.getCommitIndex();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             for (auto&& BuddyNode : nodes_)
             {
                 if ((BuddyNode.second.nextLogIndex - BuddyNode.second.replyLogindex <= logWindowSize && BuddyNode.second.nextLogIndex <= lastLogIndex)
@@ -183,7 +183,7 @@ namespace cr
             auto currentTerm = engine.getCurrentTerm();
             auto commitIndex = engine.getCommitIndex();
             auto prevLogIndex = BuddyNode.nextLogIndex - 1;
-            auto prevLogTerm = engine.getStorage()->getTermByIndex(prevLogIndex);
+            auto prevLogTerm = engine.getStorage()->term(prevLogIndex);
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
@@ -196,13 +196,13 @@ namespace cr
             request.set_prev_log_term(prevLogTerm);
             request.set_leader_commit(commitIndex);
 
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             auto logWindowSize = engine.getLogWindowSize();
             auto maxPacketLenth = engine.getMaxPacketLength();
             logWindowSize = std::max<std::uint32_t>(BuddyNode.nextLogIndex - BuddyNode.replyLogindex, logWindowSize);
             while ((BuddyNode.nextLogIndex <= lastLogIndex) && (BuddyNode.nextLogIndex - BuddyNode.replyLogindex <= logWindowSize) && (request.ByteSize() < maxPacketLenth))
             {
-                auto entries = engine.getStorage()->getEntries(BuddyNode.nextLogIndex, BuddyNode.nextLogIndex);
+                auto entries = engine.getStorage()->entries(BuddyNode.nextLogIndex, BuddyNode.nextLogIndex);
                 *request.add_entries() = std::move(entries[0].getValue());
                 BuddyNode.nextLogIndex = BuddyNode.nextLogIndex + 1;
             }

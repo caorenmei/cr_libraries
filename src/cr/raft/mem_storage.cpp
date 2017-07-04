@@ -12,8 +12,7 @@ namespace cr
 
         void MemStorage::append(const Entry& entry)
         {
-            auto lastTerm = getLastTerm();
-            if (entry.getIndex() == entries_.size() && entry.getTerm() >= lastTerm)
+            if (entry.getIndex() == entries_.size() && entry.getTerm() >= lastTerm())
             {
                 entries_.push_back(entry);
             }
@@ -33,7 +32,7 @@ namespace cr
             CR_THROW(cr::raft::StoreException, "Start Index Out of Bound");
         }
 
-        std::vector<Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex)
+        std::vector<Entry> MemStorage::entries(std::uint64_t startIndex, std::uint64_t stopIndex)
         {
             if (startIndex <= stopIndex && startIndex >= 1 && stopIndex <= entries_.size())
             {
@@ -42,7 +41,7 @@ namespace cr
             CR_THROW(cr::raft::StoreException, "Start Index or Stop Index Out of Bound");
         }
 
-        std::uint32_t MemStorage::getTermByIndex(std::uint64_t index)
+        std::uint32_t MemStorage::term(std::uint64_t index)
         {
             if (index == 0)
             {
@@ -55,12 +54,12 @@ namespace cr
             CR_THROW(cr::raft::StoreException, "Log Index Out of Bound");
         }
 
-        std::uint64_t MemStorage::getLastIndex()
+        std::uint64_t MemStorage::lastIndex()
         {
             return !entries_.empty() ? entries_.size() : 0;
         }
 
-        std::uint32_t MemStorage::getLastTerm()
+        std::uint32_t MemStorage::lastTerm()
         {
             return !entries_.empty() ? entries_.back().getTerm() : 0;
         }

@@ -67,8 +67,8 @@ namespace cr
         void Candidate::processVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto lastLogTerm = engine.getStorage()->getLastTerm();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
+            auto lastLogTerm = engine.getStorage()->lastTerm();
             for (auto buddyNodeId : engine.getBuddyNodeIds())
             {
                 auto raftMsg = std::make_shared<pb::RaftMsg>();

@@ -51,13 +51,13 @@ namespace cr
 
             virtual void remove(std::uint64_t startIndex) = 0;
 
-            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
+            virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
 
-            virtual std::uint32_t getTermByIndex(std::uint64_t index) = 0;
+            virtual std::uint32_t term(std::uint64_t index) = 0;
 
-            virtual std::uint64_t getLastIndex() = 0;
+            virtual std::uint64_t lastIndex() = 0;
 
-            virtual std::uint32_t getLastTerm() = 0;
+            virtual std::uint32_t lastTerm() = 0;
         };
     }
 }

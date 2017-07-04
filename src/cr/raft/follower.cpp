@@ -122,7 +122,7 @@ namespace cr
 
         bool Follower::checkPrevLogTerm(std::uint32_t leaderId, const pb::LogAppendReq& request)
         {
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             if (request.prev_log_index() < lastLogIndex)
             {
                 lastLogIndex = request.prev_log_index();
@@ -130,7 +130,7 @@ namespace cr
             }
             if (request.prev_log_index() == lastLogIndex)
             {
-                auto lastLogTerm = engine.getStorage()->getLastTerm();
+                auto lastLogTerm = engine.getStorage()->lastTerm();
                 return request.prev_log_term() == lastLogTerm;
             }
             return false;
@@ -143,7 +143,7 @@ namespace cr
             for (int i = 0; i < request.entries_size(); ++i)
             {
                 logIndex = logIndex + 1;
-                CR_ASSERT(logIndex == engine.getStorage()->getLastIndex() + 1);
+                CR_ASSERT(logIndex == engine.getStorage()->lastIndex() + 1);
                 engine.getStorage()->append({ logIndex, currentTerm, request.entries(i) });
             }
         }
@@ -151,7 +151,7 @@ namespace cr
         void Follower::updateCommitIndex(std::uint32_t leaderId, const pb::LogAppendReq& request)
         {
             auto commitIndex = engine.getCommitIndex();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
             if (request.leader_commit() > commitIndex && commitIndex < lastLogIndex)
             {
                 commitIndex = std::min(request.leader_commit(), lastLogIndex);
@@ -162,7 +162,7 @@ namespace cr
         void Follower::logAppendResp(std::uint32_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
@@ -181,8 +181,8 @@ namespace cr
         {
             auto candidateId = message->from_node_id();
             auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto lastLogTerm = engine.getStorage()->getLastTerm();
+            auto lastLogIndex = engine.getStorage()->lastIndex();
+            auto lastLogTerm = engine.getStorage()->lastTerm();
 
             CR_ASSERT(message->has_vote_req());
             auto& request = message->vote_req();

@@ -101,7 +101,7 @@ namespace cr
             if (lastApplied_ < commitIndex_)
             {
                 ++lastApplied_;
-                auto entries = storage_->getEntries(lastApplied_, lastApplied_);
+                auto entries = storage_->entries(lastApplied_, lastApplied_);
                 for (auto&& entry : entries)
                 {
                     executeCallback_(entry.getIndex(), entry.getValue());
@@ -129,7 +129,7 @@ namespace cr
         {
             if (currentEnumState_ == LEADER)
             {
-                auto lastLogIndex = storage_->getLastIndex();
+                auto lastLogIndex = storage_->lastIndex();
                 storage_->append({ lastLogIndex + 1, currentTerm_, std::move(value) });
             }
         }

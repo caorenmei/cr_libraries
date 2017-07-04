@@ -22,13 +22,13 @@ namespace cr
 
             virtual void remove(std::uint64_t startIndex) override;
 
-            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
+            virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
 
-            virtual std::uint32_t getTermByIndex(std::uint64_t index) override;
+            virtual std::uint32_t term(std::uint64_t index) override;
 
-            virtual std::uint64_t getLastIndex() override;
+            virtual std::uint64_t lastIndex() override;
 
-            virtual std::uint32_t getLastTerm() override;
+            virtual std::uint32_t lastTerm() override;
         private:
 
             std::vector<Entry> entries_;
