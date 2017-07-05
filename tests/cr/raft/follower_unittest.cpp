@@ -148,15 +148,15 @@ BOOST_AUTO_TEST_SUITE(RaftFollower)
 
 BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<RaftEngineFixture>)
 {
-    std::uint64_t nowTime = 1;
+    std::uint64_t nowTime = 0;
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = nowTime + builder.getElectionTimeout().first - 1;
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    nowTime = builder.getElectionTimeout().first - 1;
+    BOOST_CHECK_LE(engine->update(nowTime, messages), builder.getElectionTimeout().second);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = nowTime + builder.getElectionTimeout().second;
+    nowTime = builder.getElectionTimeout().second;
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 }

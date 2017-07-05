@@ -38,7 +38,7 @@ namespace cr
                 {
                     if (engine.getMessageQueue().empty())
                     {
-                        nowTime = nextElectionTime_;
+                        nextUpdateTime = nextElectionTime_;
                     }
                 }
             }
@@ -57,6 +57,7 @@ namespace cr
                 updateNextElectionTime(nowTime);
                 engine.setCurrentTerm(engine.getCurrentTerm() + 1);
                 grantNodeIds_.clear();
+                engine.setVotedFor(engine.getNodeId());
                 grantNodeIds_.insert(engine.getNodeId());
                 processVoteReq(nowTime, outMessages);
                 return checkVoteGranted(nowTime);
