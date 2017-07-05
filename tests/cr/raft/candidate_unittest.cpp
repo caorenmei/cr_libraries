@@ -177,6 +177,40 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<RaftEngineFixtu
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
 }
 
+BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<RaftEngineFixture>)
+{
+    std::uint64_t nowTime = 0;
+
+    nowTime = nowTime + builder.getElectionTimeout().second;
+    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    messages.clear();
+
+    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+    raftMsg->set_dest_node_id(1);
+    raftMsg->set_from_node_id(2);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+
+    auto& request = *(raftMsg->mutable_log_append_req());
+    request.set_leader_term(1);
+    request.set_leader_commit(0);
+    request.set_prev_log_index(0);
+    request.set_prev_log_term(0);
+
+    request.set_leader_term(0);
+    engine->getMessageQueue().push_back(raftMsg);
+    nowTime = nowTime + 1;
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+
+    request.set_leader_term(1);
+    engine->getMessageQueue().push_back(raftMsg);
+    nowTime = nowTime + 1;
+    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 1);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
