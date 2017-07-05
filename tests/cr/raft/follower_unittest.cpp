@@ -466,7 +466,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<RaftEngineFixt
     messages.clear();
 }
 
-// 日志不匹配
+// 追加3条日志
 BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<RaftEngineFixture>)
 {
     storage->append({ 1,1,"1" });
