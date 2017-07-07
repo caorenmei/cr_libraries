@@ -1,77 +1,18 @@
-#ifndef CR_COMMON_ERROR_H_
+ï»¿#ifndef CR_COMMON_ERROR_H_
 #define CR_COMMON_ERROR_H_
 
-#include <string>
+#include <cr/common/exception.h>
 
 namespace cr
 {
     /**
-     * ´íÎó»ùÀà£¬ÓÃÓÚ²»¿É»Ö¸´µÄ´íÎó
+     * é”™è¯¯åŸºç±»ï¼Œç”¨äºä¸å¯æ¢å¤çš„é”™è¯¯
      */
-    class Error
+    class Error : public Exception
     {
     public:
-
-        /**
-         * Constructor.
-         *
-         * @param    ´íÎóÃèÊöĞÅÏ¢.
-         */
-        explicit Error(std::string message = "");
-
-        /** Destructor. */
-        virtual ~Error() noexcept;
-
-        /**
-         * »ñÈ¡´íÎóÃèÊöĞÅÏ¢
-         *
-         * @return    ´íÎóÃèÊöĞÅÏ¢
-         */
-        virtual const char* what() const;
-       
-        /**
-         * »ñÈ¡´íÎóÃèÊöĞÅÏ¢
-         *
-         * @return    ´íÎóÃèÊöĞÅÏ¢
-         */
-        virtual const std::string& getMessage() const;
-
-        /**
-         * ÉèÖÃ´íÎó·¢ÉúµÄÔ´ÎÄ¼şÃû
-         *
-         * @param Ô´ÎÄ¼şÃû
-         */
-        void setSourceName(const char* sourceName);
-
-        /**
-         * »ñÈ¡´íÎó·¢ÉúµÄÔ´ÎÄ¼şÃû
-         *
-         * @return ´íÎó·¢ÉúµÄÔ´ÎÄ¼şÃû
-         */
-        const char* getSourceName() const;
-
-        /**
-         * ÉèÖÃ´íÎó·¢ÉúµÄÔ´ÂëĞĞ
-         *
-         * @param ´íÎó·¢ÉúµÄÔ´ÂëĞĞ
-         */
-        void setSourceLine(int sourceLine);
-
-        /**
-        * »ñÈ¡´íÎó·¢ÉúµÄÔ´ÂëĞĞ
-        *
-        * @return ´íÎó·¢ÉúµÄÔ´ÂëĞĞ
-        */
-        int getSourceLine() const;
-
-    private:
-
-        // ´íÎóÃèÊöĞÅÏ¢
-        std::string message_;
-        // Ô´ÎÄ¼şÃû
-        const char* sourceName_;
-        // Ô´ÂëĞĞ
-        int sourceLine_;
+        using Exception::Exception;
+        
     };
 }
 

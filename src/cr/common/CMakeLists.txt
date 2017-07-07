@@ -8,7 +8,6 @@ set(cr_common_SRCS
     assert_error.h
     scope_guard.h
     error.h
-    error.cpp
     exception.h
     exception.cpp
     function.h
