@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include <cr/common/throw.h>
+#include <cr/common/assert.h>
 #include <cr/raft/exception.h>
 
 namespace cr
@@ -12,37 +12,25 @@ namespace cr
 
         void MemStorage::append(const Entry& entry)
         {
-            if (entry.getIndex() != lastIndex() + 1 || entry.getTerm() < lastTerm())
-            {
-                CR_THROW(cr::raft::StoreException, "Entry Index Out of Bound");
-            }
+            CR_ASSERT_E(cr::raft::StoreException, entry.getIndex() == lastIndex() + 1 && entry.getTerm() >= lastTerm())(entry.getIndex())(entry.getTerm())(lastIndex())(lastTerm());
             entries_.push_back(entry);
         }
 
         void MemStorage::remove(std::uint64_t startIndex)
         {
-            if(startIndex < 1 || startIndex > lastIndex())
-            {
-                CR_THROW(cr::raft::StoreException, "Start Index Out of Bound");
-            }
+            CR_ASSERT_E(cr::raft::StoreException, startIndex >= 1 && startIndex <= lastIndex())(startIndex)(lastIndex());
             entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
         }
 
         std::vector<Entry> MemStorage::entries(std::uint64_t startIndex, std::uint64_t stopIndex)
         {
-            if (startIndex < 1 || startIndex > stopIndex || stopIndex > lastIndex())
-            {
-                CR_THROW(cr::raft::StoreException, "Start Index or Stop Index Out of Bound");
-            }
+            CR_ASSERT_E(cr::raft::StoreException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= lastIndex())(startIndex)(stopIndex)(lastIndex());
             return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
         }
 
         std::uint32_t MemStorage::term(std::uint64_t index)
         {
-            if (index < 1 || index > lastIndex())
-            {
-                CR_THROW(cr::raft::StoreException, "Log Index Out of Bound");
-            }
+            CR_ASSERT_E(cr::raft::StoreException, index >= 1 && index <= lastIndex())(index)(lastIndex());
             return entries_[static_cast<std::size_t>(index - 1)].getTerm();
         }
 
