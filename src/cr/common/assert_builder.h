@@ -6,69 +6,47 @@
 
 namespace cr
 {
-    class AssertBuilder;
 
-    /** 抛出断言. */
-    class ThrowAssertError
-    {
-    public:
-        explicit ThrowAssertError(const AssertBuilder& builder);
-
-        operator int();
-
-    private:
-        const AssertBuilder& builder_;
-    };
-
-    /** 断言构造器 */
+    template <typename E>
     class AssertBuilder
     {
     public:
 
-        /** 断言发生次数 */
-        static int sAssertCount;
+        AssertBuilder& CR_ASSERT_IMPL_A;
+        AssertBuilder& CR_ASSERT_IMPL_B;
 
-        ThrowAssertError CR_ASSERT_IMPL_A;
-        ThrowAssertError CR_ASSERT_IMPL_B;
+        AssertBuilder(const char* expression, const char* file, int line)
+            : CR_ASSERT_IMPL_A(*this),
+            CR_ASSERT_IMPL_B(*this),
+            sourceName_(file),
+            sourceLine_(line)
+        {
+            message_ << "Failed: " << expression << "\n"
+                << "File: " << file << " Line: " << line << "\n"
+                << "Context Variables:\n";
+        }
 
-        /**
-         * Constructor.
-         *
-         * @param handler 断言异常抛出.
-         * @param file 断言发生文件名.
-         * @param line 断言发生行数.
-         * @param expression 断言表达式.
-         */
-        AssertBuilder(std::function<void(const char*)> handler, const char* file, int line, const char* expression);
-
-        /**
-         * 打印变量名.
-         *
-         * @tparam T 变量类型.
-         * @param x 变量.
-         * @param varName 变量名.
-         *
-         * @return 断言构造器.
-         */
         template <typename T>
-        AssertBuilder& print(const T& x, const char* varName);
+        AssertBuilder& print(const T& x, const char* varName)
+        {
+            message_ << "\t" << varName << " = " << x << "\n";
+            return *this;
+        }
+
+        operator E() const
+        {
+            E e(message_.str().c_str());
+            e.setSourceName(sourceName_);
+            e.setSourceLine(sourceLine_);
+            return e;
+        }
 
     private:
 
-        friend ThrowAssertError;
-
-        // 断言描述
         std::stringstream message_;
-        // 异常抛出
-        std::function<void(const char*)> handler_;
+        const char* sourceName_;
+        int sourceLine_;
     };
-
-    template <typename T>
-    AssertBuilder& AssertBuilder::print(const T& x, const char* varName)
-    {
-        message_ << "\t" << varName << " = " << x << "\n";
-        return *this;
-    }
 }
 
 #endif

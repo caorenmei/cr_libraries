@@ -5,7 +5,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(cr_common_SRCS
     assert.h
     assert_builder.h
-    assert_builder.cpp
     assert_error.h
     scope_guard.h
     error.h
