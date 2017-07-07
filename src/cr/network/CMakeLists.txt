@@ -8,20 +8,13 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 set(cr_network_SRCS
     byte_buffer.h
     byte_buffer.cpp
-    pipe.h
     protobuf_utils.h
     protobuf_utils.cpp
-    spawn.h
-    spawn_coro.h
-    spawn.cpp
 )
 
 set(cr_network_HEADERS
     byte_buffer.h
-    pipe.h
     protobuf_utils.h
-    spawn.h
-    spawn_coro.h
 )
 
 add_library(cr_network ${cr_network_SRCS})
