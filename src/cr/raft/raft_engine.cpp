@@ -131,21 +131,17 @@ namespace cr
             return messages_;
         }
 
-        bool RaftEngine::execute(const std::vector<std::string>& values)
+        void RaftEngine::execute(const std::vector<std::string>& values)
         {
-            if (currentState_->getState() == LEADER)
+            CR_ASSERT_E(StateException, currentState_->getState() == LEADER)(currentState_->getState(), LEADER);
+            std::vector<Entry> entries;
+            auto logIndex = storage_->getLastIndex();
+            for (auto&& value : values)
             {
-                std::vector<Entry> entries;
-                auto logIndex = storage_->getLastIndex();
-                for (auto&& value : values)
-                {
-                    logIndex = logIndex + 1;
-                    entries.emplace_back(logIndex, currentTerm_, value);
-                }
-                storage_->append(entries);
-                return true;
+                logIndex = logIndex + 1;
+                entries.emplace_back(logIndex, currentTerm_, value);
             }
-            return false;
+            storage_->append(entries);
         }
 
         std::uint64_t RaftEngine::getNodeId() const

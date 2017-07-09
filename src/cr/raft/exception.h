@@ -28,6 +28,13 @@ namespace cr
         public:
             using RaftException::RaftException;
         };
+
+        /** 状态异常 */
+        class StateException : public RaftException
+        {
+        public:
+            using RaftException::RaftException;
+        };
     }
 }
 

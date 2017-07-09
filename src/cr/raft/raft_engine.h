@@ -84,7 +84,7 @@ namespace cr
             std::deque<RaftMsgPtr>& getMessageQueue();
 
             // 执行一个日志
-            bool execute(const std::vector<std::string>& value);
+            void execute(const std::vector<std::string>& values);
 
             // 自身Id
             std::uint64_t getNodeId() const;
