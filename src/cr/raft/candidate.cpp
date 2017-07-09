@@ -102,9 +102,9 @@ namespace cr
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
-                    return onLogAppendReqHandler(nowTime, std::move(message), outMessages);
+                    return onAppendEntriesReqHandler(nowTime, std::move(message), outMessages);
                 case pb::RaftMsg::REQUEST_VOTE_REQ:
-                    return onVoteReqHandler(nowTime, std::move(message), outMessages);
+                    return onRequestVoteReqHandler(nowTime, std::move(message), outMessages);
                 case pb::RaftMsg::REQUEST_VOTE_RESP:
                     return onVoteRespHandler(nowTime, std::move(message), outMessages);
                 }
@@ -112,7 +112,7 @@ namespace cr
             return false;
         }
 
-        bool Candidate::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
+        bool Candidate::onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(message->has_append_entries_req());
             auto& request = message->append_entries_req();
@@ -126,7 +126,7 @@ namespace cr
             return false;
         }
 
-        bool Candidate::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
+        bool Candidate::onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(message->has_request_vote_req());
             auto& request = message->request_vote_req();

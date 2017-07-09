@@ -35,8 +35,10 @@ namespace cr
         std::uint64_t Follower::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             auto nextUpdateTime = nowTime;
+            // 如果没有选举超时
             if (!checkElectionTimeout(nowTime))
             {
+                // 则处理消息
                 processOneMessage(nowTime, outMessages);
                 if (engine.getMessageQueue().empty())
                 {
@@ -74,10 +76,10 @@ namespace cr
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
-                    onLogAppendReqHandler(nowTime, std::move(message), outMessages);
+                    onAppendEntriesReqHandler(nowTime, std::move(message), outMessages);
                     break;
                 case pb::RaftMsg::REQUEST_VOTE_REQ:
-                    onVoteReqHandler(nowTime, std::move(message), outMessages);
+                    onRequestVoteReqHandler(nowTime, std::move(message), outMessages);
                     break;
                 default:
                     break;
@@ -85,86 +87,76 @@ namespace cr
             }
         }
 
-        void Follower::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto leaderId = message->from_node_id();
             CR_ASSERT(message->has_append_entries_req());
             auto& request = message->append_entries_req();
             bool success = false;
-            if (checkLeaderTerm(leaderId, request))
-            {
-                updateNextElectionTime(nowTime);
-                updateLeaderId(leaderId, request);
-                if (checkPrevLogTerm(leaderId, request))
-                {
-                    appendLog(leaderId, request);
-                    updateCommitIndex(leaderId, request);
-                    success = true;
-                }
-            }
-            logAppendResp(leaderId, success, outMessages);
-        }
-
-        bool Follower::checkLeaderTerm(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
-        {
+            // 如果比当前任期大，则更新任期
             auto currentTerm = engine.getCurrentTerm();
             if (request.leader_term() > currentTerm)
             {
                 currentTerm = request.leader_term();
-                setNewerTerm(currentTerm);
+                engine.setCurrentTerm(currentTerm);
+                engine.setVotedFor(boost::none);
             }
-            return request.leader_term() != 0 && request.leader_term() == currentTerm;
+            // 任期有效，处理附加日志
+            if (request.leader_term() != 0 && request.leader_term() == currentTerm)
+            {
+                // 更新超时时间
+                updateNextElectionTime(nowTime);
+                // 更新领导者
+                auto currentLeaderId = engine.getLeaderId();
+                if (!currentLeaderId || leaderId != *currentLeaderId)
+                {
+                    currentLeaderId = leaderId;
+                    engine.setVotedFor(boost::none);
+                    engine.setLeaderId(currentLeaderId);
+                }
+                // 匹配日志
+                auto lastLogIndex = engine.getStorage()->getLastIndex();
+                if (request.prev_log_index() < lastLogIndex)
+                {
+                    lastLogIndex = request.prev_log_index();
+                    engine.getStorage()->remove(lastLogIndex + 1);
+                }
+                auto lastLogTerm = engine.getStorage()->getLastTerm();
+                if (request.prev_log_index() == lastLogIndex && lastLogIndex != 0 && request.prev_log_term() != lastLogTerm)
+                {
+                    engine.getStorage()->remove(lastLogIndex);
+                    lastLogIndex = engine.getStorage()->getLastIndex();
+                    lastLogTerm = engine.getStorage()->getLastTerm();
+                }
+                // 日志匹配，则应用到状态机
+                if (request.prev_log_index() == lastLogIndex && request.prev_log_term() == lastLogTerm)
+                {
+                    // 追加日志
+                    auto logIndex = request.prev_log_index();
+                    std::vector<Entry> entries;
+                    for (int i = 0; i != request.entries_size(); ++i)
+                    {
+                        logIndex = logIndex + 1;
+                        entries.emplace_back(logIndex, currentTerm, request.entries(i));
+                    }
+                    engine.getStorage()->append(entries);
+                    lastLogIndex = engine.getStorage()->getLastIndex();
+                    // 更新已提交日志索引
+                    auto commitIndex = engine.getCommitIndex();
+                    if (request.leader_commit() > commitIndex && commitIndex < lastLogIndex)
+                    {
+                        commitIndex = std::min(request.leader_commit(), lastLogIndex);
+                        engine.setCommitIndex(commitIndex);
+                    }
+                    // ok了
+                    success = true;
+                }
+            }
+            // 回复消息
+            appendEntriesResp(leaderId, success, outMessages);
         }
 
-        void Follower::updateLeaderId(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
-        {
-            auto currentLeaderId = engine.getLeaderId();
-            if (!currentLeaderId || leaderId != *currentLeaderId)
-            {
-                engine.setLeaderId(leaderId);
-            }
-        }
-
-        bool Follower::checkPrevLogTerm(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
-        {
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            if (request.prev_log_index() < lastLogIndex)
-            {
-                lastLogIndex = request.prev_log_index();
-                engine.getStorage()->remove(lastLogIndex + 1);
-            }
-            if (request.prev_log_index() == lastLogIndex && engine.getStorage()->getLastTerm() != request.prev_log_term())
-            {
-                engine.getStorage()->remove(lastLogIndex);
-            }
-            return request.prev_log_index() == lastLogIndex && request.prev_log_term() == engine.getStorage()->getLastTerm();;
-        }
-
-        void Follower::appendLog(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
-        {
-            auto currentTerm = engine.getCurrentTerm();
-            auto logIndex = request.prev_log_index();
-            std::vector<Entry> entries;
-            for (int i = 0; i != request.entries_size(); ++i)
-            {
-                logIndex = logIndex + 1;
-                entries.emplace_back(logIndex, currentTerm, request.entries(i));
-            }
-            engine.getStorage()->append(entries);
-        }
-
-        void Follower::updateCommitIndex(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
-        {
-            auto commitIndex = engine.getCommitIndex();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            if (request.leader_commit() > commitIndex && commitIndex < lastLogIndex)
-            {
-                commitIndex = std::min(request.leader_commit(), lastLogIndex);
-                engine.setCommitIndex(commitIndex);
-            }
-        }
-
-        void Follower::logAppendResp(std::uint64_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::appendEntriesResp(std::uint64_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto lastLogIndex = engine.getStorage()->getLastIndex();
@@ -182,7 +174,7 @@ namespace cr
             outMessages.push_back(std::move(raftMsg));
         }
 
-        void Follower::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto candidateId = message->from_node_id();
             auto currentTerm = engine.getCurrentTerm();
@@ -199,7 +191,8 @@ namespace cr
                 if (currentTerm < request.candidate_term())
                 {
                     currentTerm = request.candidate_term();
-                    setNewerTerm(request.candidate_term());
+                    engine.setCurrentTerm(currentTerm);
+                    engine.setVotedFor(boost::none);
                 }
                 auto voteFor = engine.getVotedFor();
                 if (!voteFor)
@@ -210,10 +203,10 @@ namespace cr
                 success = (*voteFor == candidateId);
             }
             updateNextElectionTime(nowTime);
-            voteResp(candidateId, request, success, outMessages);
+            requestVoteResp(candidateId, request, success, outMessages);
         }
 
-        void Follower::voteResp(std::uint64_t candidateId, const pb::RequestVoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::requestVoteResp(std::uint64_t candidateId, const pb::RequestVoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
@@ -225,12 +218,6 @@ namespace cr
             response.set_follower_term(engine.getCurrentTerm());
 
             outMessages.push_back(std::move(raftMsg));
-        }
-
-        void Follower::setNewerTerm(std::uint64_t newerTerm)
-        {
-            engine.setCurrentTerm(newerTerm);
-            engine.setVotedFor(boost::none);
         }
     }
 }
