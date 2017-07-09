@@ -71,8 +71,6 @@ namespace cr
             {
                 auto message = std::move(engine.getMessageQueue().front());
                 engine.getMessageQueue().pop_front();
-                CR_ASSERT(message->dest_node_id() == engine.getNodeId())(message->dest_node_id())(engine.getNodeId());
-                CR_ASSERT(engine.isBuddyNodeId(message->from_node_id()))(message->from_node_id());
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
