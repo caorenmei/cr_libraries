@@ -265,9 +265,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
     BOOST_REQUIRE_EQUAL(checkLogAppendMsg(), 0);
     BOOST_REQUIRE_EQUAL(checkNextLogIndex(2, 4), 0);
     BOOST_REQUIRE_EQUAL(checkReplyLogIndex(2, 1), 0);
-    auto& logAppendReq = messages[0]->append_entries_req();
-    BOOST_CHECK_EQUAL(logAppendReq.prev_log_index(), 1);
-    BOOST_CHECK(cr::from(logAppendReq.entries()).equals(cr::from({ "2", "3" })));
+    auto& appendEntriesReq = messages[0]->append_entries_req();
+    BOOST_CHECK_EQUAL(appendEntriesReq.prev_log_index(), 1);
+    BOOST_CHECK(cr::from(appendEntriesReq.entries()).equals(cr::from({ "2", "3" })));
     messages.clear();
 }
 

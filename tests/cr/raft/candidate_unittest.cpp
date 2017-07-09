@@ -177,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
 }
 
-BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<CandidateFixture>)
+BOOST_FIXTURE_TEST_CASE(appendEntriesReq, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
 
