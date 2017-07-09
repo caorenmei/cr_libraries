@@ -91,7 +91,7 @@ namespace cr
             friend class Candidate;
             friend class Leader;
 
-            std::uint64_t getLogWindowSize() const;
+            std::uint64_t getMaxEntriesNum() const;
 
             std::uint64_t getMaxPacketLength() const;
 
@@ -109,29 +109,29 @@ namespace cr
 
             std::uint64_t randomElectionTimeout();
 
-
-            std::uint64_t nodeId_;
-            std::vector<std::uint64_t> buddyNodeIds_;
-            std::shared_ptr<Storage> storage_;
-            std::function<void(std::uint64_t, const std::string&)> executable_;
-            std::uint64_t logWindowSize_;
-            std::uint64_t maxPacketLength_;
-            std::deque<RaftMsgPtr> messages_;
-
-            std::uint64_t currentTerm_;
-            boost::optional<std::uint64_t> votedFor_;
-
-            std::uint64_t commitIndex_;
-            std::uint64_t lastApplied_;
-            boost::optional<std::uint64_t> leaderId_;
             std::default_random_engine random_;
             std::uint64_t minElectionTimeout_;
             std::uint64_t maxElectionTimeout_;
             std::uint64_t heatbeatTimeout_;
+            std::uint64_t maxEntriesNum_;
+            std::uint64_t maxPacketLength_;
+            
+            std::shared_ptr<Storage> storage_;
+            std::function<void(std::uint64_t, const std::string&)> executable_;
 
             std::uint64_t nowTime_;
+            std::deque<RaftMsgPtr> messages_;
             std::shared_ptr<RaftState> currentState_;
             State nextState_;
+
+            std::uint64_t nodeId_;
+            std::vector<std::uint64_t> buddyNodeIds_;
+            boost::optional<std::uint64_t> votedFor_;
+            boost::optional<std::uint64_t> leaderId_;
+
+            std::uint64_t currentTerm_;
+            std::uint64_t commitIndex_;
+            std::uint64_t lastApplied_;
         };
     }
 }

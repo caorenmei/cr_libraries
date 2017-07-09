@@ -12,7 +12,7 @@ namespace cr
             maxElectionTimeout_(200),
             heartbeatTimeout_(50),
             randomSeed_(0),
-            logWindowSize_(1),
+            maxEntriesNum_(1),
             maxPacketLength_(1)
         {}
 
@@ -102,15 +102,15 @@ namespace cr
             return randomSeed_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint64_t logWindowSize)
+        RaftEngineBuilder& RaftEngineBuilder::setMaxEntriesNum(std::uint64_t maxEntriesNum)
         {
-            logWindowSize_ = logWindowSize;
+            maxEntriesNum_ = maxEntriesNum;
             return *this;
         }
 
-        std::uint64_t RaftEngineBuilder::getLogWindowSize() const
+        std::uint64_t RaftEngineBuilder::getMaxEntriesNum() const
         {
-            return logWindowSize_;
+            return maxEntriesNum_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint64_t maxPacketSize)

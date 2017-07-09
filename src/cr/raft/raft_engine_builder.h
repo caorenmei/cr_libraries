@@ -56,9 +56,9 @@ namespace cr
 
             std::size_t getRandomSeed() const;
 
-            RaftEngineBuilder& setLogWindowSize(std::uint64_t logWindowSize);
+            RaftEngineBuilder& setMaxEntriesNum(std::uint64_t maxEntriesNum);
 
-            std::uint64_t getLogWindowSize() const;
+            std::uint64_t getMaxEntriesNum() const;
 
             RaftEngineBuilder& setMaxPacketSize(std::uint64_t maxPacketSize);
 
@@ -76,7 +76,7 @@ namespace cr
             std::uint64_t maxElectionTimeout_;
             std::uint64_t heartbeatTimeout_;
             std::size_t randomSeed_;
-            std::uint64_t logWindowSize_;
+            std::uint64_t maxEntriesNum_;
             std::uint64_t maxPacketLength_;
         };
     }

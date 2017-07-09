@@ -15,39 +15,39 @@ namespace cr
     {
 
         RaftEngine::RaftEngine(const Builder& builder)
-            : nodeId_(builder.getNodeId()),
-            buddyNodeIds_(builder.getBuddyNodeIds()),
-            storage_(builder.getStorage()),
-            executable_(builder.getEexcuteCallback()),
-            logWindowSize_(builder.getLogWindowSize()),
-            maxPacketLength_(builder.getMaxPacketLength()),
-            currentTerm_(storage_->getLastTerm()),
-            commitIndex_(0),
-            lastApplied_(0),
-            random_(builder.getRandomSeed()),
+            : random_(builder.getRandomSeed()),
             minElectionTimeout_(builder.getMinElectionTimeout()),
             maxElectionTimeout_(builder.getMaxElectionTimeout()),
             heatbeatTimeout_(builder.getHeatbeatTimeout()),
+            maxEntriesNum_(builder.getMaxEntriesNum()),
+            maxPacketLength_(builder.getMaxPacketLength()), 
+            storage_(builder.getStorage()),
+            executable_(builder.getEexcuteCallback()),
             nowTime_(0),
-            nextState_(FOLLOWER)
+            nextState_(FOLLOWER),
+            nodeId_(builder.getNodeId()),
+            buddyNodeIds_(builder.getBuddyNodeIds()),
+            currentTerm_(storage_->getLastTerm()),
+            commitIndex_(0),
+            lastApplied_(0)
         {
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
-            // 伙伴节点不能重复
-            CR_ASSERT_E(ArgumentException, std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
-            // 伙伴节点Id不能为自身Id
-            CR_ASSERT_E(ArgumentException, std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
-            // 日志存储不能为null
-            CR_ASSERT_E(ArgumentException, storage_ != nullptr);
-            // 复制状态机不能为null
-            CR_ASSERT_E(ArgumentException, executable_ != nullptr);
             // 最小选举超时时间不能大于最大选举超时时间
             CR_ASSERT_E(ArgumentException, minElectionTimeout_ != 0 && minElectionTimeout_ <= maxElectionTimeout_)(minElectionTimeout_)(maxElectionTimeout_);
             // 心跳不能大于选举超时时间
             CR_ASSERT_E(ArgumentException, heatbeatTimeout_ != 0 && heatbeatTimeout_ <= minElectionTimeout_)(heatbeatTimeout_)(minElectionTimeout_);
             // 日志复制窗口不能0
-            CR_ASSERT_E(ArgumentException, logWindowSize_ >= 1)(logWindowSize_);
+            CR_ASSERT_E(ArgumentException, maxEntriesNum_ >= 1)(maxEntriesNum_);
             // 最大数据大小不能为0
             CR_ASSERT_E(ArgumentException, maxPacketLength_ >= 1)(maxPacketLength_);
+            // 日志存储不能为null
+            CR_ASSERT_E(ArgumentException, storage_ != nullptr);
+            // 复制状态机不能为null
+            CR_ASSERT_E(ArgumentException, executable_ != nullptr);
+            // 伙伴节点不能重复
+            CR_ASSERT_E(ArgumentException, std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
+            // 伙伴节点Id不能为自身Id
+            CR_ASSERT_E(ArgumentException, std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());   
         }
 
         RaftEngine::~RaftEngine()
@@ -184,9 +184,9 @@ namespace cr
             return leaderId_;
         }
 
-        std::uint64_t RaftEngine::getLogWindowSize() const
+        std::uint64_t RaftEngine::getMaxEntriesNum() const
         {
-            return logWindowSize_;
+            return maxEntriesNum_;
         }
 
         std::uint64_t RaftEngine::getMaxPacketLength() const

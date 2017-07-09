@@ -171,7 +171,7 @@ namespace cr
 
         void Leader::processLogAppend(std::uint64_t nowTime, bool newerCommitIndex, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto logWindowSize = engine.getLogWindowSize();
+            auto logWindowSize = engine.getMaxEntriesNum();
             auto commitIndex = engine.getCommitIndex();
             auto lastLogIndex = engine.getStorage()->getLastIndex();
             for (auto&& node : nodes_)
@@ -205,7 +205,7 @@ namespace cr
             request.set_leader_commit(commitIndex);
 
             auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto logWindowSize = engine.getLogWindowSize();
+            auto logWindowSize = engine.getMaxEntriesNum();
             auto maxPacketLenth = engine.getMaxPacketLength();
             logWindowSize = std::max<std::uint64_t>(node.nextLogIndex - node.replyLogIndex, logWindowSize);
             maxPacketLenth = std::max<std::uint64_t>(request.ByteSize() + 1, maxPacketLenth);
