@@ -37,10 +37,12 @@ namespace cr
         std::uint64_t Candidate::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             auto nextUpdateTime = nowTime;
+            // 如果没有选举自己， 则处理消息
             if (!checkElectionTimeout(nowTime, outMessages))
             {
                 if (!processOneMessage(nowTime, outMessages))
                 {
+                    // 如果没有转换状态，则等待超时
                     if (engine.getMessageQueue().empty())
                     {
                         nextUpdateTime = nextElectionTime_;
@@ -57,20 +59,26 @@ namespace cr
 
         bool Candidate::checkElectionTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
+            // 如果选举超时
             if (nextElectionTime_ <= nowTime)
             {
+                // 重设超时时间
                 updateNextElectionTime(nowTime);
+                // 增加任期
                 engine.setCurrentTerm(engine.getCurrentTerm() + 1);
+                // 给自己一票
                 grantNodeIds_.clear();
                 engine.setVotedFor(engine.getNodeId());
                 grantNodeIds_.insert(engine.getNodeId());
-                processVoteReq(nowTime, outMessages);
+                // 发送请求投票消息
+                processRequestVoteReq(nowTime, outMessages);
+                // 如果只有一个节点，则选举自己
                 return checkVoteGranted(nowTime);
             }
             return false;
         }
 
-        void Candidate::processVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
+        void Candidate::processRequestVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto lastLogIndex = engine.getStorage()->getLastIndex();
@@ -104,7 +112,7 @@ namespace cr
                 case pb::RaftMsg::REQUEST_VOTE_REQ:
                     return onRequestVoteReqHandler(nowTime, std::move(message), outMessages);
                 case pb::RaftMsg::REQUEST_VOTE_RESP:
-                    return onVoteRespHandler(nowTime, std::move(message), outMessages);
+                    return onRequestVoteRespHandler(nowTime, std::move(message), outMessages);
                 }
             }
             return false;
@@ -112,8 +120,8 @@ namespace cr
 
         bool Candidate::onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            CR_ASSERT(message->has_append_entries_req());
             auto& request = message->append_entries_req();
+            // 如果领导者任期符合,则转换到跟随者
             if (engine.getCurrentTerm() <= request.leader_term())
             {
                 engine.getMessageQueue().push_front(std::move(message));
@@ -126,36 +134,36 @@ namespace cr
 
         bool Candidate::onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            CR_ASSERT(message->has_request_vote_req());
             auto& request = message->request_vote_req();
+            // 如果对方任期比自己大，则转换到跟随者
             if (engine.getCurrentTerm() < request.candidate_term())
             {
                 engine.getMessageQueue().push_front(std::move(message));
-                setNewerTerm(request.candidate_term());
+                engine.setNextState(RaftEngine::FOLLOWER);
+                engine.setVotedFor(boost::none);
                 return true;
             }
             return false;
         }
 
-        bool Candidate::onVoteRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
+        bool Candidate::onRequestVoteRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
+            auto& response = message->request_vote_resp();
             auto followerId = message->from_node_id();
             auto currentTerm = engine.getCurrentTerm();
-
-            CR_ASSERT(message->has_request_vote_resp());
-            auto& response = message->request_vote_resp();
+            // 是本次投票结果,判断是否选举成功，成功转换到领导者
             if (currentTerm == response.follower_term() && response.success())
             {
                 grantNodeIds_.insert(followerId);
-                if (checkVoteGranted(nowTime))
-                {
-                    return true;
-                }
+                return checkVoteGranted(nowTime);
             }
+            // 比跟随者任期小，更新自己的任期，转化到跟随者
             else if (currentTerm < response.follower_term())
             {
                 currentTerm = response.follower_term();
-                setNewerTerm(currentTerm);
+                engine.setCurrentTerm(currentTerm);
+                engine.setNextState(RaftEngine::FOLLOWER);
+                engine.setVotedFor(boost::none);
                 return true;
             }
             return false;
@@ -163,20 +171,15 @@ namespace cr
 
         bool Candidate::checkVoteGranted(std::uint64_t nowTime)
         {
+            // 超过半数选票，选举成功,转换到领导者
             if (grantNodeIds_.size() > (1 + engine.getBuddyNodeIds().size()) / 2)
             {
                 engine.setNextState(RaftEngine::LEADER);
                 engine.setLeaderId(engine.getNodeId());
+                engine.setVotedFor(boost::none);
                 return true;
             }
             return false;
-        }
-
-        void Candidate::setNewerTerm(std::uint64_t newerTerm)
-        {
-            engine.setCurrentTerm(newerTerm);
-            engine.setVotedFor(boost::none);
-            engine.setNextState(RaftEngine::FOLLOWER);
         }
     }
 }
