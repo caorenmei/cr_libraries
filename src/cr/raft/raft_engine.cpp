@@ -19,7 +19,7 @@ namespace cr
             : nodeId_(builder.getNodeId()),
             buddyNodeIds_(builder.getBuddyNodeIds()),
             storage_(builder.getStorage()),
-            executeCallback_(builder.getEexcuteCallback()),
+            executable_(builder.getEexcuteCallback()),
             random_(builder.getRandom()),
             logWindowSize_(builder.getLogWindowSize()),
             maxPacketLength_(builder.getMaxPacketLength()),
@@ -37,7 +37,7 @@ namespace cr
             CR_ASSERT(std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
             CR_ASSERT(std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
             CR_ASSERT(storage_ != nullptr);
-            CR_ASSERT(executeCallback_ != nullptr);
+            CR_ASSERT(executable_ != nullptr);
             CR_ASSERT(electionTimeout_.first != 0 && electionTimeout_.first <= electionTimeout_.second);
             CR_ASSERT(heatbeatTimeout_ != 0 && heatbeatTimeout_ <= electionTimeout_.first);
             CR_ASSERT(random_ != nullptr);
@@ -106,7 +106,7 @@ namespace cr
                 auto getEntries = storage_->getEntries(lastApplied_, lastApplied_);
                 for (auto&& entry : getEntries)
                 {
-                    executeCallback_(entry.getIndex(), entry.getValue());
+                    executable_(entry.getIndex(), entry.getValue());
                 }
             }
 

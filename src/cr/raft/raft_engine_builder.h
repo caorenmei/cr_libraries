@@ -69,7 +69,7 @@ namespace cr
             std::uint64_t nodeId_;
             std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
-            std::function<void(std::uint64_t, const std::string&)> executeCallback_;
+            std::function<void(std::uint64_t, const std::string&)> executable_;
             std::pair<std::uint64_t, std::uint64_t> electionTimeout_;
             std::uint64_t heartbeatTimeout_;
             std::function<std::uint64_t()> random_;

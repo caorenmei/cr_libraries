@@ -51,13 +51,13 @@ namespace cr
 
         RaftEngineBuilder& RaftEngineBuilder::setEexcuteCallback(std::function<void(std::uint64_t, const std::string&)> cb)
         {
-            executeCallback_ = std::move(cb);
+            executable_ = std::move(cb);
             return *this;
         }
 
         const std::function<void(std::uint64_t, const std::string&)>& RaftEngineBuilder::getEexcuteCallback() const
         {
-            return executeCallback_;
+            return executable_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(const std::pair<std::uint64_t, std::uint64_t>& electionTimeout)

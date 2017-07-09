@@ -112,7 +112,7 @@ namespace cr
             std::uint64_t nodeId_;
             std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
-            std::function<void(std::uint64_t, const std::string&)> executeCallback_;
+            std::function<void(std::uint64_t, const std::string&)> executable_;
             std::function<std::uint64_t()> random_;
             std::uint64_t logWindowSize_;
             std::uint64_t maxPacketLength_;
