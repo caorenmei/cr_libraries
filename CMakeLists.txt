@@ -24,7 +24,7 @@ endif()
 add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
 
 # 第三方库
-foreach(libName boost cpp-netlib eluna lua mongodb-bson mongodb-driver mongodb-driver-cxx mysql mysql-connector-cpp protobuf rapidxml zookeeper)
+foreach(libName boost cpp-netlib lua mysql mysql-connector-cpp protobuf rapidxml rocksdb)
     set(ENV{PATH} "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/${libName}/bin${_CR_ENV_TERMINAL}$ENV{PATH}")
     set(ENV{CMAKE_INCLUDE_PATH} "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/include${_CR_ENV_TERMINAL}$ENV{CMAKE_INCLUDE_PATH}")
     set(ENV{CMAKE_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/lib${_CR_ENV_TERMINAL}$ENV{CMAKE_LIBRARY_PATH}")
