@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include <cr/common/assert.h>
-#include <cr/common/throw.h>
 #include <cr/raft/candidate.h>
 #include <cr/raft/exception.h>
 #include <cr/raft/follower.h>
@@ -33,15 +32,22 @@ namespace cr
             nextState_(FOLLOWER)
         {
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
-            // 节点有效性判断
-            CR_ASSERT(std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
-            CR_ASSERT(std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
-            CR_ASSERT(storage_ != nullptr);
-            CR_ASSERT(executable_ != nullptr);
-            CR_ASSERT(minElectionTimeout_ != 0 && minElectionTimeout_ <= maxElectionTimeout_);
-            CR_ASSERT(heatbeatTimeout_ != 0 && heatbeatTimeout_ <= minElectionTimeout_);
-            CR_ASSERT(logWindowSize_ >= 1);
-            CR_ASSERT(maxPacketLength_ >= 1);
+            // 伙伴节点不能重复
+            CR_ASSERT_E(ArgumentException, std::unique(buddyNodeIds_.begin(), buddyNodeIds_.end()) == buddyNodeIds_.end());
+            // 伙伴节点Id不能为自身Id
+            CR_ASSERT_E(ArgumentException, std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
+            // 日志存储不能为null
+            CR_ASSERT_E(ArgumentException, storage_ != nullptr);
+            // 复制状态机不能为null
+            CR_ASSERT_E(ArgumentException, executable_ != nullptr);
+            // 最小选举超时时间不能大于最大选举超时时间
+            CR_ASSERT_E(ArgumentException, minElectionTimeout_ != 0 && minElectionTimeout_ <= maxElectionTimeout_)(minElectionTimeout_)(maxElectionTimeout_);
+            // 心跳不能大于选举超时时间
+            CR_ASSERT_E(ArgumentException, heatbeatTimeout_ != 0 && heatbeatTimeout_ <= minElectionTimeout_)(heatbeatTimeout_)(minElectionTimeout_);
+            // 日志复制窗口不能0
+            CR_ASSERT_E(ArgumentException, logWindowSize_ >= 1)(logWindowSize_);
+            // 最大数据大小不能为0
+            CR_ASSERT_E(ArgumentException, maxPacketLength_ >= 1)(maxPacketLength_);
         }
 
         RaftEngine::~RaftEngine()

@@ -14,26 +14,26 @@ namespace cr
         {
             for (auto&& entry : entries)
             {
-                CR_ASSERT_E(cr::raft::StoreException, entry.getIndex() == getLastIndex() + 1 && entry.getTerm() >= getLastTerm())(entry.getIndex())(entry.getTerm())(getLastIndex())(getLastTerm());
+                CR_ASSERT_E(cr::raft::ArgumentException, entry.getIndex() == getLastIndex() + 1 && entry.getTerm() >= getLastTerm())(entry.getIndex())(entry.getTerm())(getLastIndex())(getLastTerm());
                 entries_.push_back(entry);
             }
         }
 
         void MemStorage::remove(std::uint64_t startIndex)
         {
-            CR_ASSERT_E(cr::raft::StoreException, startIndex >= 1 && startIndex <= getLastIndex())(startIndex)(getLastIndex());
+            CR_ASSERT_E(cr::raft::ArgumentException, startIndex >= 1 && startIndex <= getLastIndex())(startIndex)(getLastIndex());
             entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
         }
 
         std::vector<Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex)
         {
-            CR_ASSERT_E(cr::raft::StoreException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= getLastIndex())(startIndex)(stopIndex)(getLastIndex());
+            CR_ASSERT_E(cr::raft::ArgumentException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= getLastIndex())(startIndex)(stopIndex)(getLastIndex());
             return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
         }
 
         std::uint64_t MemStorage::getTermByIndex(std::uint64_t index)
         {
-            CR_ASSERT_E(cr::raft::StoreException, index >= 1 && index <= getLastIndex())(index)(getLastIndex());
+            CR_ASSERT_E(cr::raft::ArgumentException, index >= 1 && index <= getLastIndex())(index)(getLastIndex());
             return entries_[static_cast<std::size_t>(index - 1)].getTerm();
         }
 

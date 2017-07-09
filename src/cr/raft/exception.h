@@ -15,15 +15,15 @@ namespace cr
 
         };
 
-        /** 日志存储异常 */
-        class StoreException : public RaftException
+        /** 参数错误 */
+        class ArgumentException : public RaftException
         {
         public:
             using RaftException::RaftException;
         };
 
-        /** 投票异常 */
-        class VoteException : public RaftException
+        /** 日志存储异常 */
+        class StoreException : public RaftException
         {
         public:
             using RaftException::RaftException;
