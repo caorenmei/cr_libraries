@@ -12,7 +12,7 @@
 #include <cr/raft/raft_engine.h>
 #include <cr/raft/raft_msg.pb.h>
 
-class SimpleStatMachine
+class CandidateStatMachine
 {
 public:
 
@@ -24,14 +24,14 @@ public:
     std::vector<std::string> entries;
 };
 
-struct RaftEngineFixture;
+struct CandidateFixture;
 
 namespace cr
 {
     namespace raft
     {
         template <>
-        struct DebugVisitor<RaftEngineFixture>
+        struct DebugVisitor<CandidateFixture>
         {
             DebugVisitor()
             {
@@ -39,7 +39,7 @@ namespace cr
                 engine = builder.setNodeId(1)
                     .setBuddyNodeIds({ 2,3,4,5 })
                     .setStorage(storage)
-                    .setEexcuteCallback(std::bind(&SimpleStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
+                    .setEexcuteCallback(std::bind(&CandidateStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
                     .setElectionTimeout(std::make_pair(100, 100))
                     .setHeartbeatTimeout(50)
                     .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
@@ -86,7 +86,7 @@ namespace cr
             cr::raft::RaftEngine::Builder builder;
             std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
-            SimpleStatMachine stateMachine;
+            CandidateStatMachine stateMachine;
             std::default_random_engine random_;
             std::shared_ptr<cr::raft::RaftEngine> engine;
         };
@@ -95,7 +95,7 @@ namespace cr
 
 BOOST_AUTO_TEST_SUITE(RaftCandidate)
 
-BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
@@ -108,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<RaftEngineFixtur
     messages.clear();
 }
 
-BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
 
@@ -139,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<RaftEngineFi
     messages.clear();
 }
 
-BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
 
@@ -178,7 +178,7 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<RaftEngineFixtu
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
 }
 
-BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
 

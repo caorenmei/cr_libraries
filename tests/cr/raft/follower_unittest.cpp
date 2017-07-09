@@ -12,7 +12,7 @@
 #include <cr/raft/raft_engine.h>
 #include <cr/raft/raft_msg.pb.h>
 
-class SimpleStatMachine
+class FollowerStatMachine
 {
 public:
 
@@ -24,14 +24,14 @@ public:
     std::vector<std::string> entries;
 };
 
-struct RaftEngineFixture;
+struct FollowerFixture;
 
 namespace cr
 {
     namespace raft
     {
         template <>
-        struct DebugVisitor<RaftEngineFixture>
+        struct DebugVisitor<FollowerFixture>
         {
             DebugVisitor()
             {
@@ -39,7 +39,7 @@ namespace cr
                 engine = builder.setNodeId(1)
                     .setBuddyNodeIds({ 2,3,4 })
                     .setStorage(storage)
-                    .setEexcuteCallback(std::bind(&SimpleStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
+                    .setEexcuteCallback(std::bind(&FollowerStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
                     .setHeartbeatTimeout(50)
                     .setElectionTimeout(std::make_pair(100, 200))
                     .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
@@ -138,7 +138,7 @@ namespace cr
             cr::raft::RaftEngine::Builder builder;
             std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
-            SimpleStatMachine stateMachine;
+            FollowerStatMachine stateMachine;
             std::default_random_engine random_;
             std::shared_ptr<cr::raft::RaftEngine> engine;
         };
@@ -147,7 +147,7 @@ namespace cr
 
 BOOST_AUTO_TEST_SUITE(RaftFollower)
 
-BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
 {
     std::uint64_t nowTime = 0;
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
@@ -162,7 +162,7 @@ BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<RaftEngineFixtur
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 }
 
-BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<RaftEngineFi
 }
 
 // 任期为0，投票肯定失败
-BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -216,7 +216,7 @@ BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
 }
 
 // 任期为1，投票成功
-BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -236,7 +236,7 @@ BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
 }
 
 // 任期为1，重复投票成功
-BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -257,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<RaftEngineFi
 }
 
 // 日志不匹配，投票失败
-BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
     storage->append({ 1, 1, "1" });
     storage->append({ 2, 3, "2" });
@@ -296,7 +296,7 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<RaftEngineFixtur
 }
 
 // 日志匹配，投票成功
-BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
     storage->append({ 1, 1, "1" });
     storage->append({ 2, 3, "2" });
@@ -335,7 +335,7 @@ BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<RaftEngineFixture>)
 }
 
 // 任期为1，空日志，成功
-BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -356,7 +356,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<RaftEngineFixtu
 }
 
 // 任期为2，空日志，成功
-BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     setLeaderId(3);
     setCurrentTerm(1);
@@ -380,7 +380,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<RaftEngineFixtu
 }
 
 // 任期比当前小，空日志，失败
-BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixture>)
 {
     setLeaderId(3);
     setCurrentTerm(2);
@@ -406,7 +406,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<RaftEngineFi
 }
 
 // 日志不匹配
-BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
     storage->append({ 1,1,"1" });
     storage->append({ 2,2,"2" });
@@ -444,7 +444,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<RaftEngineF
 }
 
 // 日志不匹配
-BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
     storage->append({ 1,1,"1" });
     storage->append({ 2,2,"2" });
@@ -468,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<RaftEngineFixt
 }
 
 // 追加3条日志
-BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<RaftEngineFixture>)
+BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerFixture>)
 {
     storage->append({ 1,1,"1" });
     storage->append({ 2,2,"2" });

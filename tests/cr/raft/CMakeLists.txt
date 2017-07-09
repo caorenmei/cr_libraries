@@ -10,7 +10,7 @@ set(cr_raft_unittest_SRCS
     candidate_unittest.cpp
     follower_unittest.cpp
     mem_storage_unittest.cpp
- #   raft_engine_unittest.cpp
+    leader_unittest.cpp
 )
   
 add_executable(cr_raft_unittest ${cr_raft_unittest_SRCS})

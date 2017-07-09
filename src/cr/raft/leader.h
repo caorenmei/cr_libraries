@@ -38,9 +38,9 @@ namespace cr
 
             bool onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
 
-            void updateCommitIndex();
+            bool updateCommitIndex();
 
-            void processLogAppend(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+            void processLogAppend(std::uint64_t nowTime, bool newerCommitIndex, std::vector<RaftMsgPtr>& outMessages);
 
             void logAppendReq(BuddyNode& BuddyNode, std::vector<RaftMsgPtr>& outMessages);
 
@@ -51,7 +51,7 @@ namespace cr
                 std::uint32_t nodeId;
                 std::uint64_t nextUpdateTime;
                 std::uint64_t nextLogIndex;
-                std::uint64_t replyLogindex;
+                std::uint64_t replyLogIndex;
                 std::uint64_t matchLogIndex;
             };
             std::map<std::uint32_t, BuddyNode> nodes_;
