@@ -76,11 +76,11 @@ namespace cr
                 CR_ASSERT(engine.isBuddyNodeId(message->from_node_id()))(message->from_node_id());
                 switch (message->msg_type())
                 {
-                case pb::RaftMsg::LOG_APPEND_REQ:
+                case pb::RaftMsg::APPEND_ENTRIES_REQ:
                     return onLogAppendReqHandler(nowTime, std::move(message), outMessages);
-                case pb::RaftMsg::LOG_APPEND_RESP:
+                case pb::RaftMsg::APPEND_ENTRIES_RESP:
                     return onLogAppendRespHandler(nowTime, std::move(message), outMessages);
-                case pb::RaftMsg::VOTE_REQ:
+                case pb::RaftMsg::REQUEST_VOTE_REQ:
                     return onVoteReqHandler(nowTime, std::move(message), outMessages);
                 }
             }
@@ -89,8 +89,8 @@ namespace cr
 
         bool Leader::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            CR_ASSERT(message->has_log_append_req());
-            auto& request = message->log_append_req();
+            CR_ASSERT(message->has_append_entries_req());
+            auto& request = message->append_entries_req();
             if (request.leader_term() > engine.getCurrentTerm())
             {
                 engine.getMessageQueue().push_front(std::move(message));
@@ -104,8 +104,8 @@ namespace cr
         {
             auto currentTerm = engine.getCurrentTerm();
 
-            CR_ASSERT(message->has_log_append_resp());
-            auto& response = message->log_append_resp();
+            CR_ASSERT(message->has_append_entries_resp());
+            auto& response = message->append_entries_resp();
 
             if (response.follower_term() == currentTerm)
             {
@@ -132,8 +132,8 @@ namespace cr
 
         bool Leader::onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
-            CR_ASSERT(message->has_vote_req());
-            auto& request = message->vote_req();
+            CR_ASSERT(message->has_request_vote_req());
+            auto& request = message->request_vote_req();
             if (request.candidate_term() > engine.getCurrentTerm())
             {
                 engine.getMessageQueue().push_front(std::move(message));
@@ -191,9 +191,9 @@ namespace cr
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
             raftMsg->set_dest_node_id(node.nodeId);
-            raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_REQ);
+            raftMsg->set_msg_type(pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-            auto& request = *(raftMsg->mutable_log_append_req());
+            auto& request = *(raftMsg->mutable_append_entries_req());
             request.set_leader_term(currentTerm);
             request.set_prev_log_index(prevLogIndex);
             request.set_prev_log_term(prevLogTerm);

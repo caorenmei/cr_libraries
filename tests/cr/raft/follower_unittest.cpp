@@ -71,17 +71,17 @@ namespace cr
             }
 
             // 校验日志复制成功
-            int checkVoteSuccess(std::uint64_t candidateId, const pb::VoteReq& request)
+            int checkVoteSuccess(std::uint64_t candidateId, const pb::RequestVoteReq& request)
             {
                 if (messages.size() != 1)
                 {
                     return 1;
                 }
-                if (messages[0]->msg_type() != pb::RaftMsg::VOTE_RESP || !messages[0]->has_vote_resp())
+                if (messages[0]->msg_type() != pb::RaftMsg::REQUEST_VOTE_RESP || !messages[0]->has_request_vote_resp())
                 {
                     return 2;
                 }
-                auto& response = messages[0]->vote_resp();
+                auto& response = messages[0]->request_vote_resp();
                 if (response.follower_term() != engine->getCurrentTerm())
                 {
                     return 3;
@@ -101,7 +101,7 @@ namespace cr
                 return 0;
             }
 
-            int checkLogAppendSuccess(std::uint64_t leaderId, const pb::LogAppendReq& request)
+            int checkLogAppendSuccess(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
             {
                 if (messages.size() != 1)
                 {
@@ -111,11 +111,11 @@ namespace cr
                 {
                     return 2;
                 }
-                if (messages[0]->msg_type() != pb::RaftMsg::LOG_APPEND_RESP || !messages[0]->has_log_append_resp())
+                if (messages[0]->msg_type() != pb::RaftMsg::APPEND_ENTRIES_RESP || !messages[0]->has_append_entries_resp())
                 {
                     return 3;
                 }
-                auto& response = messages[0]->log_append_resp();
+                auto& response = messages[0]->append_entries_resp();
                 if (response.follower_term() != request.leader_term())
                 {
                     return 4;
@@ -167,9 +167,9 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixt
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(0);
     request.set_last_log_term(1);
     request.set_candidate_term(0);
@@ -201,9 +201,9 @@ BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<FollowerFixture>)
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(0);
     request.set_last_log_term(0);
     request.set_candidate_term(0);
@@ -221,9 +221,9 @@ BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(0);
     request.set_last_log_term(0);
     request.set_candidate_term(1);
@@ -241,9 +241,9 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixt
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(0);
     request.set_last_log_term(0);
     request.set_candidate_term(1);
@@ -265,9 +265,9 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(0);
     request.set_last_log_term(0);
     request.set_candidate_term(1);
@@ -304,9 +304,9 @@ BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
-    auto& request = *(raftMsg->mutable_vote_req());
+    auto& request = *(raftMsg->mutable_request_vote_req());
     request.set_last_log_index(2);
     request.set_last_log_term(3);
     request.set_candidate_term(1);
@@ -340,9 +340,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<FollowerFixture
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(1);
     request.set_leader_commit(0);
     request.set_prev_log_index(0);
@@ -364,9 +364,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<FollowerFixture
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(2);
     request.set_leader_commit(0);
     request.set_prev_log_index(0);
@@ -388,9 +388,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(1);
     request.set_leader_commit(0);
     request.set_prev_log_index(0);
@@ -401,7 +401,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
     BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
-    BOOST_CHECK_EQUAL(messages[0]->log_append_resp().follower_term(), 2);
+    BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().follower_term(), 2);
     messages.clear();
 }
 
@@ -414,9 +414,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(1);
     request.set_leader_commit(0);
     request.set_prev_log_index(3);
@@ -428,7 +428,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
-    BOOST_CHECK_EQUAL(messages[0]->log_append_resp().last_log_index(), 2);
+    BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 2);
     messages.clear();
 
     request.set_prev_log_index(2);
@@ -438,7 +438,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
-    BOOST_CHECK_EQUAL(messages[0]->log_append_resp().last_log_index(), 1);
+    BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 1);
     BOOST_CHECK_EQUAL(storage->lastIndex(), 1);
     messages.clear();
 }
@@ -452,9 +452,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(1);
     request.set_leader_commit(0);
     request.set_prev_log_index(2);
@@ -477,9 +477,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(2);
     request.set_leader_commit(4);
     request.set_prev_log_index(2);

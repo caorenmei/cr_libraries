@@ -1,10 +1,8 @@
 ﻿syntax = "proto3";
 package cr.raft.pb;
 
-import "google/protobuf/any.proto";
-
 // 附加日志
-message LogAppendReq
+message AppendEntriesReq
 {
     // 领导人的任期号
     uint64 leader_term = 1;
@@ -19,7 +17,7 @@ message LogAppendReq
 }
 
 // 附加回复
-message LogAppendResp
+message AppendEntriesResp
 {
     // 当前的任期号，用于领导人去更新自己
     uint64 follower_term = 1;
@@ -30,7 +28,7 @@ message LogAppendResp
 }
 
 // 请求投票
-message VoteReq
+message RequestVoteReq
 {
     // 候选人的任期号
     uint64 candidate_term = 1;
@@ -41,7 +39,7 @@ message VoteReq
 }
 
 // 请求投票回复
-message VoteResp
+message RequestVoteResp
 {
     // 当前的任期号，用于领导人去更新自己
     uint64 follower_term = 1;
@@ -56,13 +54,13 @@ message RaftMsg
     enum MsgType
     {
         // 附加日志请求
-        LOG_APPEND_REQ = 0;
+        APPEND_ENTRIES_REQ = 0;
         //  附加日志回复
-        LOG_APPEND_RESP = 1;
+        APPEND_ENTRIES_RESP = 1;
         // 请求投票
-        VOTE_REQ = 2;
+        REQUEST_VOTE_REQ = 2;
         // 请求投票回复
-        VOTE_RESP = 3;
+        REQUEST_VOTE_RESP = 3;
     }
     // 源节点Id
     uint64 from_node_id = 1;
@@ -73,11 +71,11 @@ message RaftMsg
     // 消息类型
     MsgType msg_type = 4;
     // 附加日志
-    LogAppendReq log_append_req = 5;
+    AppendEntriesReq append_entries_req = 5;
     // 附加日志回复
-    LogAppendResp log_append_resp = 6;
+    AppendEntriesResp append_entries_resp = 6;
     // 请求投票
-    VoteReq vote_req = 7;
+    RequestVoteReq request_vote_req = 7;
     // 请求投票回复
-    VoteResp vote_resp = 8;
+    RequestVoteResp request_vote_resp = 8;
 }

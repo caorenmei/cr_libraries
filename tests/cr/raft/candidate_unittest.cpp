@@ -66,11 +66,11 @@ namespace cr
                     {
                         return 3;
                     }
-                    if (message->msg_type() != pb::RaftMsg::RaftMsg::VOTE_REQ || !message->has_vote_req())
+                    if (message->msg_type() != pb::RaftMsg::RaftMsg::REQUEST_VOTE_REQ || !message->has_request_vote_req())
                     {
                         return 4;
                     }
-                    auto& voteReq = message->vote_req();
+                    auto& voteReq = message->request_vote_req();
                     if (voteReq.candidate_term() != engine->getCurrentTerm())
                     {
                         return 5;
@@ -115,8 +115,8 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_RESP);
-    auto& request = *(raftMsg->mutable_vote_resp());
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
+    auto& request = *(raftMsg->mutable_request_vote_resp());
 
     raftMsg->set_from_node_id(2);
     engine->getMessageQueue().push_back(raftMsg);
@@ -145,8 +145,8 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_RESP);
-    auto& request = *(raftMsg->mutable_vote_resp());
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
+    auto& request = *(raftMsg->mutable_request_vote_resp());
 
     nowTime = nowTime + builder.getElectionTimeout().second;
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
@@ -191,9 +191,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<CandidateFixture>)
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
     raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_REQ);
+    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-    auto& request = *(raftMsg->mutable_log_append_req());
+    auto& request = *(raftMsg->mutable_append_entries_req());
     request.set_leader_term(1);
     request.set_leader_commit(0);
     request.set_prev_log_index(0);

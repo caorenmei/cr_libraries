@@ -64,9 +64,9 @@ namespace cr
                     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                     raftMsg->set_from_node_id(nodeId);
                     raftMsg->set_dest_node_id(1);
-                    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::VOTE_RESP);
+                    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
 
-                    auto& request = *(raftMsg->mutable_vote_resp());
+                    auto& request = *(raftMsg->mutable_request_vote_resp());
                     request.set_follower_term(engine->getCurrentTerm());
                     request.set_success(true);
 
@@ -89,11 +89,11 @@ namespace cr
                     {
                         return 2;
                     }
-                    if (message->msg_type() != pb::RaftMsg::LOG_APPEND_REQ || !message->has_log_append_req())
+                    if (message->msg_type() != pb::RaftMsg::APPEND_ENTRIES_REQ || !message->has_append_entries_req())
                     {
                         return 3;
                     }
-                    auto& appendReq = message->log_append_req();
+                    auto& appendReq = message->append_entries_req();
                     if (appendReq.leader_commit() != engine->getCommitIndex())
                     {
                         return 4;
@@ -161,9 +161,9 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(engine->getNodeId());
                 raftMsg->set_from_node_id(fromNode);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::LOG_APPEND_RESP);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_RESP);
 
-                auto& request = *(raftMsg->mutable_log_append_resp());
+                auto& request = *(raftMsg->mutable_append_entries_resp());
                 request.set_follower_term(followerTerm);
                 request.set_last_log_index(lastLogIndex);
                 request.set_success(success);
@@ -265,7 +265,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
     BOOST_REQUIRE_EQUAL(checkLogAppendMsg(), 0);
     BOOST_REQUIRE_EQUAL(checkNextLogIndex(2, 4), 0);
     BOOST_REQUIRE_EQUAL(checkReplyLogIndex(2, 1), 0);
-    auto& logAppendReq = messages[0]->log_append_req();
+    auto& logAppendReq = messages[0]->append_entries_req();
     BOOST_CHECK_EQUAL(logAppendReq.prev_log_index(), 1);
     BOOST_CHECK(cr::from(logAppendReq.entries()).equals(cr::from({ "2", "3" })));
     messages.clear();

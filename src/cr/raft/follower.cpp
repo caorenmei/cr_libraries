@@ -68,10 +68,10 @@ namespace cr
                 CR_ASSERT(engine.isBuddyNodeId(message->from_node_id()))(message->from_node_id());
                 switch (message->msg_type())
                 {
-                case pb::RaftMsg::LOG_APPEND_REQ:
+                case pb::RaftMsg::APPEND_ENTRIES_REQ:
                     onLogAppendReqHandler(nowTime, std::move(message), outMessages);
                     break;
-                case pb::RaftMsg::VOTE_REQ:
+                case pb::RaftMsg::REQUEST_VOTE_REQ:
                     onVoteReqHandler(nowTime, std::move(message), outMessages);
                     break;
                 default:
@@ -83,8 +83,8 @@ namespace cr
         void Follower::onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto leaderId = message->from_node_id();
-            CR_ASSERT(message->has_log_append_req());
-            auto& request = message->log_append_req();
+            CR_ASSERT(message->has_append_entries_req());
+            auto& request = message->append_entries_req();
             bool success = false;
             if (checkLeaderTerm(leaderId, request))
             {
@@ -100,7 +100,7 @@ namespace cr
             logAppendResp(leaderId, success, outMessages);
         }
 
-        bool Follower::checkLeaderTerm(std::uint64_t leaderId, const pb::LogAppendReq& request)
+        bool Follower::checkLeaderTerm(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
         {
             auto currentTerm = engine.getCurrentTerm();
             if (request.leader_term() > currentTerm)
@@ -111,7 +111,7 @@ namespace cr
             return request.leader_term() != 0 && request.leader_term() == currentTerm;
         }
 
-        void Follower::updateLeaderId(std::uint64_t leaderId, const pb::LogAppendReq& request)
+        void Follower::updateLeaderId(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
         {
             auto currentLeaderId = engine.getLeaderId();
             if (!currentLeaderId || leaderId != *currentLeaderId)
@@ -120,7 +120,7 @@ namespace cr
             }
         }
 
-        bool Follower::checkPrevLogTerm(std::uint64_t leaderId, const pb::LogAppendReq& request)
+        bool Follower::checkPrevLogTerm(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
         {
             auto lastLogIndex = engine.getStorage()->lastIndex();
             if (request.prev_log_index() < lastLogIndex)
@@ -135,7 +135,7 @@ namespace cr
             return request.prev_log_index() == lastLogIndex && request.prev_log_term() == engine.getStorage()->lastTerm();;
         }
 
-        void Follower::appendLog(std::uint64_t leaderId, const pb::LogAppendReq& request)
+        void Follower::appendLog(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto logIndex = request.prev_log_index();
@@ -147,7 +147,7 @@ namespace cr
             }
         }
 
-        void Follower::updateCommitIndex(std::uint64_t leaderId, const pb::LogAppendReq& request)
+        void Follower::updateCommitIndex(std::uint64_t leaderId, const pb::AppendEntriesReq& request)
         {
             auto commitIndex = engine.getCommitIndex();
             auto lastLogIndex = engine.getStorage()->lastIndex();
@@ -166,9 +166,9 @@ namespace cr
             auto raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
             raftMsg->set_dest_node_id(leaderId);
-            raftMsg->set_msg_type(pb::RaftMsg::LOG_APPEND_RESP);
+            raftMsg->set_msg_type(pb::RaftMsg::APPEND_ENTRIES_RESP);
 
-            auto& response = *(raftMsg->mutable_log_append_resp());
+            auto& response = *(raftMsg->mutable_append_entries_resp());
             response.set_follower_term(currentTerm);
             response.set_last_log_index(lastLogIndex);
             response.set_success(success);
@@ -183,8 +183,8 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->lastIndex();
             auto lastLogTerm = engine.getStorage()->lastTerm();
 
-            CR_ASSERT(message->has_vote_req());
-            auto& request = message->vote_req();
+            CR_ASSERT(message->has_request_vote_req());
+            auto& request = message->request_vote_req();
 
             bool success = false;
             if ((request.candidate_term() >= currentTerm && request.candidate_term() > 0)
@@ -207,14 +207,14 @@ namespace cr
             voteResp(candidateId, request, success, outMessages);
         }
 
-        void Follower::voteResp(std::uint64_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::voteResp(std::uint64_t candidateId, const pb::RequestVoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
             raftMsg->set_dest_node_id(candidateId);
-            raftMsg->set_msg_type(pb::RaftMsg::VOTE_RESP);
+            raftMsg->set_msg_type(pb::RaftMsg::REQUEST_VOTE_RESP);
 
-            auto& response = *(raftMsg->mutable_vote_resp());
+            auto& response = *(raftMsg->mutable_request_vote_resp());
             response.set_success(success);
             response.set_follower_term(engine.getCurrentTerm());
 
