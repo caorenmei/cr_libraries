@@ -8,6 +8,7 @@ namespace cr
     {
         RaftEngineBuilder::RaftEngineBuilder()
             : nodeId_(0),
+            heartbeatTimeout_(0),
             logWindowSize_(1),
             maxPacketLength_(1)
         {}
@@ -68,6 +69,17 @@ namespace cr
         const std::pair<std::uint32_t, std::uint32_t>& RaftEngineBuilder::getElectionTimeout() const
         {
             return electionTimeout_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setHeartbeatTimeout(std::uint32_t heartbeatTimeout)
+        {
+            heartbeatTimeout_ = heartbeatTimeout;
+            return *this;
+        }
+
+        std::uint32_t RaftEngineBuilder::getHeatbeatTimeout() const
+        {
+            return heartbeatTimeout_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint32_t()> random)

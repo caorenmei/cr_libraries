@@ -41,6 +41,7 @@ namespace cr
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&SimpleStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
                     .setElectionTimeout(std::make_pair(100, 100))
+                    .setHeartbeatTimeout(50)
                     .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
                     .build();
                 engine->initialize(0);

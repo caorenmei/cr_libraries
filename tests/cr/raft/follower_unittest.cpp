@@ -40,6 +40,7 @@ namespace cr
                     .setBuddyNodeIds({ 2,3,4 })
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&SimpleStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
+                    .setHeartbeatTimeout(50)
                     .setElectionTimeout(std::make_pair(100, 200))
                     .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
                     .build();

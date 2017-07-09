@@ -29,7 +29,8 @@ namespace cr
             nowTime_(0),
             currentEnumState_(FOLLOWER),
             nextEnumState_(FOLLOWER),
-            electionTimeout_(builder.getElectionTimeout())
+            electionTimeout_(builder.getElectionTimeout()),
+            heatbeatTimeout_(builder.getHeatbeatTimeout())
         {
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
             // 节点有效性判断
@@ -38,6 +39,7 @@ namespace cr
             CR_ASSERT(storage_ != nullptr);
             CR_ASSERT(executeCallback_ != nullptr);
             CR_ASSERT(electionTimeout_.first != 0 && electionTimeout_.first <= electionTimeout_.second);
+            CR_ASSERT(heatbeatTimeout_ != 0 && heatbeatTimeout_ <= electionTimeout_.first);
             CR_ASSERT(random_ != nullptr);
             CR_ASSERT(logWindowSize_ >= 1);
             CR_ASSERT(maxPacketLength_ >= 1);
@@ -118,6 +120,11 @@ namespace cr
         std::deque<RaftEngine::RaftMsgPtr>& RaftEngine::getMessageQueue()
         {
             return messages_;
+        }
+
+        std::uint32_t RaftEngine::getHeatbeatTimeout() const
+        {
+            return heatbeatTimeout_;
         }
 
         std::uint32_t RaftEngine::getMinElectionTimeout() const

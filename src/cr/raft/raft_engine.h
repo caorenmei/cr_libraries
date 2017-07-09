@@ -65,6 +65,8 @@ namespace cr
 
             void execute(std::string value);
 
+            std::uint32_t getHeatbeatTimeout() const;
+
             std::uint32_t getMinElectionTimeout() const;
 
             std::uint64_t getCommitIndex() const;
@@ -123,6 +125,7 @@ namespace cr
             std::uint64_t lastApplied_;
             boost::optional<std::uint32_t> leaderId_;
             std::pair<std::uint32_t, std::uint32_t> electionTimeout_;
+            std::uint32_t heatbeatTimeout_;
 
             std::uint64_t nowTime_;
             std::shared_ptr<RaftState> currentState_;

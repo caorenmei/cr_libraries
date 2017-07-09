@@ -48,12 +48,12 @@ namespace cr
 
         void Leader::updateNextUpdateTime(BuddyNode& BuddyNode, std::uint64_t nowTime)
         {
-            BuddyNode.nextUpdateTime = nowTime + engine.getMinElectionTimeout() / 2;
+            BuddyNode.nextUpdateTime = nowTime + engine.getHeatbeatTimeout();
         }
 
         std::uint64_t Leader::checkHeartbeatTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto minNextUpdateTime = nowTime + engine.getMinElectionTimeout();
+            auto minNextUpdateTime = nowTime + engine.getHeatbeatTimeout();
             for (auto&& BuddyNode : nodes_)
             {
                 if (BuddyNode.second.nextUpdateTime <= nowTime)

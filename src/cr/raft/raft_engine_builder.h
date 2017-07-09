@@ -46,6 +46,10 @@ namespace cr
 
             const std::pair<std::uint32_t, std::uint32_t>& getElectionTimeout() const;
 
+            RaftEngineBuilder& setHeartbeatTimeout(std::uint32_t heartbeatTimeout);
+
+            std::uint32_t getHeatbeatTimeout() const;
+
             RaftEngineBuilder& setRandom(std::function<std::uint32_t()> random);
 
             const std::function<std::uint32_t()>& getRandom() const;
@@ -67,6 +71,7 @@ namespace cr
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executeCallback_;
             std::pair<std::uint32_t, std::uint32_t> electionTimeout_;
+            std::uint32_t heartbeatTimeout_;
             std::function<std::uint32_t()> random_;
             std::uint32_t logWindowSize_;
             std::uint32_t maxPacketLength_;
