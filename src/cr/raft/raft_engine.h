@@ -80,8 +80,8 @@ namespace cr
             // 执行逻辑
             std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
 
-            // 输入消息队列
-            std::deque<RaftMsgPtr>& getMessageQueue();
+            // 添加消息到消息队列
+            void pushMessageQueue(RaftMsgPtr raftMsg);
 
             // 执行一个日志
             void execute(const std::vector<std::string>& values);
@@ -133,6 +133,9 @@ namespace cr
 
             // 应用状态机
             void applyStateMachine();
+
+            // 输入消息队列
+            std::deque<RaftMsgPtr>& getMessageQueue();
 
             // 设置选票候选者
             void setVotedFor(boost::optional<std::uint64_t> voteFor);

@@ -100,7 +100,7 @@ namespace cr
         {
             CR_ASSERT(currentState_ != nullptr);
             // 更新时间
-            CR_ASSERT(nowTime_ <= nowTime)(nowTime_, nowTime);
+            CR_ASSERT(nowTime_ <= nowTime)(nowTime_)(nowTime);
             nowTime_ = nowTime;
             // 处理Raft状态
             auto nextUpdateTime = currentState_->update(nowTime, outMessages);
@@ -109,14 +109,14 @@ namespace cr
             if (nextState_ != currentState_->getState())
             {
                 onTransitionState();
-                CR_ASSERT(nextState_ == currentState_->getState())(nextState_, currentState_->getState());
+                CR_ASSERT(nextState_ == currentState_->getState())(nextState_)(currentState_->getState());
                 nextUpdateTime = nowTime;
             }
             // 引用状态机
             if (lastApplied_ < commitIndex_)
             {
                 applyStateMachine();
-                CR_ASSERT(lastApplied_ <= commitIndex_)(lastApplied_, commitIndex_);
+                CR_ASSERT(lastApplied_ <= commitIndex_)(lastApplied_)(commitIndex_);
             }
             // 继续循环处理
             if (!messages_.empty() || lastApplied_ < commitIndex_)
@@ -131,9 +131,14 @@ namespace cr
             return messages_;
         }
 
+        void RaftEngine::pushMessageQueue(RaftMsgPtr raftMsg)
+        {
+            messages_.push_back(std::move(raftMsg));
+        }
+
         void RaftEngine::execute(const std::vector<std::string>& values)
         {
-            CR_ASSERT_E(StateException, currentState_->getState() == LEADER)(currentState_->getState(), LEADER);
+            CR_ASSERT_E(StateException, currentState_->getState() == LEADER)(currentState_->getState())(LEADER);
             std::vector<Entry> entries;
             auto logIndex = storage_->getLastIndex();
             for (auto&& value : values)

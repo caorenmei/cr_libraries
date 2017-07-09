@@ -174,22 +174,22 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixt
     request.set_candidate_term(0);
 
     std::uint64_t nowTime = 1;
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 }
@@ -207,9 +207,8 @@ BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<FollowerFixture>)
     request.set_last_log_term(0);
     request.set_candidate_term(0);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
     messages.clear();
 }
@@ -227,9 +226,9 @@ BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
     request.set_last_log_term(0);
     request.set_candidate_term(1);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
+
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
     messages.clear();
 }
@@ -248,9 +247,8 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixt
     request.set_candidate_term(1);
     
     setVoteFor(2);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
     messages.clear();
 }
@@ -271,25 +269,22 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
     request.set_last_log_term(0);
     request.set_candidate_term(1);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
     messages.clear();
 
     request.set_last_log_index(2);
     request.set_last_log_term(2);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
     messages.clear();
 
     request.set_last_log_index(1);
     request.set_last_log_term(3);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
     messages.clear();
 }
@@ -310,25 +305,22 @@ BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
     request.set_last_log_term(3);
     request.set_candidate_term(1);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
     messages.clear();
 
     request.set_last_log_index(3);
     request.set_last_log_term(3);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
     messages.clear();
 
     request.set_last_log_index(0);
     request.set_last_log_term(4);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
     messages.clear();
 }
@@ -347,9 +339,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<FollowerFixture
     request.set_prev_log_index(0);
     request.set_prev_log_term(0);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
     messages.clear();
 }
@@ -371,9 +362,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<FollowerFixture
     request.set_prev_log_index(0);
     request.set_prev_log_term(0);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
     messages.clear();
 }
@@ -395,9 +385,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
     request.set_prev_log_index(0);
     request.set_prev_log_term(0);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
+
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().follower_term(), 2);
@@ -422,9 +412,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     request.set_prev_log_term(2);
 
     
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 2);
@@ -432,9 +421,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
 
     request.set_prev_log_index(2);
     request.set_prev_log_term(1);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 1);
@@ -459,9 +447,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
     request.set_prev_log_index(2);
     request.set_prev_log_term(2);
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
     messages.clear();
 }
@@ -487,9 +474,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     request.add_entries("4");
     request.add_entries("5");
 
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
     BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.getValue(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));

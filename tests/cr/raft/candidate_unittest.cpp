@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
     auto& request = *(raftMsg->mutable_request_vote_resp());
 
     raftMsg->set_from_node_id(2);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
@@ -128,7 +128,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
     nowTime = nowTime + 1;
     request.set_follower_term(engine->getCurrentTerm());
     request.set_success(true);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LT(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
 
@@ -155,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
     raftMsg->set_from_node_id(2);
     request.set_follower_term(engine->getCurrentTerm());
     request.set_success(true);
-    engine->getMessageQueue().push_back(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
@@ -163,7 +163,7 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
     raftMsg->set_from_node_id(3);
     request.set_follower_term(engine->getCurrentTerm());
     request.set_success(false);
-    engine->getMessageQueue().push_back(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
     raftMsg->set_from_node_id(4);
     request.set_follower_term(engine->getCurrentTerm());
     request.set_success(true);
-    engine->getMessageQueue().push_back(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
@@ -199,16 +199,15 @@ BOOST_FIXTURE_TEST_CASE(logAppendReq, cr::raft::DebugVisitor<CandidateFixture>)
     request.set_prev_log_term(0);
 
     request.set_leader_term(0);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 
     request.set_leader_term(1);
-    engine->getMessageQueue().push_back(raftMsg);
+    engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 1);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 }
 

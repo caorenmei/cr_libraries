@@ -70,7 +70,7 @@ namespace cr
                     request.set_follower_term(engine->getCurrentTerm());
                     request.set_success(true);
 
-                    engine->getMessageQueue().push_back(raftMsg);
+                    engine->pushMessageQueue(raftMsg);
                     nowTime = nowTime + 1;
                     engine->update(nowTime, messages);
                 }
@@ -259,7 +259,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
 
     nowTime += 1;
     auto logAppendResp0 = newLogAppendResp(2, 1, 1, false);
-    engine->getMessageQueue().push_back(logAppendResp0);
+    engine->pushMessageQueue(logAppendResp0);
     engine->update(nowTime, messages);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_REQUIRE_EQUAL(checkLogAppendMsg(), 0);
@@ -285,7 +285,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
 
     nowTime += 1;
     auto logAppendResp0 = newLogAppendResp(2, 1, 1, false);
-    engine->getMessageQueue().push_back(logAppendResp0);
+    engine->pushMessageQueue(logAppendResp0);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
@@ -293,7 +293,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
 
     nowTime += 1;
     auto logAppendResp1 = newLogAppendResp(3, 1, 1, false);
-    engine->getMessageQueue().push_back(logAppendResp1);
+    engine->pushMessageQueue(logAppendResp1);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
@@ -301,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
 
     nowTime += 1;
     auto logAppendResp2 = newLogAppendResp(2, 1, 3, true);
-    engine->getMessageQueue().push_back(logAppendResp2);
+    engine->pushMessageQueue(logAppendResp2);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
 
     nowTime += 1;
     auto logAppendResp3 = newLogAppendResp(3, 1, 2, true);
-    engine->getMessageQueue().push_back(logAppendResp3);
+    engine->pushMessageQueue(logAppendResp3);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 2);
     BOOST_CHECK_EQUAL(messages.size(), 4);
