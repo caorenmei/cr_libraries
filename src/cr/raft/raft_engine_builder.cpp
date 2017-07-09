@@ -8,7 +8,10 @@ namespace cr
     {
         RaftEngineBuilder::RaftEngineBuilder()
             : nodeId_(0),
-            heartbeatTimeout_(0),
+            minElectionTimeout_(150),
+            maxElectionTimeout_(200),
+            heartbeatTimeout_(50),
+            randomSeed_(0),
             logWindowSize_(1),
             maxPacketLength_(1)
         {}
@@ -60,15 +63,21 @@ namespace cr
             return executable_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(const std::pair<std::uint64_t, std::uint64_t>& electionTimeout)
+        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(std::uint64_t minElectionTimeout, std::uint64_t maxElectionTimeout)
         {
-            electionTimeout_ = electionTimeout;
+            minElectionTimeout_ = minElectionTimeout;
+            maxElectionTimeout_ = maxElectionTimeout;
             return *this;
         }
 
-        const std::pair<std::uint64_t, std::uint64_t>& RaftEngineBuilder::getElectionTimeout() const
+        std::uint64_t RaftEngineBuilder::getMinElectionTimeout() const
         {
-            return electionTimeout_;
+            return minElectionTimeout_;
+        }
+
+        std::uint64_t RaftEngineBuilder::getMaxElectionTimeout() const
+        {
+            return maxElectionTimeout_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setHeartbeatTimeout(std::uint64_t heartbeatTimeout)
@@ -82,15 +91,15 @@ namespace cr
             return heartbeatTimeout_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint64_t()> random)
+        RaftEngineBuilder& RaftEngineBuilder::setRandomSeed(std::size_t seed)
         {
-            random_ = std::move(random);
+            randomSeed_ = seed;
             return *this;
         }
 
-        const std::function<std::uint64_t()>& RaftEngineBuilder::getRandom() const
+        std::size_t RaftEngineBuilder::getRandomSeed() const
         {
-            return random_;
+            return randomSeed_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint64_t logWindowSize)

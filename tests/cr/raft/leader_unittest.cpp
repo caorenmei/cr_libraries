@@ -40,11 +40,11 @@ namespace cr
                     .setBuddyNodeIds({ 2,3,4,5 })
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&LeaderStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
-                    .setElectionTimeout(std::make_pair(100, 100))
+                    .setElectionTimeout(100, 200)
                     .setHeartbeatTimeout(50)
                     .setLogWindowSize(2)
                     .setMaxPacketSize(1024)
-                    .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
+                    .setRandomSeed(0)
                     .build();
                 engine->initialize(nowTime);
             }
@@ -54,7 +54,7 @@ namespace cr
 
             void transactionLeader()
             {
-                nowTime = nowTime + builder.getElectionTimeout().second;
+                nowTime = nowTime + builder.getMaxElectionTimeout();
                 engine->update(nowTime, messages);
                 engine->update(nowTime, messages);
                 messages.clear();

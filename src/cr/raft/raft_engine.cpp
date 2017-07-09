@@ -20,17 +20,18 @@ namespace cr
             buddyNodeIds_(builder.getBuddyNodeIds()),
             storage_(builder.getStorage()),
             executable_(builder.getEexcuteCallback()),
-            random_(builder.getRandom()),
             logWindowSize_(builder.getLogWindowSize()),
             maxPacketLength_(builder.getMaxPacketLength()),
             currentTerm_(storage_->getLastTerm()),
             commitIndex_(0),
             lastApplied_(0),
+            random_(builder.getRandomSeed()),
+            minElectionTimeout_(builder.getMinElectionTimeout()),
+            maxElectionTimeout_(builder.getMaxElectionTimeout()),
+            heatbeatTimeout_(builder.getHeatbeatTimeout()),
             nowTime_(0),
             currentEnumState_(FOLLOWER),
-            nextEnumState_(FOLLOWER),
-            electionTimeout_(builder.getElectionTimeout()),
-            heatbeatTimeout_(builder.getHeatbeatTimeout())
+            nextEnumState_(FOLLOWER)
         {
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
             // 节点有效性判断
@@ -38,9 +39,8 @@ namespace cr
             CR_ASSERT(std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());
             CR_ASSERT(storage_ != nullptr);
             CR_ASSERT(executable_ != nullptr);
-            CR_ASSERT(electionTimeout_.first != 0 && electionTimeout_.first <= electionTimeout_.second);
-            CR_ASSERT(heatbeatTimeout_ != 0 && heatbeatTimeout_ <= electionTimeout_.first);
-            CR_ASSERT(random_ != nullptr);
+            CR_ASSERT(minElectionTimeout_ != 0 && minElectionTimeout_ <= maxElectionTimeout_);
+            CR_ASSERT(heatbeatTimeout_ != 0 && heatbeatTimeout_ <= minElectionTimeout_);
             CR_ASSERT(logWindowSize_ >= 1);
             CR_ASSERT(maxPacketLength_ >= 1);
         }
@@ -129,7 +129,7 @@ namespace cr
 
         std::uint64_t RaftEngine::getMinElectionTimeout() const
         {
-            return electionTimeout_.first;
+            return minElectionTimeout_;
         }
 
         bool RaftEngine::execute(const std::vector<std::string>& values)
@@ -239,13 +239,10 @@ namespace cr
             leaderId_ = leaderId;
         }
 
-        std::uint64_t RaftEngine::randomElectionTimeout() const
+        std::uint64_t RaftEngine::randomElectionTimeout()
         {
-            auto electionTime = electionTimeout_.first;
-            if (electionTimeout_.first < electionTimeout_.second)
-            {
-                electionTime += random_() % (electionTimeout_.second - electionTimeout_.first);
-            } 
+            std::uniform_int_distribution<std::uint64_t> distribution(minElectionTimeout_, maxElectionTimeout_);
+            auto electionTime = distribution(random_);
             return electionTime;
         }
     }

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <deque>
 #include <memory>
+#include <random>
 
 #include <boost/optional.hpp>
 
@@ -106,14 +107,13 @@ namespace cr
 
             void setLeaderId(boost::optional<std::uint64_t> leaderId);
 
-            std::uint64_t randomElectionTimeout() const;
+            std::uint64_t randomElectionTimeout();
 
 
             std::uint64_t nodeId_;
             std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executable_;
-            std::function<std::uint64_t()> random_;
             std::uint64_t logWindowSize_;
             std::uint64_t maxPacketLength_;
             std::deque<RaftMsgPtr> messages_;
@@ -124,7 +124,9 @@ namespace cr
             std::uint64_t commitIndex_;
             std::uint64_t lastApplied_;
             boost::optional<std::uint64_t> leaderId_;
-            std::pair<std::uint64_t, std::uint64_t> electionTimeout_;
+            std::default_random_engine random_;
+            std::uint64_t minElectionTimeout_;
+            std::uint64_t maxElectionTimeout_;
             std::uint64_t heatbeatTimeout_;
 
             std::uint64_t nowTime_;

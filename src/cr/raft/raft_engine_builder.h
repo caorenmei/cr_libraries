@@ -42,17 +42,19 @@ namespace cr
 
             const std::function<void(std::uint64_t, const std::string&)>& getEexcuteCallback() const;
 
-            RaftEngineBuilder& setElectionTimeout(const std::pair<std::uint64_t, std::uint64_t>& electionTimeout);
+            RaftEngineBuilder& setElectionTimeout(std::uint64_t minElectionTimeout, std::uint64_t maxElectionTimeout);
 
-            const std::pair<std::uint64_t, std::uint64_t>& getElectionTimeout() const;
+            std::uint64_t getMinElectionTimeout() const;
+
+            std::uint64_t getMaxElectionTimeout() const;
 
             RaftEngineBuilder& setHeartbeatTimeout(std::uint64_t heartbeatTimeout);
 
             std::uint64_t getHeatbeatTimeout() const;
 
-            RaftEngineBuilder& setRandom(std::function<std::uint64_t()> random);
+            RaftEngineBuilder& setRandomSeed(std::size_t seed);
 
-            const std::function<std::uint64_t()>& getRandom() const;
+            std::size_t getRandomSeed() const;
 
             RaftEngineBuilder& setLogWindowSize(std::uint64_t logWindowSize);
 
@@ -70,9 +72,10 @@ namespace cr
             std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executable_;
-            std::pair<std::uint64_t, std::uint64_t> electionTimeout_;
+            std::uint64_t minElectionTimeout_;
+            std::uint64_t maxElectionTimeout_;
             std::uint64_t heartbeatTimeout_;
-            std::function<std::uint64_t()> random_;
+            std::size_t randomSeed_;
             std::uint64_t logWindowSize_;
             std::uint64_t maxPacketLength_;
         };

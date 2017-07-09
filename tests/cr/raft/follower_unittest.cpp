@@ -41,8 +41,8 @@ namespace cr
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&FollowerStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
                     .setHeartbeatTimeout(50)
-                    .setElectionTimeout(std::make_pair(100, 200))
-                    .setRandom(std::bind(&std::default_random_engine::operator(), &random_))
+                    .setElectionTimeout(100, 200)
+                    .setRandomSeed(0)
                     .build();
                 engine->initialize(0);
             }
@@ -139,7 +139,6 @@ namespace cr
             std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
             FollowerStatMachine stateMachine;
-            std::default_random_engine random_;
             std::shared_ptr<cr::raft::RaftEngine> engine;
         };
     }
@@ -150,14 +149,14 @@ BOOST_AUTO_TEST_SUITE(RaftFollower)
 BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
 {
     std::uint64_t nowTime = 0;
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = builder.getElectionTimeout().first - 1;
-    BOOST_CHECK_LE(engine->update(nowTime, messages), builder.getElectionTimeout().second);
+    nowTime = builder.getMinElectionTimeout() - 1;
+    BOOST_CHECK_LE(engine->update(nowTime, messages), builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = builder.getElectionTimeout().second;
+    nowTime = builder.getMaxElectionTimeout();
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 }
@@ -176,22 +175,22 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixt
 
     std::uint64_t nowTime = 1;
     engine->getMessageQueue().push_back(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = nowTime + builder.getElectionTimeout().first - 1;
+    nowTime = nowTime + builder.getMinElectionTimeout() - 1;
     engine->getMessageQueue().push_back(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = nowTime + builder.getElectionTimeout().first - 1;
+    nowTime = nowTime + builder.getMinElectionTimeout() - 1;
     engine->getMessageQueue().push_back(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 
-    nowTime = nowTime + builder.getElectionTimeout().first - 1;
+    nowTime = nowTime + builder.getMinElectionTimeout() - 1;
     engine->getMessageQueue().push_back(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getElectionTimeout().second);
+    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 }
 
