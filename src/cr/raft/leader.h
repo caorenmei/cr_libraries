@@ -44,17 +44,17 @@ namespace cr
 
             void logAppendReq(BuddyNode& BuddyNode, std::vector<RaftMsgPtr>& outMessages);
 
-            void setNewerTerm(std::uint32_t newerTerm);
+            void setNewerTerm(std::uint64_t newerTerm);
 
             struct BuddyNode
             {
-                std::uint32_t nodeId;
+                std::uint64_t nodeId;
                 std::uint64_t nextUpdateTime;
                 std::uint64_t nextLogIndex;
                 std::uint64_t replyLogIndex;
                 std::uint64_t matchLogIndex;
             };
-            std::map<std::uint32_t, BuddyNode> nodes_;
+            std::map<std::uint64_t, BuddyNode> nodes_;
         };
     }
 }

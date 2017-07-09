@@ -7,11 +7,11 @@ import "google/protobuf/any.proto";
 message LogAppendReq
 {
     // 领导人的任期号
-    uint32 leader_term = 1;
+    uint64 leader_term = 1;
     // 新的日志条目紧随之前的索引值
     uint64 prev_log_index = 2;
     // prevLogIndex 条目的任期号
-    uint32 prev_log_term = 3;
+    uint64 prev_log_term = 3;
     // 准备存储的日志条目（表示心跳时为空；一次性发送多个是为了提高效率）
     repeated bytes entries = 4;
     // 领导人已经提交的日志的索引值
@@ -22,7 +22,7 @@ message LogAppendReq
 message LogAppendResp
 {
     // 当前的任期号，用于领导人去更新自己
-    uint32 follower_term = 1;
+    uint64 follower_term = 1;
     // 最后的日志索引值
     uint64 last_log_index = 2;
     // 跟随者包含了匹配上 prevLogIndex 和 prevLogTerm 的日志时为真
@@ -33,18 +33,18 @@ message LogAppendResp
 message VoteReq
 {
     // 候选人的任期号
-    uint32 candidate_term = 1;
+    uint64 candidate_term = 1;
     // 候选人的最后日志条目的索引值
     uint64 last_log_index = 2;
     // 候选人最后日志条目的任期号
-    uint32 last_log_term = 3;
+    uint64 last_log_term = 3;
 }
 
 // 请求投票回复
 message VoteResp
 {
     // 当前的任期号，用于领导人去更新自己
-    uint32 follower_term = 1;
+    uint64 follower_term = 1;
     // 候选人赢得了此张选票时为真
     bool success = 3;
 }
@@ -65,11 +65,11 @@ message RaftMsg
         VOTE_RESP = 3;
     }
     // 源节点Id
-    uint32 from_node_id = 1;
+    uint64 from_node_id = 1;
     // 目标节点 Id
-    uint32 dest_node_id = 2;
+    uint64 dest_node_id = 2;
     // 实例 Id
-    uint32 instance_id = 3;
+    uint64 instance_id = 3;
     // 消息类型
     MsgType msg_type = 4;
     // 附加日志

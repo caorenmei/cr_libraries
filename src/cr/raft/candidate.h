@@ -40,10 +40,10 @@ namespace cr
 
             bool checkVoteGranted(std::uint64_t nowTime);
 
-            void setNewerTerm(std::uint32_t newerTerm);
+            void setNewerTerm(std::uint64_t newerTerm);
 
             std::uint64_t nextElectionTime_;
-            std::set<std::uint32_t> grantNodeIds_;
+            std::set<std::uint64_t> grantNodeIds_;
         };
     }
 }

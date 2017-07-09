@@ -33,23 +33,23 @@ namespace cr
 
             void onLogAppendReqHandler(std::uint64_t nowTime, RaftMsgPtr raftMsg, std::vector<RaftMsgPtr>& outMessages);
 
-            bool checkLeaderTerm(std::uint32_t leaderId, const pb::LogAppendReq& request);
+            bool checkLeaderTerm(std::uint64_t leaderId, const pb::LogAppendReq& request);
 
-            void updateLeaderId(std::uint32_t leaderId, const pb::LogAppendReq& request);
+            void updateLeaderId(std::uint64_t leaderId, const pb::LogAppendReq& request);
 
-            bool checkPrevLogTerm(std::uint32_t leaderId, const pb::LogAppendReq& request);
+            bool checkPrevLogTerm(std::uint64_t leaderId, const pb::LogAppendReq& request);
 
-            void appendLog(std::uint32_t leaderId, const pb::LogAppendReq& request);
+            void appendLog(std::uint64_t leaderId, const pb::LogAppendReq& request);
 
-            void updateCommitIndex(std::uint32_t leaderId, const pb::LogAppendReq& request);
+            void updateCommitIndex(std::uint64_t leaderId, const pb::LogAppendReq& request);
 
-            void logAppendResp(std::uint32_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages);
+            void logAppendResp(std::uint64_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages);
 
             void onVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr raftMsg, std::vector<RaftMsgPtr>& outMessages);
 
-            void voteResp(std::uint32_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages);
+            void voteResp(std::uint64_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages);
 
-            void setNewerTerm(std::uint32_t newerTerm);
+            void setNewerTerm(std::uint64_t newerTerm);
 
             std::uint64_t nextElectionTime_;
         };

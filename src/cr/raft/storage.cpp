@@ -8,7 +8,7 @@ namespace cr
             : Entry(0, 0, "")
         {}
 
-        Entry::Entry(std::uint64_t index, std::uint32_t term, std::string data)
+        Entry::Entry(std::uint64_t index, std::uint64_t term, std::string data)
             : index_(index),
             term_(term),
             value_(std::move(data))
@@ -25,12 +25,12 @@ namespace cr
             return *this;
         }
 
-        std::uint32_t Entry::getTerm() const
+        std::uint64_t Entry::getTerm() const
         {
             return term_;
         }
 
-        Entry& Entry::setTerm(std::uint32_t term)
+        Entry& Entry::setTerm(std::uint64_t term)
         {
             term_ = term;
             return *this;

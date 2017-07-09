@@ -171,7 +171,7 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->lastIndex();
             for (auto&& node : nodes_)
             {
-                auto nodeWindowSize = std::max<std::uint32_t>(node.second.nextLogIndex - node.second.replyLogIndex, logWindowSize);
+                auto nodeWindowSize = std::max(node.second.nextLogIndex - node.second.replyLogIndex, logWindowSize);
                 if ((node.second.nextLogIndex - node.second.replyLogIndex <= nodeWindowSize && node.second.nextLogIndex <= lastLogIndex)
                     || ((node.second.matchLogIndex <= node.second.nextLogIndex) && (node.second.matchLogIndex < commitIndex || newerCommitIndex)))
                 {
@@ -202,8 +202,8 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->lastIndex();
             auto logWindowSize = engine.getLogWindowSize();
             auto maxPacketLenth = engine.getMaxPacketLength();
-            logWindowSize = std::max<std::uint32_t>(node.nextLogIndex - node.replyLogIndex, logWindowSize);
-            maxPacketLenth = std::max<std::uint32_t>(request.ByteSize() + 1, maxPacketLenth);
+            logWindowSize = std::max<std::uint64_t>(node.nextLogIndex - node.replyLogIndex, logWindowSize);
+            maxPacketLenth = std::max<std::uint64_t>(request.ByteSize() + 1, maxPacketLenth);
             while ((node.nextLogIndex <= lastLogIndex) && (node.nextLogIndex - node.replyLogIndex <= logWindowSize) && (request.ByteSize() < maxPacketLenth))
             {
                 auto entries = engine.getStorage()->entries(node.nextLogIndex, node.nextLogIndex);
@@ -214,7 +214,7 @@ namespace cr
             outMessages.push_back(std::move(raftMsg));
         }
 
-        void Leader::setNewerTerm(std::uint32_t newerTerm)
+        void Leader::setNewerTerm(std::uint64_t newerTerm)
         {
             engine.setCurrentTerm(newerTerm);
             engine.setVotedFor(boost::none);

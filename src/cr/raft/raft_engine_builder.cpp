@@ -16,24 +16,24 @@ namespace cr
         RaftEngineBuilder::~RaftEngineBuilder()
         {}
 
-        RaftEngineBuilder& RaftEngineBuilder::setNodeId(std::uint32_t nodeId)
+        RaftEngineBuilder& RaftEngineBuilder::setNodeId(std::uint64_t nodeId)
         {
             nodeId_ = nodeId;
             return *this;
         }
 
-        std::uint32_t  RaftEngineBuilder::getNodeId() const
+        std::uint64_t  RaftEngineBuilder::getNodeId() const
         {
             return nodeId_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setBuddyNodeIds(std::vector<std::uint32_t> otherNodeIds)
+        RaftEngineBuilder& RaftEngineBuilder::setBuddyNodeIds(std::vector<std::uint64_t> otherNodeIds)
         {
             buddyNodeIds_ = std::move(otherNodeIds);
             return *this;
         }
 
-        const std::vector<std::uint32_t>& RaftEngineBuilder::getBuddyNodeIds() const
+        const std::vector<std::uint64_t>& RaftEngineBuilder::getBuddyNodeIds() const
         {
             return buddyNodeIds_;
         }
@@ -60,57 +60,57 @@ namespace cr
             return executeCallback_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(const std::pair<std::uint32_t, std::uint32_t>& electionTimeout)
+        RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(const std::pair<std::uint64_t, std::uint64_t>& electionTimeout)
         {
             electionTimeout_ = electionTimeout;
             return *this;
         }
 
-        const std::pair<std::uint32_t, std::uint32_t>& RaftEngineBuilder::getElectionTimeout() const
+        const std::pair<std::uint64_t, std::uint64_t>& RaftEngineBuilder::getElectionTimeout() const
         {
             return electionTimeout_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setHeartbeatTimeout(std::uint32_t heartbeatTimeout)
+        RaftEngineBuilder& RaftEngineBuilder::setHeartbeatTimeout(std::uint64_t heartbeatTimeout)
         {
             heartbeatTimeout_ = heartbeatTimeout;
             return *this;
         }
 
-        std::uint32_t RaftEngineBuilder::getHeatbeatTimeout() const
+        std::uint64_t RaftEngineBuilder::getHeatbeatTimeout() const
         {
             return heartbeatTimeout_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint32_t()> random)
+        RaftEngineBuilder& RaftEngineBuilder::setRandom(std::function<std::uint64_t()> random)
         {
             random_ = std::move(random);
             return *this;
         }
 
-        const std::function<std::uint32_t()>& RaftEngineBuilder::getRandom() const
+        const std::function<std::uint64_t()>& RaftEngineBuilder::getRandom() const
         {
             return random_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint32_t logWindowSize)
+        RaftEngineBuilder& RaftEngineBuilder::setLogWindowSize(std::uint64_t logWindowSize)
         {
             logWindowSize_ = logWindowSize;
             return *this;
         }
 
-        std::uint32_t RaftEngineBuilder::getLogWindowSize() const
+        std::uint64_t RaftEngineBuilder::getLogWindowSize() const
         {
             return logWindowSize_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint32_t maxPacketSize)
+        RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint64_t maxPacketSize)
         {
             maxPacketLength_ = maxPacketSize;
             return *this;
         }
 
-        std::uint32_t RaftEngineBuilder::getMaxPacketLength() const
+        std::uint64_t RaftEngineBuilder::getMaxPacketLength() const
         {
             return maxPacketLength_;
         }

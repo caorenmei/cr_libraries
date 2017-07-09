@@ -50,12 +50,12 @@ namespace cr
             ~DebugVisitor()
             {}
 
-            void setVoteFor(boost::optional<std::uint32_t> voteFor)
+            void setVoteFor(boost::optional<std::uint64_t> voteFor)
             {
                 engine->setVotedFor(voteFor);
             }
 
-            void setLeaderId(boost::optional<std::uint32_t> leaderId)
+            void setLeaderId(boost::optional<std::uint64_t> leaderId)
             {
                 engine->setLeaderId(leaderId);
             }
@@ -65,13 +65,13 @@ namespace cr
                 engine->setCommitIndex(commitIndex);
             }
 
-            void setCurrentTerm(std::uint32_t currentTerm)
+            void setCurrentTerm(std::uint64_t currentTerm)
             {
                 engine->setCurrentTerm(currentTerm);
             }
 
             // 校验日志复制成功
-            int checkVoteSuccess(std::uint32_t candidateId, const pb::VoteReq& request)
+            int checkVoteSuccess(std::uint64_t candidateId, const pb::VoteReq& request)
             {
                 if (messages.size() != 1)
                 {
@@ -101,7 +101,7 @@ namespace cr
                 return 0;
             }
 
-            int checkLogAppendSuccess(std::uint32_t leaderId, const pb::LogAppendReq& request)
+            int checkLogAppendSuccess(std::uint64_t leaderId, const pb::LogAppendReq& request)
             {
                 if (messages.size() != 1)
                 {

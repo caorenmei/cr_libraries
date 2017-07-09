@@ -169,7 +169,7 @@ namespace cr
             return false;
         }
 
-        void Candidate::setNewerTerm(std::uint32_t newerTerm)
+        void Candidate::setNewerTerm(std::uint64_t newerTerm)
         {
             engine.setCurrentTerm(newerTerm);
             engine.setVotedFor(boost::none);

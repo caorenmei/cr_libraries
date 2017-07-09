@@ -78,7 +78,7 @@ namespace cr
 
             int checkLogAppendMsg()
             {
-                std::set<std::uint32_t> destNodeIds;
+                std::set<std::uint64_t> destNodeIds;
                 for (auto&& message : messages)
                 {
                     if (!engine->isBuddyNodeId(message->dest_node_id()))
@@ -114,7 +114,7 @@ namespace cr
                 return 0;
             }
 
-            int checkNextLogIndex(std::uint32_t nodeId, std::uint64_t nextLogIndex)
+            int checkNextLogIndex(std::uint64_t nodeId, std::uint64_t nextLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
@@ -128,7 +128,7 @@ namespace cr
                 return 0;
             }
 
-            int checkMatchLogIndex(std::uint32_t nodeId, std::uint64_t matchLogIndex)
+            int checkMatchLogIndex(std::uint64_t nodeId, std::uint64_t matchLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
@@ -142,7 +142,7 @@ namespace cr
                 return 0;
             }
 
-            int checkReplyLogIndex(std::uint32_t nodeId, std::uint64_t replyLogIndex)
+            int checkReplyLogIndex(std::uint64_t nodeId, std::uint64_t replyLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
@@ -156,7 +156,7 @@ namespace cr
                 return 0;
             }
 
-            RaftEngine::RaftMsgPtr newLogAppendResp(std::uint32_t fromNode, std::uint32_t followerTerm, std::uint64_t lastLogIndex, bool success) 
+            RaftEngine::RaftMsgPtr newLogAppendResp(std::uint64_t fromNode, std::uint64_t followerTerm, std::uint64_t lastLogIndex, bool success) 
             {
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(engine->getNodeId());

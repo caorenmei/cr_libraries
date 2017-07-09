@@ -28,7 +28,7 @@ namespace cr
             return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
         }
 
-        std::uint32_t MemStorage::term(std::uint64_t index)
+        std::uint64_t MemStorage::term(std::uint64_t index)
         {
             CR_ASSERT_E(cr::raft::StoreException, index >= 1 && index <= lastIndex())(index)(lastIndex());
             return entries_[static_cast<std::size_t>(index - 1)].getTerm();
@@ -39,7 +39,7 @@ namespace cr
             return !entries_.empty() ? entries_.size() : 0;
         }
 
-        std::uint32_t MemStorage::lastTerm()
+        std::uint64_t MemStorage::lastTerm()
         {
             return !entries_.empty() ? entries_.back().getTerm() : 0;
         }

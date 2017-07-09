@@ -100,7 +100,7 @@ namespace cr
             logAppendResp(leaderId, success, outMessages);
         }
 
-        bool Follower::checkLeaderTerm(std::uint32_t leaderId, const pb::LogAppendReq& request)
+        bool Follower::checkLeaderTerm(std::uint64_t leaderId, const pb::LogAppendReq& request)
         {
             auto currentTerm = engine.getCurrentTerm();
             if (request.leader_term() > currentTerm)
@@ -111,7 +111,7 @@ namespace cr
             return request.leader_term() != 0 && request.leader_term() == currentTerm;
         }
 
-        void Follower::updateLeaderId(std::uint32_t leaderId, const pb::LogAppendReq& request)
+        void Follower::updateLeaderId(std::uint64_t leaderId, const pb::LogAppendReq& request)
         {
             auto currentLeaderId = engine.getLeaderId();
             if (!currentLeaderId || leaderId != *currentLeaderId)
@@ -120,7 +120,7 @@ namespace cr
             }
         }
 
-        bool Follower::checkPrevLogTerm(std::uint32_t leaderId, const pb::LogAppendReq& request)
+        bool Follower::checkPrevLogTerm(std::uint64_t leaderId, const pb::LogAppendReq& request)
         {
             auto lastLogIndex = engine.getStorage()->lastIndex();
             if (request.prev_log_index() < lastLogIndex)
@@ -135,7 +135,7 @@ namespace cr
             return request.prev_log_index() == lastLogIndex && request.prev_log_term() == engine.getStorage()->lastTerm();;
         }
 
-        void Follower::appendLog(std::uint32_t leaderId, const pb::LogAppendReq& request)
+        void Follower::appendLog(std::uint64_t leaderId, const pb::LogAppendReq& request)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto logIndex = request.prev_log_index();
@@ -147,7 +147,7 @@ namespace cr
             }
         }
 
-        void Follower::updateCommitIndex(std::uint32_t leaderId, const pb::LogAppendReq& request)
+        void Follower::updateCommitIndex(std::uint64_t leaderId, const pb::LogAppendReq& request)
         {
             auto commitIndex = engine.getCommitIndex();
             auto lastLogIndex = engine.getStorage()->lastIndex();
@@ -158,7 +158,7 @@ namespace cr
             }
         }
 
-        void Follower::logAppendResp(std::uint32_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::logAppendResp(std::uint64_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             auto currentTerm = engine.getCurrentTerm();
             auto lastLogIndex = engine.getStorage()->lastIndex();
@@ -207,7 +207,7 @@ namespace cr
             voteResp(candidateId, request, success, outMessages);
         }
 
-        void Follower::voteResp(std::uint32_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
+        void Follower::voteResp(std::uint64_t candidateId, const pb::VoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
             raftMsg->set_from_node_id(engine.getNodeId());
@@ -221,7 +221,7 @@ namespace cr
             outMessages.push_back(std::move(raftMsg));
         }
 
-        void Follower::setNewerTerm(std::uint32_t newerTerm)
+        void Follower::setNewerTerm(std::uint64_t newerTerm)
         {
             engine.setCurrentTerm(newerTerm);
             engine.setVotedFor(boost::none);

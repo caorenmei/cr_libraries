@@ -48,17 +48,17 @@ namespace cr
         RaftEngine::~RaftEngine()
         {}
 
-        std::uint32_t RaftEngine::getNodeId() const
+        std::uint64_t RaftEngine::getNodeId() const
         {
             return nodeId_;
         }
 
-        const std::vector<std::uint32_t>& RaftEngine::getBuddyNodeIds() const
+        const std::vector<std::uint64_t>& RaftEngine::getBuddyNodeIds() const
         {
             return buddyNodeIds_;
         }
 
-        bool RaftEngine::isBuddyNodeId(std::uint32_t nodeId) const
+        bool RaftEngine::isBuddyNodeId(std::uint64_t nodeId) const
         {
             return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
         }
@@ -122,12 +122,12 @@ namespace cr
             return messages_;
         }
 
-        std::uint32_t RaftEngine::getHeatbeatTimeout() const
+        std::uint64_t RaftEngine::getHeatbeatTimeout() const
         {
             return heatbeatTimeout_;
         }
 
-        std::uint32_t RaftEngine::getMinElectionTimeout() const
+        std::uint64_t RaftEngine::getMinElectionTimeout() const
         {
             return electionTimeout_.first;
         }
@@ -156,27 +156,27 @@ namespace cr
             return currentEnumState_;
         }
 
-        std::uint32_t RaftEngine::getCurrentTerm() const
+        std::uint64_t RaftEngine::getCurrentTerm() const
         {
             return currentTerm_;
         }
 
-        boost::optional<std::uint32_t> RaftEngine::getVotedFor() const
+        boost::optional<std::uint64_t> RaftEngine::getVotedFor() const
         {
             return votedFor_;
         }
 
-        const boost::optional<std::uint32_t>& RaftEngine::getLeaderId() const
+        const boost::optional<std::uint64_t>& RaftEngine::getLeaderId() const
         {
             return leaderId_;
         }
 
-        std::uint32_t RaftEngine::getLogWindowSize() const
+        std::uint64_t RaftEngine::getLogWindowSize() const
         {
             return logWindowSize_;
         }
 
-        std::uint32_t RaftEngine::getMaxPacketLength() const
+        std::uint64_t RaftEngine::getMaxPacketLength() const
         {
             return maxPacketLength_;
         }
@@ -209,13 +209,13 @@ namespace cr
             currentEnumState_ = nextEnumState_;
         }
 
-        void RaftEngine::setCurrentTerm(std::uint32_t currentTerm)
+        void RaftEngine::setCurrentTerm(std::uint64_t currentTerm)
         {
             CR_ASSERT(currentTerm_ <= currentTerm)(currentTerm_)(currentTerm);
             currentTerm_ = currentTerm;
         }
 
-        void RaftEngine::setVotedFor(boost::optional<std::uint32_t> voteFor)
+        void RaftEngine::setVotedFor(boost::optional<std::uint64_t> voteFor)
         {
             votedFor_ = voteFor;
         }
@@ -226,12 +226,12 @@ namespace cr
             commitIndex_ = commitIndex;
         }
 
-        void RaftEngine::setLeaderId(boost::optional<std::uint32_t> leaderId)
+        void RaftEngine::setLeaderId(boost::optional<std::uint64_t> leaderId)
         {
             leaderId_ = leaderId;
         }
 
-        std::uint32_t RaftEngine::randomElectionTimeout() const
+        std::uint64_t RaftEngine::randomElectionTimeout() const
         {
             auto electionTime = electionTimeout_.first;
             if (electionTimeout_.first < electionTimeout_.second)

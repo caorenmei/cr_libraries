@@ -26,13 +26,13 @@ namespace cr
 
             ~RaftEngineBuilder();
 
-            RaftEngineBuilder& setNodeId(std::uint32_t nodeId);
+            RaftEngineBuilder& setNodeId(std::uint64_t nodeId);
 
-            std::uint32_t getNodeId() const;
+            std::uint64_t getNodeId() const;
 
-            RaftEngineBuilder& setBuddyNodeIds(std::vector<std::uint32_t> otherNodeIds);
+            RaftEngineBuilder& setBuddyNodeIds(std::vector<std::uint64_t> otherNodeIds);
 
-            const std::vector<std::uint32_t>& getBuddyNodeIds() const;
+            const std::vector<std::uint64_t>& getBuddyNodeIds() const;
 
             RaftEngineBuilder& setStorage(std::shared_ptr<Storage> storage);
 
@@ -42,39 +42,39 @@ namespace cr
 
             const std::function<void(std::uint64_t, const std::string&)>& getEexcuteCallback() const;
 
-            RaftEngineBuilder& setElectionTimeout(const std::pair<std::uint32_t, std::uint32_t>& electionTimeout);
+            RaftEngineBuilder& setElectionTimeout(const std::pair<std::uint64_t, std::uint64_t>& electionTimeout);
 
-            const std::pair<std::uint32_t, std::uint32_t>& getElectionTimeout() const;
+            const std::pair<std::uint64_t, std::uint64_t>& getElectionTimeout() const;
 
-            RaftEngineBuilder& setHeartbeatTimeout(std::uint32_t heartbeatTimeout);
+            RaftEngineBuilder& setHeartbeatTimeout(std::uint64_t heartbeatTimeout);
 
-            std::uint32_t getHeatbeatTimeout() const;
+            std::uint64_t getHeatbeatTimeout() const;
 
-            RaftEngineBuilder& setRandom(std::function<std::uint32_t()> random);
+            RaftEngineBuilder& setRandom(std::function<std::uint64_t()> random);
 
-            const std::function<std::uint32_t()>& getRandom() const;
+            const std::function<std::uint64_t()>& getRandom() const;
 
-            RaftEngineBuilder& setLogWindowSize(std::uint32_t logWindowSize);
+            RaftEngineBuilder& setLogWindowSize(std::uint64_t logWindowSize);
 
-            std::uint32_t getLogWindowSize() const;
+            std::uint64_t getLogWindowSize() const;
 
-            RaftEngineBuilder& setMaxPacketSize(std::uint32_t maxPacketSize);
+            RaftEngineBuilder& setMaxPacketSize(std::uint64_t maxPacketSize);
 
-            std::uint32_t getMaxPacketLength() const;
+            std::uint64_t getMaxPacketLength() const;
 
             std::shared_ptr<RaftEngine> build();
 
         private:
 
-            std::uint32_t nodeId_;
-            std::vector<std::uint32_t> buddyNodeIds_;
+            std::uint64_t nodeId_;
+            std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executeCallback_;
-            std::pair<std::uint32_t, std::uint32_t> electionTimeout_;
-            std::uint32_t heartbeatTimeout_;
-            std::function<std::uint32_t()> random_;
-            std::uint32_t logWindowSize_;
-            std::uint32_t maxPacketLength_;
+            std::pair<std::uint64_t, std::uint64_t> electionTimeout_;
+            std::uint64_t heartbeatTimeout_;
+            std::function<std::uint64_t()> random_;
+            std::uint64_t logWindowSize_;
+            std::uint64_t maxPacketLength_;
         };
     }
 }

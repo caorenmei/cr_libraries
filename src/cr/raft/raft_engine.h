@@ -47,11 +47,11 @@ namespace cr
             RaftEngine(const RaftEngine&) = delete;
             RaftEngine& operator=(const RaftEngine&) = delete;
 
-            std::uint32_t getNodeId() const;
+            std::uint64_t getNodeId() const;
 
-            const std::vector<std::uint32_t>& getBuddyNodeIds() const;
+            const std::vector<std::uint64_t>& getBuddyNodeIds() const;
 
-            bool isBuddyNodeId(std::uint32_t nodeId) const;
+            bool isBuddyNodeId(std::uint64_t nodeId) const;
 
             const std::shared_ptr<Storage>& getStorage() const;
 
@@ -65,9 +65,9 @@ namespace cr
 
             void execute(std::string value);
 
-            std::uint32_t getHeatbeatTimeout() const;
+            std::uint64_t getHeatbeatTimeout() const;
 
-            std::uint32_t getMinElectionTimeout() const;
+            std::uint64_t getMinElectionTimeout() const;
 
             std::uint64_t getCommitIndex() const;
 
@@ -75,11 +75,11 @@ namespace cr
 
             State getCurrentState() const;
 
-            std::uint32_t getCurrentTerm() const;
+            std::uint64_t getCurrentTerm() const;
 
-            boost::optional<std::uint32_t> getVotedFor() const;
+            boost::optional<std::uint64_t> getVotedFor() const;
 
-            const boost::optional<std::uint32_t>& getLeaderId() const;
+            const boost::optional<std::uint64_t>& getLeaderId() const;
 
         private:
 
@@ -90,42 +90,42 @@ namespace cr
             friend class Candidate;
             friend class Leader;
 
-            std::uint32_t getLogWindowSize() const;
+            std::uint64_t getLogWindowSize() const;
 
-            std::uint32_t getMaxPacketLength() const;
+            std::uint64_t getMaxPacketLength() const;
 
             void setNextState(State nextState);
 
             void onTransitionState();
 
-            void setCurrentTerm(std::uint32_t currentTerm);
+            void setCurrentTerm(std::uint64_t currentTerm);
 
-            void setVotedFor(boost::optional<std::uint32_t> voteFor);
+            void setVotedFor(boost::optional<std::uint64_t> voteFor);
 
             void setCommitIndex(std::uint64_t commitIndex);
 
-            void setLeaderId(boost::optional<std::uint32_t> leaderId);
+            void setLeaderId(boost::optional<std::uint64_t> leaderId);
 
-            std::uint32_t randomElectionTimeout() const;
+            std::uint64_t randomElectionTimeout() const;
 
 
-            std::uint32_t nodeId_;
-            std::vector<std::uint32_t> buddyNodeIds_;
+            std::uint64_t nodeId_;
+            std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executeCallback_;
-            std::function<std::uint32_t()> random_;
-            std::uint32_t logWindowSize_;
-            std::uint32_t maxPacketLength_;
+            std::function<std::uint64_t()> random_;
+            std::uint64_t logWindowSize_;
+            std::uint64_t maxPacketLength_;
             std::deque<RaftMsgPtr> messages_;
 
-            std::uint32_t currentTerm_;
-            boost::optional<std::uint32_t> votedFor_;
+            std::uint64_t currentTerm_;
+            boost::optional<std::uint64_t> votedFor_;
 
             std::uint64_t commitIndex_;
             std::uint64_t lastApplied_;
-            boost::optional<std::uint32_t> leaderId_;
-            std::pair<std::uint32_t, std::uint32_t> electionTimeout_;
-            std::uint32_t heatbeatTimeout_;
+            boost::optional<std::uint64_t> leaderId_;
+            std::pair<std::uint64_t, std::uint64_t> electionTimeout_;
+            std::uint64_t heatbeatTimeout_;
 
             std::uint64_t nowTime_;
             std::shared_ptr<RaftState> currentState_;

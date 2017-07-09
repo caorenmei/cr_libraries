@@ -17,15 +17,15 @@ namespace cr
 
             Entry();
 
-            Entry(std::uint64_t index, std::uint32_t term, std::string data);
+            Entry(std::uint64_t index, std::uint64_t term, std::string data);
 
             std::uint64_t getIndex() const;
 
             Entry& setIndex(std::uint64_t index);
 
-            std::uint32_t getTerm() const;
+            std::uint64_t getTerm() const;
 
-            Entry& setTerm(std::uint32_t term);
+            Entry& setTerm(std::uint64_t term);
 
             const std::string& getValue() const;
 
@@ -35,7 +35,7 @@ namespace cr
 
         private:
             std::uint64_t index_;
-            std::uint32_t term_;
+            std::uint64_t term_;
             std::string value_;
         };
 
@@ -53,11 +53,11 @@ namespace cr
 
             virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
 
-            virtual std::uint32_t term(std::uint64_t index) = 0;
+            virtual std::uint64_t term(std::uint64_t index) = 0;
 
             virtual std::uint64_t lastIndex() = 0;
 
-            virtual std::uint32_t lastTerm() = 0;
+            virtual std::uint64_t lastTerm() = 0;
         };
     }
 }

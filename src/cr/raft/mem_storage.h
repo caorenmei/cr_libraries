@@ -26,11 +26,11 @@ namespace cr
 
             virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
 
-            virtual std::uint32_t term(std::uint64_t index) override;
+            virtual std::uint64_t term(std::uint64_t index) override;
 
             virtual std::uint64_t lastIndex() override;
 
-            virtual std::uint32_t lastTerm() override;
+            virtual std::uint64_t lastTerm() override;
         private:
 
             std::vector<Entry> entries_;
