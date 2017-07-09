@@ -26,6 +26,7 @@ namespace cr
         template <typename T>
         class DebugVisitor;
 
+        // Raft 引擎
         class RaftEngine
         {
         public:
@@ -34,10 +35,14 @@ namespace cr
 
             using Builder = RaftEngineBuilder;
 
+            // 状态
             enum State : int
             {
+                // 跟随者
                 FOLLOWER,
+                // 候选者
                 CANDIDATE,
+                // 领导者
                 LEADER,
             };
 
@@ -48,39 +53,62 @@ namespace cr
             RaftEngine(const RaftEngine&) = delete;
             RaftEngine& operator=(const RaftEngine&) = delete;
 
-            std::uint64_t getNodeId() const;
-
-            const std::vector<std::uint64_t>& getBuddyNodeIds() const;
-
-            bool isBuddyNodeId(std::uint64_t nodeId) const;
-
-            const std::shared_ptr<Storage>& getStorage() const;
-
-            std::uint64_t getNowTime() const;
-
-            void initialize(std::uint64_t nowTime);
-
-            std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
-
-            std::deque<RaftMsgPtr>& getMessageQueue();
-
-            bool execute(const std::vector<std::string>& value);
-
-            std::uint64_t getHeatbeatTimeout() const;
-
+            // 最小超时时间
             std::uint64_t getMinElectionTimeout() const;
 
-            std::uint64_t getCommitIndex() const;
+            // 最大超时时间
+            std::uint64_t getMaxElectionTimeout() const;
 
-            std::uint64_t getLastApplied() const;
+            // 最大超时时间
+            std::uint64_t getHeatbeatTimeout() const;
 
+            // 最大传输日志数
+            std::uint64_t getMaxEntriesNum() const;
+
+            // 最大传输包大小
+            std::uint64_t getMaxPacketLength() const;
+
+            // 当前时间
+            std::uint64_t getNowTime() const;
+
+            // 当前状态
             State getCurrentState() const;
 
-            std::uint64_t getCurrentTerm() const;
+            // 初始化
+            void initialize(std::uint64_t nowTime);
 
+            // 执行逻辑
+            std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+
+            // 输入消息队列
+            std::deque<RaftMsgPtr>& getMessageQueue();
+
+            // 执行一个日志
+            bool execute(const std::vector<std::string>& value);
+
+            // 自身Id
+            std::uint64_t getNodeId() const;
+
+            // 其它节点Id
+            const std::vector<std::uint64_t>& getBuddyNodeIds() const;
+
+            // 是否是伙伴Id
+            bool isBuddyNodeId(std::uint64_t nodeId) const;
+
+            // 当前投票
             boost::optional<std::uint64_t> getVotedFor() const;
 
-            const boost::optional<std::uint64_t>& getLeaderId() const;
+            // 当前领导者
+            boost::optional<std::uint64_t> getLeaderId() const;
+
+            // 当前任期
+            std::uint64_t getCurrentTerm() const;
+
+            // 最大已提交日志索引
+            std::uint64_t getCommitIndex() const;
+
+            // 最后应用到状态机的日志索引
+            std::uint64_t getLastApplied() const;
 
         private:
 
@@ -91,23 +119,32 @@ namespace cr
             friend class Candidate;
             friend class Leader;
 
-            std::uint64_t getMaxEntriesNum() const;
+            // 随机超时时间
+            std::uint64_t randElectionTimeout();
 
-            std::uint64_t getMaxPacketLength() const;
-
+            // 底层存储
+            const std::shared_ptr<Storage>& getStorage() const;
+       
+            // 设置下一个状态
             void setNextState(State nextState);
 
+            // 状态转换
             void onTransitionState();
 
-            void setCurrentTerm(std::uint64_t currentTerm);
+            // 应用状态机
+            void applyStateMachine();
 
+            // 设置选票候选者
             void setVotedFor(boost::optional<std::uint64_t> voteFor);
 
-            void setCommitIndex(std::uint64_t commitIndex);
-
+            // 设置领导者
             void setLeaderId(boost::optional<std::uint64_t> leaderId);
 
-            std::uint64_t randomElectionTimeout();
+            // 设置当前任期
+            void setCurrentTerm(std::uint64_t currentTerm);
+
+            // 设置提交日志索引
+            void setCommitIndex(std::uint64_t commitIndex);
 
             std::default_random_engine random_;
             std::uint64_t minElectionTimeout_;

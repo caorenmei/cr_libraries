@@ -42,6 +42,10 @@ namespace cr
 
             const std::function<void(std::uint64_t, const std::string&)>& getEexcuteCallback() const;
 
+            RaftEngineBuilder& setRandomSeed(std::size_t seed);
+
+            std::size_t getRandomSeed() const;
+
             RaftEngineBuilder& setElectionTimeout(std::uint64_t minElectionTimeout, std::uint64_t maxElectionTimeout);
 
             std::uint64_t getMinElectionTimeout() const;
@@ -51,10 +55,6 @@ namespace cr
             RaftEngineBuilder& setHeartbeatTimeout(std::uint64_t heartbeatTimeout);
 
             std::uint64_t getHeatbeatTimeout() const;
-
-            RaftEngineBuilder& setRandomSeed(std::size_t seed);
-
-            std::size_t getRandomSeed() const;
 
             RaftEngineBuilder& setMaxEntriesNum(std::uint64_t maxEntriesNum);
 
@@ -72,10 +72,10 @@ namespace cr
             std::vector<std::uint64_t> buddyNodeIds_;
             std::shared_ptr<Storage> storage_;
             std::function<void(std::uint64_t, const std::string&)> executable_;
+            std::size_t randomSeed_;
             std::uint64_t minElectionTimeout_;
             std::uint64_t maxElectionTimeout_;
             std::uint64_t heartbeatTimeout_;
-            std::size_t randomSeed_;
             std::uint64_t maxEntriesNum_;
             std::uint64_t maxPacketLength_;
         };

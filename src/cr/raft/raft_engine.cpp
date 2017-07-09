@@ -53,29 +53,39 @@ namespace cr
         RaftEngine::~RaftEngine()
         {}
 
-        std::uint64_t RaftEngine::getNodeId() const
+        std::uint64_t RaftEngine::getMinElectionTimeout() const
         {
-            return nodeId_;
+            return minElectionTimeout_;
         }
 
-        const std::vector<std::uint64_t>& RaftEngine::getBuddyNodeIds() const
+        std::uint64_t RaftEngine::getMaxElectionTimeout() const
         {
-            return buddyNodeIds_;
+            return maxElectionTimeout_;
         }
 
-        bool RaftEngine::isBuddyNodeId(std::uint64_t nodeId) const
+        std::uint64_t RaftEngine::getHeatbeatTimeout() const
         {
-            return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
+            return heatbeatTimeout_;
         }
 
-        const std::shared_ptr<Storage>& RaftEngine::getStorage() const
+        std::uint64_t RaftEngine::getMaxEntriesNum() const
         {
-            return storage_;
+            return maxEntriesNum_;
+        }
+
+        std::uint64_t RaftEngine::getMaxPacketLength() const
+        {
+            return maxPacketLength_;
         }
 
         std::uint64_t RaftEngine::getNowTime() const
         {
             return nowTime_;
+        }
+
+        RaftEngine::State RaftEngine::getCurrentState() const
+        {
+            return static_cast<State>(currentState_->getState());
         }
 
         void RaftEngine::initialize(std::uint64_t nowTime)
@@ -89,35 +99,29 @@ namespace cr
         std::uint64_t RaftEngine::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(currentState_ != nullptr);
-            if (nowTime < nowTime_)
-            {
-                return nowTime_;
-            }
+            // 更新时间
+            CR_ASSERT(nowTime_ <= nowTime)(nowTime_, nowTime);
             nowTime_ = nowTime;
-
+            // 处理Raft状态
             auto nextUpdateTime = currentState_->update(nowTime, outMessages);
             CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
+            // 状态转换
             if (nextState_ != currentState_->getState())
             {
                 onTransitionState();
+                CR_ASSERT(nextState_ == currentState_->getState())(nextState_, currentState_->getState());
                 nextUpdateTime = nowTime;
             }
-            CR_ASSERT(nextState_ == currentState_->getState());
-            CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-
+            // 引用状态机
             if (lastApplied_ < commitIndex_)
             {
-                ++lastApplied_;
-                auto getEntries = storage_->getEntries(lastApplied_, lastApplied_);
-                for (auto&& entry : getEntries)
-                {
-                    executable_(entry.getIndex(), entry.getValue());
-                }
+                applyStateMachine();
+                CR_ASSERT(lastApplied_ <= commitIndex_)(lastApplied_, commitIndex_);
             }
-
+            // 继续循环处理
             if (!messages_.empty() || lastApplied_ < commitIndex_)
             {
-                return nowTime_;
+                nextUpdateTime = nowTime;
             }
             return nextUpdateTime;
         }
@@ -125,16 +129,6 @@ namespace cr
         std::deque<RaftEngine::RaftMsgPtr>& RaftEngine::getMessageQueue()
         {
             return messages_;
-        }
-
-        std::uint64_t RaftEngine::getHeatbeatTimeout() const
-        {
-            return heatbeatTimeout_;
-        }
-
-        std::uint64_t RaftEngine::getMinElectionTimeout() const
-        {
-            return minElectionTimeout_;
         }
 
         bool RaftEngine::execute(const std::vector<std::string>& values)
@@ -154,6 +148,36 @@ namespace cr
             return false;
         }
 
+        std::uint64_t RaftEngine::getNodeId() const
+        {
+            return nodeId_;
+        }
+
+        const std::vector<std::uint64_t>& RaftEngine::getBuddyNodeIds() const
+        {
+            return buddyNodeIds_;
+        }
+
+        bool RaftEngine::isBuddyNodeId(std::uint64_t nodeId) const
+        {
+            return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
+        }
+
+        boost::optional<std::uint64_t> RaftEngine::getVotedFor() const
+        {
+            return votedFor_;
+        }
+
+        boost::optional<std::uint64_t> RaftEngine::getLeaderId() const
+        {
+            return leaderId_;
+        }
+
+        std::uint64_t RaftEngine::getCurrentTerm() const
+        {
+            return currentTerm_;
+        }
+
         std::uint64_t RaftEngine::getCommitIndex() const
         {
             return commitIndex_;
@@ -164,34 +188,16 @@ namespace cr
             return lastApplied_;
         }
 
-        RaftEngine::State RaftEngine::getCurrentState() const
+        std::uint64_t RaftEngine::randElectionTimeout()
         {
-            return static_cast<State>(currentState_->getState());
+            std::uniform_int_distribution<std::uint64_t> distribution(minElectionTimeout_, maxElectionTimeout_);
+            auto electionTime = distribution(random_);
+            return electionTime;
         }
 
-        std::uint64_t RaftEngine::getCurrentTerm() const
+        const std::shared_ptr<Storage>& RaftEngine::getStorage() const
         {
-            return currentTerm_;
-        }
-
-        boost::optional<std::uint64_t> RaftEngine::getVotedFor() const
-        {
-            return votedFor_;
-        }
-
-        const boost::optional<std::uint64_t>& RaftEngine::getLeaderId() const
-        {
-            return leaderId_;
-        }
-
-        std::uint64_t RaftEngine::getMaxEntriesNum() const
-        {
-            return maxEntriesNum_;
-        }
-
-        std::uint64_t RaftEngine::getMaxPacketLength() const
-        {
-            return maxPacketLength_;
+            return storage_;
         }
 
         void RaftEngine::setNextState(State nextState)
@@ -221,10 +227,14 @@ namespace cr
             currentState_->onEnter(std::move(prevState));
         }
 
-        void RaftEngine::setCurrentTerm(std::uint64_t currentTerm)
+        void RaftEngine::applyStateMachine()
         {
-            CR_ASSERT(currentTerm_ <= currentTerm)(currentTerm_)(currentTerm);
-            currentTerm_ = currentTerm;
+            auto nextApplied = std::min(lastApplied_ + 10, commitIndex_);
+            auto getEntries = storage_->getEntries(lastApplied_ + 1, nextApplied);
+            for (auto&& entry : getEntries)
+            {
+                executable_(entry.getIndex(), entry.getValue());
+            }
         }
 
         void RaftEngine::setVotedFor(boost::optional<std::uint64_t> voteFor)
@@ -243,11 +253,10 @@ namespace cr
             leaderId_ = leaderId;
         }
 
-        std::uint64_t RaftEngine::randomElectionTimeout()
+        void RaftEngine::setCurrentTerm(std::uint64_t currentTerm)
         {
-            std::uniform_int_distribution<std::uint64_t> distribution(minElectionTimeout_, maxElectionTimeout_);
-            auto electionTime = distribution(random_);
-            return electionTime;
+            CR_ASSERT(currentTerm_ <= currentTerm)(currentTerm_)(currentTerm);
+            currentTerm_ = currentTerm;
         }
     }
 }

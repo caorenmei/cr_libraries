@@ -63,6 +63,17 @@ namespace cr
             return executable_;
         }
 
+        RaftEngineBuilder& RaftEngineBuilder::setRandomSeed(std::size_t seed)
+        {
+            randomSeed_ = seed;
+            return *this;
+        }
+
+        std::size_t RaftEngineBuilder::getRandomSeed() const
+        {
+            return randomSeed_;
+        }
+
         RaftEngineBuilder& RaftEngineBuilder::setElectionTimeout(std::uint64_t minElectionTimeout, std::uint64_t maxElectionTimeout)
         {
             minElectionTimeout_ = minElectionTimeout;
@@ -89,17 +100,6 @@ namespace cr
         std::uint64_t RaftEngineBuilder::getHeatbeatTimeout() const
         {
             return heartbeatTimeout_;
-        }
-
-        RaftEngineBuilder& RaftEngineBuilder::setRandomSeed(std::size_t seed)
-        {
-            randomSeed_ = seed;
-            return *this;
-        }
-
-        std::size_t RaftEngineBuilder::getRandomSeed() const
-        {
-            return randomSeed_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setMaxEntriesNum(std::uint64_t maxEntriesNum)

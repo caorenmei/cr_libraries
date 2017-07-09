@@ -48,7 +48,7 @@ namespace cr
 
         void Follower::updateNextElectionTime(std::uint64_t nowTime)
         {
-            nextElectionTime_ = nowTime + engine.randomElectionTimeout();
+            nextElectionTime_ = nowTime + engine.randElectionTimeout();
         }
 
         bool Follower::checkElectionTimeout(std::uint64_t nowTime)
