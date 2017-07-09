@@ -88,7 +88,6 @@ namespace cr
         void Follower::onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto leaderId = message->from_node_id();
-            CR_ASSERT(message->has_append_entries_req());
             auto& request = message->append_entries_req();
             bool success = false;
             // 如果比当前任期大，则更新任期
@@ -179,9 +178,7 @@ namespace cr
             auto lastLogIndex = engine.getStorage()->getLastIndex();
             auto lastLogTerm = engine.getStorage()->getLastTerm();
 
-            CR_ASSERT(message->has_request_vote_req());
             auto& request = message->request_vote_req();
-
             bool success = false;
             if ((request.candidate_term() >= currentTerm && request.candidate_term() > 0)
                 && (std::make_tuple(request.last_log_term(), request.last_log_index()) >= std::make_tuple(lastLogTerm, lastLogIndex)))
