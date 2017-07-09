@@ -17,6 +17,11 @@ namespace cr
         Leader::~Leader()
         {}
 
+        int Leader::getState() const
+        {
+            return RaftEngine::LEADER;
+        }
+
         void Leader::onEnter(std::shared_ptr<RaftState> prevState)
         {
             auto lastLogIndex = engine.getStorage()->getLastIndex();

@@ -18,6 +18,8 @@ namespace cr
 
             ~Candidate();
 
+            virtual int getState() const override;
+
             virtual void onEnter(std::shared_ptr<RaftState> prevState) override;
 
             virtual void onLeave() override;

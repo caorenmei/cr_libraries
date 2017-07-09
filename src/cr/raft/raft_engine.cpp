@@ -30,8 +30,7 @@ namespace cr
             maxElectionTimeout_(builder.getMaxElectionTimeout()),
             heatbeatTimeout_(builder.getHeatbeatTimeout()),
             nowTime_(0),
-            currentEnumState_(FOLLOWER),
-            nextEnumState_(FOLLOWER)
+            nextState_(FOLLOWER)
         {
             std::sort(buddyNodeIds_.begin(), buddyNodeIds_.end());
             // 节点有效性判断
@@ -92,12 +91,12 @@ namespace cr
 
             auto nextUpdateTime = currentState_->update(nowTime, outMessages);
             CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
-            if (nextEnumState_ != currentEnumState_)
+            if (nextState_ != currentState_->getState())
             {
                 onTransitionState();
                 nextUpdateTime = nowTime;
             }
-            CR_ASSERT(nextEnumState_ == currentEnumState_);
+            CR_ASSERT(nextState_ == currentState_->getState());
             CR_ASSERT(nextUpdateTime >= nowTime_)(nextUpdateTime)(nowTime_);
 
             if (lastApplied_ < commitIndex_)
@@ -134,7 +133,7 @@ namespace cr
 
         bool RaftEngine::execute(const std::vector<std::string>& values)
         {
-            if (currentEnumState_ == LEADER)
+            if (currentState_->getState() == LEADER)
             {
                 std::vector<Entry> entries;
                 auto logIndex = storage_->getLastIndex();
@@ -161,7 +160,7 @@ namespace cr
 
         RaftEngine::State RaftEngine::getCurrentState() const
         {
-            return currentEnumState_;
+            return static_cast<State>(currentState_->getState());
         }
 
         std::uint64_t RaftEngine::getCurrentTerm() const
@@ -191,14 +190,14 @@ namespace cr
 
         void RaftEngine::setNextState(State nextState)
         {
-            nextEnumState_ = nextState;
+            nextState_ = nextState;
         }
 
         void RaftEngine::onTransitionState()
         {
             currentState_->onLeave();
             auto prevState = std::move(currentState_);
-            switch (nextEnumState_)
+            switch (nextState_)
             {
             case FOLLOWER:
                 currentState_ = std::make_shared<Follower>(*this);
@@ -210,11 +209,10 @@ namespace cr
                 currentState_ = std::make_shared<Leader>(*this);
                 break;
             default:
-                CR_ASSERT(!"Exception State")(static_cast<int>(currentEnumState_))(static_cast<int>(nextEnumState_));
+                CR_ASSERT(!"Exception State")(static_cast<int>(currentState_->getState()))(static_cast<int>(nextState_));
                 break;
             }
             currentState_->onEnter(std::move(prevState));
-            currentEnumState_ = nextEnumState_;
         }
 
         void RaftEngine::setCurrentTerm(std::uint64_t currentTerm)

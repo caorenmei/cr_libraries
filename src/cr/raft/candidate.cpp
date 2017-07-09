@@ -21,6 +21,11 @@ namespace cr
         Candidate::~Candidate()
         {}
 
+        int Candidate::getState() const
+        {
+            return RaftEngine::CANDIDATE;
+        }
+
         void Candidate::onEnter(std::shared_ptr<RaftState> prevState)
         {
             nextElectionTime_ = engine.getNowTime();

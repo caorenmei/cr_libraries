@@ -18,6 +18,11 @@ namespace cr
         Follower::~Follower()
         {}
 
+        int Follower::getState() const
+        {
+            return RaftEngine::FOLLOWER;
+        }
+
         void Follower::onEnter(std::shared_ptr<RaftState> prevState)
         {
             auto nowTime = engine.getNowTime();

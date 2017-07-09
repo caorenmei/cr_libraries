@@ -27,6 +27,8 @@ namespace cr
 
             virtual ~RaftState();
 
+            virtual int getState() const = 0;
+
             virtual void onEnter(std::shared_ptr<RaftState> prevState) = 0;
 
             virtual void onLeave() = 0;

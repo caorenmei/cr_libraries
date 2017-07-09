@@ -34,7 +34,7 @@ namespace cr
 
             using Builder = RaftEngineBuilder;
 
-            enum State
+            enum State : int
             {
                 FOLLOWER,
                 CANDIDATE,
@@ -131,8 +131,7 @@ namespace cr
 
             std::uint64_t nowTime_;
             std::shared_ptr<RaftState> currentState_;
-            State currentEnumState_;
-            State nextEnumState_;
+            State nextState_;
         };
     }
 }
