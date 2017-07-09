@@ -18,10 +18,10 @@ public:
 
     void execute(std::uint64_t logIndex, const std::string& value)
     {
-        entries.push_back(value);
+        getEntries.push_back(value);
     }
 
-    std::vector<std::string> entries;
+    std::vector<std::string> getEntries;
 };
 
 struct LeaderFixture;
@@ -102,11 +102,11 @@ namespace cr
                     {
                         return 5;
                     }
-                    if (appendReq.prev_log_index() > storage->lastIndex() || appendReq.prev_log_term() > storage->lastTerm())
+                    if (appendReq.prev_log_index() > storage->getLastIndex() || appendReq.prev_log_term() > storage->getLastTerm())
                     {
                         return 6;
                     }
-                    if (appendReq.prev_log_index() + appendReq.entries_size() > storage->lastIndex())
+                    if (appendReq.prev_log_index() + appendReq.entries_size() > storage->getLastIndex())
                     {
                         return 7;
                     }
@@ -226,9 +226,9 @@ BOOST_FIXTURE_TEST_CASE(heatbeat, cr::raft::DebugVisitor<LeaderFixture>)
 
 BOOST_FIXTURE_TEST_CASE(logAppend, cr::raft::DebugVisitor<LeaderFixture>)
 {
-    storage->append({ 1, 1, "1" });
-    storage->append({ 2, 1, "2" });
-    storage->append({ 3, 1, "3" });
+    storage->append({ { 1, 1, "1" } });
+    storage->append({ { 2, 1, "2" } });
+    storage->append({ { 3, 1, "3" } });
     transactionLeader();
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
     BOOST_CHECK(messages.empty());
@@ -247,9 +247,9 @@ BOOST_FIXTURE_TEST_CASE(logAppend, cr::raft::DebugVisitor<LeaderFixture>)
 
 BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>)
 {
-    storage->append({ 1, 1, "1" });
-    storage->append({ 2, 1, "2" });
-    storage->append({ 3, 1, "3" });
+    storage->append({ {1, 1, "1"} });
+    storage->append({ { 2, 1, "2" } });
+    storage->append({ { 3, 1, "3" } });
     transactionLeader();
     BOOST_REQUIRE_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
     BOOST_CHECK(messages.empty());
@@ -273,9 +273,9 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
 
 BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixture>)
 {
-    storage->append({ 1, 1, "1" });
-    storage->append({ 2, 1, "2" });
-    storage->append({ 3, 1, "3" });
+    storage->append({ { 1, 1, "1" } });
+    storage->append({ { 2, 1, "2" } });
+    storage->append({ { 3, 1, "3" } });
     transactionLeader();
     BOOST_REQUIRE_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
     BOOST_CHECK(messages.empty());

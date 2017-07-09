@@ -63,7 +63,7 @@ namespace cr
 
             std::deque<RaftMsgPtr>& getMessageQueue();
 
-            void execute(std::string value);
+            bool execute(const std::vector<std::string>& value);
 
             std::uint64_t getHeatbeatTimeout() const;
 

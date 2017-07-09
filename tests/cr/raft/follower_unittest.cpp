@@ -18,10 +18,10 @@ public:
 
     void execute(std::uint64_t logIndex, const std::string& value)
     {
-        entries.push_back(value);
+        getEntries.push_back(value);
     }
 
-    std::vector<std::string> entries;
+    std::vector<std::string> getEntries;
 };
 
 struct FollowerFixture;
@@ -259,8 +259,8 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixt
 // 日志不匹配，投票失败
 BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ 1, 1, "1" });
-    storage->append({ 2, 3, "2" });
+    storage->append({ { 1, 1, "1" } });
+    storage->append({ { 2, 3, "2" } });
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -298,8 +298,8 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
 // 日志匹配，投票成功
 BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ 1, 1, "1" });
-    storage->append({ 2, 3, "2" });
+    storage->append({ { 1, 1, "1" } });
+    storage->append({ { 2, 3, "2" } });
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -408,8 +408,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
 // 日志不匹配
 BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ 1,1,"1" });
-    storage->append({ 2,2,"2" });
+    storage->append({ { 1,1,"1" } });
+    storage->append({ { 2,2,"2" } });
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -439,15 +439,15 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 1);
-    BOOST_CHECK_EQUAL(storage->lastIndex(), 1);
+    BOOST_CHECK_EQUAL(storage->getLastIndex(), 1);
     messages.clear();
 }
 
 // 日志不匹配
 BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ 1,1,"1" });
-    storage->append({ 2,2,"2" });
+    storage->append({ { 1,1,"1" } });
+    storage->append({ { 2,2,"2" } });
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
     raftMsg->set_dest_node_id(1);
@@ -470,8 +470,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
 // 追加3条日志
 BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ 1,1,"1" });
-    storage->append({ 2,2,"2" });
+    storage->append({ { 1,1,"1" } });
+    storage->append({ { 2,2,"2" } });
     setCurrentTerm(2);
 
     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
@@ -493,7 +493,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     BOOST_CHECK_EQUAL(engine->getMessageQueue().size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
-    BOOST_CHECK(cr::from(storage->entries(1, 5)).map([](auto&& e) {return e.getValue(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
+    BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.getValue(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
     messages.clear();
 }
 

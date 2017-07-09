@@ -2,8 +2,6 @@
 #define CR_RAFT_LOG_STRAGE_H_
 
 #include <cstdint>
-#include <functional>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,7 +15,7 @@ namespace cr
 
             Entry();
 
-            Entry(std::uint64_t index, std::uint64_t term, std::string data);
+            Entry(std::uint64_t index, std::uint64_t getTermByIndex, std::string data);
 
             std::uint64_t getIndex() const;
 
@@ -25,7 +23,7 @@ namespace cr
 
             std::uint64_t getTerm() const;
 
-            Entry& setTerm(std::uint64_t term);
+            Entry& setTerm(std::uint64_t getTermByIndex);
 
             const std::string& getValue() const;
 
@@ -47,17 +45,17 @@ namespace cr
 
             virtual ~Storage() = default;
 
-            virtual void append(const Entry& entry) = 0;
+            virtual void append(const std::vector<Entry>& entries) = 0;
 
             virtual void remove(std::uint64_t startIndex) = 0;
 
-            virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
+            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
 
-            virtual std::uint64_t term(std::uint64_t index) = 0;
+            virtual std::uint64_t getTermByIndex(std::uint64_t index) = 0;
 
-            virtual std::uint64_t lastIndex() = 0;
+            virtual std::uint64_t getLastIndex() = 0;
 
-            virtual std::uint64_t lastTerm() = 0;
+            virtual std::uint64_t getLastTerm() = 0;
         };
     }
 }

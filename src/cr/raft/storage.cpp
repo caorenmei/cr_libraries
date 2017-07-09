@@ -8,9 +8,9 @@ namespace cr
             : Entry(0, 0, "")
         {}
 
-        Entry::Entry(std::uint64_t index, std::uint64_t term, std::string data)
+        Entry::Entry(std::uint64_t index, std::uint64_t getTermByIndex, std::string data)
             : index_(index),
-            term_(term),
+            term_(getTermByIndex),
             value_(std::move(data))
         {}
 
@@ -30,9 +30,9 @@ namespace cr
             return term_;
         }
 
-        Entry& Entry::setTerm(std::uint64_t term)
+        Entry& Entry::setTerm(std::uint64_t getTermByIndex)
         {
-            term_ = term;
+            term_ = getTermByIndex;
             return *this;
         }
 

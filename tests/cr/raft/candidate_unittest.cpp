@@ -18,10 +18,10 @@ public:
 
     void execute(std::uint64_t logIndex, const std::string& value)
     {
-        entries.push_back(value);
+        getEntries.push_back(value);
     }
 
-    std::vector<std::string> entries;
+    std::vector<std::string> getEntries;
 };
 
 struct CandidateFixture;
@@ -75,7 +75,7 @@ namespace cr
                     {
                         return 5;
                     }
-                    if (voteReq.last_log_index() != storage->lastIndex() || voteReq.last_log_term() != storage->lastTerm())
+                    if (voteReq.last_log_index() != storage->getLastIndex() || voteReq.last_log_term() != storage->getLastTerm())
                     {
                         return 6;
                     }

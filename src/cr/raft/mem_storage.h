@@ -20,17 +20,17 @@ namespace cr
             MemStorage(const MemStorage&) = delete;
             MemStorage& operator=(const MemStorage&) = delete;
 
-            virtual void append(const Entry& entry) override;
+            virtual void append(const std::vector<Entry>& entry) override;
 
             virtual void remove(std::uint64_t startIndex) override;
 
-            virtual std::vector<Entry> entries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
+            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
 
-            virtual std::uint64_t term(std::uint64_t index) override;
+            virtual std::uint64_t getTermByIndex(std::uint64_t index) override;
 
-            virtual std::uint64_t lastIndex() override;
+            virtual std::uint64_t getLastIndex() override;
 
-            virtual std::uint64_t lastTerm() override;
+            virtual std::uint64_t getLastTerm() override;
         private:
 
             std::vector<Entry> entries_;

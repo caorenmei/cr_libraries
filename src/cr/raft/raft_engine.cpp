@@ -23,7 +23,7 @@ namespace cr
             random_(builder.getRandom()),
             logWindowSize_(builder.getLogWindowSize()),
             maxPacketLength_(builder.getMaxPacketLength()),
-            currentTerm_(storage_->lastTerm()),
+            currentTerm_(storage_->getLastTerm()),
             commitIndex_(0),
             lastApplied_(0),
             nowTime_(0),
@@ -103,8 +103,8 @@ namespace cr
             if (lastApplied_ < commitIndex_)
             {
                 ++lastApplied_;
-                auto entries = storage_->entries(lastApplied_, lastApplied_);
-                for (auto&& entry : entries)
+                auto getEntries = storage_->getEntries(lastApplied_, lastApplied_);
+                for (auto&& entry : getEntries)
                 {
                     executeCallback_(entry.getIndex(), entry.getValue());
                 }
@@ -132,13 +132,21 @@ namespace cr
             return electionTimeout_.first;
         }
 
-        void RaftEngine::execute(std::string value)
+        bool RaftEngine::execute(const std::vector<std::string>& values)
         {
             if (currentEnumState_ == LEADER)
             {
-                auto lastLogIndex = storage_->lastIndex();
-                storage_->append({ lastLogIndex + 1, currentTerm_, std::move(value) });
+                std::vector<Entry> entries;
+                auto logIndex = storage_->getLastIndex();
+                for (auto&& value : values)
+                {
+                    logIndex = logIndex + 1;
+                    entries.emplace_back(logIndex, currentTerm_, value);
+                }
+                storage_->append(entries);
+                return true;
             }
+            return false;
         }
 
         std::uint64_t RaftEngine::getCommitIndex() const
