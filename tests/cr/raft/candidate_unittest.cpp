@@ -50,6 +50,61 @@ namespace cr
             ~DebugVisitor()
             {}
 
+            auto makeRequestVoteReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t lastLogIndex, std::uint64_t lastLogTerm, std::uint64_t candidateTerm)
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
+
+                auto& request = *(raftMsg->mutable_request_vote_req());
+                request.set_last_log_index(lastLogIndex);
+                request.set_last_log_term(lastLogTerm);
+                request.set_candidate_term(candidateTerm);
+
+                return raftMsg;
+            }
+
+            auto makeRequestVoteRespMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t candidateTerm, bool success)
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
+
+                auto& response = *(raftMsg->mutable_request_vote_resp());
+                response.set_follower_term(candidateTerm);
+                response.set_success(success);
+
+                return raftMsg;
+            }
+
+            auto makeAppendEntriesReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t leaderTerm, std::uint64_t leaderCommit,
+                std::uint64_t prevLogIndex, std::uint64_t prevLogTerm,
+                const std::vector<std::string>& entries = std::vector<std::string>())
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
+
+                auto& request = *(raftMsg->mutable_append_entries_req());
+                request.set_leader_term(leaderTerm);
+                request.set_leader_commit(leaderCommit);
+                request.set_prev_log_index(prevLogIndex);
+                request.set_prev_log_term(prevLogTerm);
+
+                for (auto&& entry : entries)
+                {
+                    request.add_entries(std::move(entry));
+                }
+
+                return raftMsg;
+            }
+
             int checkVoteRequest()
             {
                 if (messages.size() != engine->getBuddyNodeIds().size())
@@ -111,13 +166,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
 {
     std::uint64_t nowTime = 0;
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
-    auto& request = *(raftMsg->mutable_request_vote_resp());
-
-    raftMsg->set_from_node_id(2);
+    auto raftMsg = makeRequestVoteRespMsg(2, 1, 0, false);
     engine->pushMessageQueue(raftMsg);
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
@@ -126,8 +175,7 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
     messages.clear();
 
     nowTime = nowTime + 1;
-    request.set_follower_term(engine->getCurrentTerm());
-    request.set_success(true);
+    raftMsg = makeRequestVoteRespMsg(2, 1, engine->getCurrentTerm(), true);
     engine->pushMessageQueue(raftMsg);
     BOOST_CHECK_LT(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
@@ -142,36 +190,25 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
 {
     std::uint64_t nowTime = 0;
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
-    auto& request = *(raftMsg->mutable_request_vote_resp());
-
     nowTime = nowTime + builder.getMaxElectionTimeout();
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
 
-    raftMsg->set_from_node_id(2);
-    request.set_follower_term(engine->getCurrentTerm());
-    request.set_success(true);
-    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    auto raftMsg = makeRequestVoteRespMsg(2, 1, engine->getCurrentTerm(), true);
+    engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 
-    raftMsg->set_from_node_id(3);
-    request.set_follower_term(engine->getCurrentTerm());
-    request.set_success(false);
-    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    raftMsg = makeRequestVoteRespMsg(3, 1, engine->getCurrentTerm(), false);
+    engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 
-    raftMsg->set_from_node_id(4);
-    request.set_follower_term(engine->getCurrentTerm());
-    request.set_success(true);
-    engine->pushMessageQueue(std::make_shared<cr::raft::pb::RaftMsg>(*raftMsg));
+    raftMsg = makeRequestVoteRespMsg(4, 1, engine->getCurrentTerm(), true);
+    engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
@@ -187,24 +224,13 @@ BOOST_FIXTURE_TEST_CASE(appendEntriesReq, cr::raft::DebugVisitor<CandidateFixtur
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
     messages.clear();
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(1);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(0);
-    request.set_prev_log_term(0);
-
-    request.set_leader_term(0);
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 0, 0, 0, 0);
     engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
 
-    request.set_leader_term(1);
+    raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
     engine->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
     BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
