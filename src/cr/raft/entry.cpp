@@ -1,4 +1,4 @@
-﻿#include <cr/raft/storage.h>
+#include <cr/raft/entry.h>
 
 namespace cr
 {
@@ -30,9 +30,9 @@ namespace cr
             return term_;
         }
 
-        Entry& Entry::setTerm(std::uint64_t getTermByIndex)
+        Entry& Entry::setTerm(std::uint64_t term)
         {
-            term_ = getTermByIndex;
+            term_ = term;
             return *this;
         }
 
@@ -46,9 +46,9 @@ namespace cr
             return value_;
         }
 
-        Entry& Entry::setValue(std::string data)
+        Entry& Entry::setValue(std::string value)
         {
-            data = std::move(data);
+            value_ = std::move(value);
             return *this;
         }
     }

@@ -1,42 +1,16 @@
-﻿#ifndef CR_RAFT_LOG_STRAGE_H_
-#define CR_RAFT_LOG_STRAGE_H_
+﻿#ifndef CR_RAFT_STORAGE_H_
+#define CR_RAFT_STORAGE_H_
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
+#include <cr/raft/entry.h>
+
 namespace cr
 {
     namespace raft
     {
-        class Entry
-        {
-        public:
-
-            Entry();
-
-            Entry(std::uint64_t index, std::uint64_t getTermByIndex, std::string data);
-
-            std::uint64_t getIndex() const;
-
-            Entry& setIndex(std::uint64_t index);
-
-            std::uint64_t getTerm() const;
-
-            Entry& setTerm(std::uint64_t getTermByIndex);
-
-            const std::string& getValue() const;
-
-            std::string& getValue();
-
-            Entry& setValue(std::string data);
-
-        private:
-            std::uint64_t index_;
-            std::uint64_t term_;
-            std::string value_;
-        };
-
         class Storage
         {
         public:

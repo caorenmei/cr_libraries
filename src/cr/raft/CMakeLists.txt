@@ -14,6 +14,8 @@ set(cr_raft_SRCS
     ${PROTO_HDRS} ${PROTO_SRCS}
     candidate.h
     candidate.cpp
+    entry.h
+    entry.cpp
     exception.h
     follower.h
     follower.cpp
@@ -33,6 +35,7 @@ set(cr_raft_SRCS
 
 set(cr_raft_HEADERS
     ${PROTO_HDRS}
+    entry.h
     exception.h
     log_storage.h
     mem_log_storage.h
