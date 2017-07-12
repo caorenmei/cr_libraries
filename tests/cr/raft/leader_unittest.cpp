@@ -92,6 +92,21 @@ namespace cr
                 return raftMsg;
             }
 
+            auto makeAppendEntriesResp(std::uint64_t fromNode, std::uint64_t followerTerm, std::uint64_t lastLogIndex, bool success)
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(engine->getNodeId());
+                raftMsg->set_from_node_id(fromNode);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_RESP);
+
+                auto& request = *(raftMsg->mutable_append_entries_resp());
+                request.set_follower_term(followerTerm);
+                request.set_last_log_index(lastLogIndex);
+                request.set_success(success);
+
+                return raftMsg;
+            }
+
             void transactionLeader()
             {
                 nowTime = nowTime + builder.getMaxElectionTimeout();
@@ -196,21 +211,6 @@ namespace cr
                 return 0;
             }
 
-            RaftEngine::RaftMsgPtr newLogAppendResp(std::uint64_t fromNode, std::uint64_t followerTerm, std::uint64_t lastLogIndex, bool success) 
-            {
-                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-                raftMsg->set_dest_node_id(engine->getNodeId());
-                raftMsg->set_from_node_id(fromNode);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_RESP);
-
-                auto& request = *(raftMsg->mutable_append_entries_resp());
-                request.set_follower_term(followerTerm);
-                request.set_last_log_index(lastLogIndex);
-                request.set_success(success);
-
-                return raftMsg;
-            }
-
             cr::raft::RaftEngine::Builder builder;
             std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
     messages.clear();
 
     nowTime += 1;
-    auto logAppendResp0 = newLogAppendResp(2, 1, 1, false);
+    auto logAppendResp0 = makeAppendEntriesResp(2, 1, 1, false);
     engine->pushMessageQueue(logAppendResp0);
     engine->update(nowTime, messages);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
@@ -324,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     messages.clear();
 
     nowTime += 1;
-    auto logAppendResp0 = newLogAppendResp(2, 1, 1, false);
+    auto logAppendResp0 = makeAppendEntriesResp(2, 1, 1, false);
     engine->pushMessageQueue(logAppendResp0);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
@@ -332,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     messages.clear();
 
     nowTime += 1;
-    auto logAppendResp1 = newLogAppendResp(3, 1, 1, false);
+    auto logAppendResp1 = makeAppendEntriesResp(3, 1, 1, false);
     engine->pushMessageQueue(logAppendResp1);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
@@ -340,7 +340,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     messages.clear();
 
     nowTime += 1;
-    auto logAppendResp2 = newLogAppendResp(2, 1, 3, true);
+    auto logAppendResp2 = makeAppendEntriesResp(2, 1, 3, true);
     engine->pushMessageQueue(logAppendResp2);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 0);
@@ -348,7 +348,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     messages.clear();
 
     nowTime += 1;
-    auto logAppendResp3 = newLogAppendResp(3, 1, 2, true);
+    auto logAppendResp3 = makeAppendEntriesResp(3, 1, 2, true);
     engine->pushMessageQueue(logAppendResp3);
     engine->update(nowTime, messages);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 2);
