@@ -52,6 +52,46 @@ namespace cr
             ~DebugVisitor()
             {}
 
+            auto makeRequestVoteReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t lastLogIndex, std::uint64_t lastLogTerm, std::uint64_t candidateTerm)
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
+
+                auto& request = *(raftMsg->mutable_request_vote_req());
+                request.set_last_log_index(lastLogIndex);
+                request.set_last_log_term(lastLogTerm);
+                request.set_candidate_term(candidateTerm);
+
+                return raftMsg;
+            }
+
+            auto makeAppendEntriesReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t leaderTerm, std::uint64_t leaderCommit,
+                std::uint64_t prevLogIndex, std::uint64_t prevLogTerm,
+                const std::vector<std::string>& entries = std::vector<std::string>())
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
+
+                auto& request = *(raftMsg->mutable_append_entries_req());
+                request.set_leader_term(leaderTerm);
+                request.set_leader_commit(leaderCommit);
+                request.set_prev_log_index(prevLogIndex);
+                request.set_prev_log_term(prevLogTerm);
+
+                for (auto&& entry : entries)
+                {
+                    request.add_entries(std::move(entry));
+                }
+
+                return raftMsg;
+            }
+
             void transactionLeader()
             {
                 nowTime = nowTime + builder.getMaxElectionTimeout();
@@ -315,6 +355,60 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     BOOST_CHECK_EQUAL(messages.size(), 4);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
+}
+
+BOOST_FIXTURE_TEST_CASE(RequestVoteLowTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 0);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+}
+
+BOOST_FIXTURE_TEST_CASE(RequestVoteEqualTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+}
+
+BOOST_FIXTURE_TEST_CASE(RequestVoteHighTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 2);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+}
+
+BOOST_FIXTURE_TEST_CASE(AppendEntriesLowTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 0, 0, 0, 0);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+}
+
+BOOST_FIXTURE_TEST_CASE(AppendEntriesEqualTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+}
+
+BOOST_FIXTURE_TEST_CASE(AppendEntriesHighTerm, cr::raft::DebugVisitor<LeaderFixture>)
+{
+    transactionLeader();
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 0, 0, 0);
+    engine->pushMessageQueue(raftMsg);
+    engine->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
