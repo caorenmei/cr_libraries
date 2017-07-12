@@ -70,6 +70,46 @@ namespace cr
                 engine->setCurrentTerm(currentTerm);
             }
 
+            auto makeRequestVoteReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t lastLogIndex, std::uint64_t lastLogTerm, std::uint64_t candidateTerm)
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
+
+                auto& request = *(raftMsg->mutable_request_vote_req());
+                request.set_last_log_index(lastLogIndex);
+                request.set_last_log_term(lastLogTerm);
+                request.set_candidate_term(candidateTerm);
+
+                return raftMsg;
+            }
+
+            auto makeAppendEntriesReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
+                std::uint64_t leaderTerm, std::uint64_t leaderCommit,
+                std::uint64_t prevLogIndex, std::uint64_t prevLogTerm,
+                const std::vector<std::string>& entries = std::vector<std::string>())
+            {
+                auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
+                raftMsg->set_dest_node_id(destNodeId);
+                raftMsg->set_from_node_id(fromNodeId);
+                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
+
+                auto& request = *(raftMsg->mutable_append_entries_req());
+                request.set_leader_term(leaderTerm);
+                request.set_leader_commit(leaderCommit);
+                request.set_prev_log_index(prevLogIndex);
+                request.set_prev_log_term(prevLogTerm);
+
+                for (auto&& entry : entries)
+                {
+                    request.add_entries(std::move(entry));
+                }
+
+                return raftMsg;
+            }
+
             // 校验日志复制成功
             int checkVoteSuccess(std::uint64_t candidateId, const pb::RequestVoteReq& request)
             {
@@ -163,15 +203,7 @@ BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<FollowerFixture>
 
 BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(0);
-    request.set_last_log_term(1);
-    request.set_candidate_term(0);
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 1, 0);
 
     std::uint64_t nowTime = 1;
     engine->pushMessageQueue(raftMsg);
@@ -197,59 +229,36 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixt
 // 任期为0，投票肯定失败
 BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(0);
-    request.set_last_log_term(0);
-    request.set_candidate_term(0);
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 0);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
 
 // 任期为1，投票成功
 BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(0);
-    request.set_last_log_term(0);
-    request.set_candidate_term(1);
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
 
-    BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
+
+    BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
 
 // 任期为1，重复投票成功
 BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(0);
-    request.set_last_log_term(0);
-    request.set_candidate_term(1);
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
     
     setVoteFor(2);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
 
@@ -259,33 +268,23 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
     storage->append({ { 1, 1, "1" } });
     storage->append({ { 2, 3, "2" } });
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(0);
-    request.set_last_log_term(0);
-    request.set_candidate_term(1);
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
-    request.set_last_log_index(2);
-    request.set_last_log_term(2);
+    raftMsg = makeRequestVoteReqMsg(2, 1, 2, 2, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
-    request.set_last_log_index(1);
-    request.set_last_log_term(3);
+    raftMsg = makeRequestVoteReqMsg(2, 1, 1, 3, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
 
@@ -295,53 +294,33 @@ BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
     storage->append({ { 1, 1, "1" } });
     storage->append({ { 2, 3, "2" } });
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
-
-    auto& request = *(raftMsg->mutable_request_vote_req());
-    request.set_last_log_index(2);
-    request.set_last_log_term(3);
-    request.set_candidate_term(1);
-
+    auto raftMsg = makeRequestVoteReqMsg(2, 1, 2, 3, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
-    request.set_last_log_index(3);
-    request.set_last_log_term(3);
+    raftMsg = makeRequestVoteReqMsg(2, 1, 3, 3, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
-    request.set_last_log_index(0);
-    request.set_last_log_term(4);
+    raftMsg = makeRequestVoteReqMsg(2, 1, 0, 4, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkVoteSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
 
 // 任期为1，空日志，成功
 BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(1);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(0);
-    request.set_prev_log_term(0);
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
 
@@ -351,20 +330,11 @@ BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<FollowerFixture
     setLeaderId(3);
     setCurrentTerm(1);
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(2);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(0);
-    request.set_prev_log_term(0);
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 0, 0, 0);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
 
@@ -374,21 +344,12 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
     setLeaderId(3);
     setCurrentTerm(2);
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(1);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(0);
-    request.set_prev_log_term(0);
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
 
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
 
-    BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().follower_term(), 2);
     messages.clear();
@@ -400,30 +361,18 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     storage->append({ { 1,1,"1" } });
     storage->append({ { 2,2,"2" } });
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(1);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(3);
-    request.set_prev_log_term(2);
-
-    
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 3, 2);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 2);
     messages.clear();
 
-    request.set_prev_log_index(2);
-    request.set_prev_log_term(1);
+    raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 2, 1);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_NE(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 1);
     BOOST_CHECK_EQUAL(storage->getLastIndex(), 1);
@@ -436,20 +385,10 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
     storage->append({ { 1,1,"1" } });
     storage->append({ { 2,2,"2" } });
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(1);
-    request.set_leader_commit(0);
-    request.set_prev_log_index(2);
-    request.set_prev_log_term(2);
-
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 2, 2);
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
 
@@ -460,23 +399,10 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     storage->append({ { 2,2,"2" } });
     setCurrentTerm(2);
 
-    auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-    raftMsg->set_dest_node_id(1);
-    raftMsg->set_from_node_id(2);
-    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
-
-    auto& request = *(raftMsg->mutable_append_entries_req());
-    request.set_leader_term(2);
-    request.set_leader_commit(4);
-    request.set_prev_log_index(2);
-    request.set_prev_log_term(2);
-    request.add_entries("3");
-    request.add_entries("4");
-    request.add_entries("5");
-
+    auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 4, 2, 2, { "3", "4", "5" });
     engine->pushMessageQueue(raftMsg);
     engine->update(1, messages);
-    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, request), 0);
+    BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
     BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.getValue(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
     messages.clear();
