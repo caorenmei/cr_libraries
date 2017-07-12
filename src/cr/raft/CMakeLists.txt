@@ -17,6 +17,8 @@ set(cr_raft_SRCS
     entry.h
     entry.cpp
     exception.h
+    file_storage.h
+    file_storage.cpp
     follower.h
     follower.cpp
     leader.h
@@ -37,6 +39,7 @@ set(cr_raft_HEADERS
     ${PROTO_HDRS}
     entry.h
     exception.h
+    file_storage.h
     log_storage.h
     mem_log_storage.h
     raft_engine.h
