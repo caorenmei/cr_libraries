@@ -22,7 +22,7 @@ namespace cr
             FileStorage& operator=(const FileStorage&) = delete;
 
             // 获取存储接口
-            std::shared_ptr<Storage> newInstance(std::uint64_t instanceId);
+            std::shared_ptr<Storage> getStorage(std::uint64_t instanceId);
 
         private:
 

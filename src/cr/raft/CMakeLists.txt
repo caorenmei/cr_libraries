@@ -5,6 +5,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
+find_package(Rocksdb REQUIRED)
+include_directories(${ROCKSDB_INCLUDE_DIRS})
+
 set(cr_raft_PROTOS raft_msg.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${cr_raft_PROTOS})  
 
@@ -24,7 +27,6 @@ set(cr_raft_SRCS
     leader.h
     leader.cpp
     storage.h
-    storage.cpp
     mem_storage.h
     mem_storage.cpp
     raft_engine.h
