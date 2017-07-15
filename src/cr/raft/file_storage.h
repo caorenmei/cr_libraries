@@ -14,7 +14,7 @@ namespace cr
         {
         public:
 
-            explicit FileStorage(const std::string& path);
+            explicit FileStorage(const std::string& path, bool sync = true);
 
             ~FileStorage();
 

@@ -66,13 +66,13 @@ namespace cr
             return getColumnFamilyNamePrefix() + std::to_string(instance);
         }
 
-        
         class RocksdbStorage : public Storage
         {
         public:
-            RocksdbStorage(std::shared_ptr<rocksdb::DB> db, std::shared_ptr<rocksdb::ColumnFamilyHandle> column)
+            RocksdbStorage(std::shared_ptr<rocksdb::DB> db, std::shared_ptr<rocksdb::ColumnFamilyHandle> column, bool sync)
                 : db_(db),
-                column_(column)
+                column_(column),
+                sync_(sync)
             {
                 std::string lastLogIndexValue;
                 auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogIndexKey()), &lastLogIndexValue);
@@ -109,7 +109,7 @@ namespace cr
                 batch.Put(column.get(), rocksdb::Slice(getLastLogTermKey()), rocksdb::Slice(uint64ToString(lastLogTerm)));
 
                 rocksdb::WriteOptions writeOptions;
-                writeOptions.sync = true;
+                writeOptions.sync = sync_;
                 auto status = db->Write(writeOptions, &batch);
                 CR_ASSERT_E(cr::raft::StoreException, status.ok());
 
@@ -144,7 +144,7 @@ namespace cr
                 batch.Put(column.get(), rocksdb::Slice(getLastLogTermKey()), rocksdb::Slice(uint64ToString(lastLogTerm)));
 
                 rocksdb::WriteOptions writeOptions;
-                writeOptions.sync = true;
+                writeOptions.sync = sync_;
                 auto status = db->Write(writeOptions, &batch);
                 CR_ASSERT_E(cr::raft::StoreException, status.ok());
 
@@ -205,9 +205,9 @@ namespace cr
                 return lastLogTerm_;
             }
 
-            
             std::weak_ptr<rocksdb::DB> db_;
             std::weak_ptr<rocksdb::ColumnFamilyHandle> column_;
+            bool sync_;
             std::uint64_t lastLogIndex_;
             std::uint64_t lastLogTerm_;
         };
@@ -215,15 +215,19 @@ namespace cr
         class FileStorage::Impl
         {
         public:
+            rocksdb::ColumnFamilyOptions options;
+            bool sync;
             std::shared_ptr<rocksdb::DB> db;
             std::map<std::string, std::shared_ptr<rocksdb::ColumnFamilyHandle>> columnFamilies;
             std::map<std::uint64_t, std::shared_ptr<Storage>> instances;
             std::mutex mutex;
         };
 
-        FileStorage::FileStorage(const std::string& path)
+        FileStorage::FileStorage(const std::string& path, bool sync/* = true*/)
             : impl_(std::make_unique<Impl>())
         {
+            impl_->sync = sync;
+
             rocksdb::DBOptions options;
             options.create_if_missing = true;
 
@@ -233,11 +237,11 @@ namespace cr
             std::vector<rocksdb::ColumnFamilyDescriptor> existsColumnFamilies;
             for (const auto& columnFamilyName : columnFamilyNames)
             {
-                existsColumnFamilies.push_back(rocksdb::ColumnFamilyDescriptor(columnFamilyName, rocksdb::ColumnFamilyOptions()));
+                existsColumnFamilies.push_back(rocksdb::ColumnFamilyDescriptor(columnFamilyName, impl_->options));
             }
             if (existsColumnFamilies.empty())
             {
-                existsColumnFamilies.push_back(rocksdb::ColumnFamilyDescriptor(rocksdb::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions()));
+                existsColumnFamilies.push_back(rocksdb::ColumnFamilyDescriptor(rocksdb::kDefaultColumnFamilyName, impl_->options));
             }
 
             rocksdb::DB* db = nullptr;
@@ -265,11 +269,11 @@ namespace cr
                 if (columnFamilyIter == impl_->columnFamilies.end())
                 {
                     rocksdb::ColumnFamilyHandle* column = nullptr;
-                    auto status = impl_->db->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), columnFamilyName, &column);
+                    auto status = impl_->db->CreateColumnFamily(impl_->options, columnFamilyName, &column);
                     CR_ASSERT_E(cr::raft::StateException, status.ok());
                     columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, std::shared_ptr<rocksdb::ColumnFamilyHandle>(column))).first;
                 }
-                auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second);
+                auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second, impl_->sync);
                 instanceIter = impl_->instances.insert(std::make_pair(instanceId, storage)).first;
             }
             return instanceIter->second;
