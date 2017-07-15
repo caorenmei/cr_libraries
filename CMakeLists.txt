@@ -25,11 +25,11 @@ add_definitions(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
 
 # 第三方库
 foreach(libName boost cpp-netlib lua mysql mysql-connector-cpp protobuf rapidxml rocksdb)
-    set(ENV{PATH} "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/${libName}/bin${_CR_ENV_TERMINAL}$ENV{PATH}")
-    set(CMAKE_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/include${_CR_ENV_TERMINAL}${CMAKE_INCLUDE_PATH}")
-    set(CMAKE_LIBRARY_PATH "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/lib${_CR_ENV_TERMINAL}${CMAKE_LIBRARY_PATH}")
+    list(APPEND ENV{PATH} "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/${libName}/bin")
+    list(APPEND CMAKE_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/include")
+    list(APPEND CMAKE_LIBRARY_PATH "${PROJECT_SOURCE_DIR}/install/${CMAKE_BUILD_TYPE}/lib")
 endforeach()
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake${_CR_ENV_TERMINAL}${CMAKE_MODULE_PATH}")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # Boost
 option(Boost_USE_STATIC_LIBS "Use static libs" ON)

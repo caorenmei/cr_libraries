@@ -19,7 +19,9 @@ set(cr_raft_unittest_SRCS
   
 add_executable(cr_raft_unittest ${cr_raft_unittest_SRCS})
 install(TARGETS cr_raft_unittest DESTINATION bin)
-find_library(WIN_RPCRT_LIBRARY Rpcrt4)
+if (WIN32)
+    find_library(WIN_RPCRT_LIBRARY Rpcrt4)
+endif()
 target_link_libraries(cr_raft_unittest 
     cr_raft
     cr_common
