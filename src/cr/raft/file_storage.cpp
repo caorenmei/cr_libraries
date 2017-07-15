@@ -267,7 +267,7 @@ namespace cr
                     rocksdb::ColumnFamilyHandle* column = nullptr;
                     auto status = impl_->db->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), columnFamilyName, &column);
                     CR_ASSERT_E(cr::raft::StateException, status.ok());
-                    columnFamilyIter = impl_->columnFamilies.emplace(columnFamilyName, column).first;
+                    columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, std::shared_ptr<rocksdb::ColumnFamilyHandle>(column))).first;
                 }
                 auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second);
                 instanceIter = impl_->instances.insert(std::make_pair(instanceId, storage)).first;
