@@ -1,6 +1,7 @@
 #include <cr/raft/file_storage.h>
 
 #include <map>
+#include <mutex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/arithmetic.hpp>
@@ -217,6 +218,7 @@ namespace cr
             std::shared_ptr<rocksdb::DB> db;
             std::map<std::string, std::shared_ptr<rocksdb::ColumnFamilyHandle>> columnFamilies;
             std::map<std::uint64_t, std::shared_ptr<Storage>> instances;
+            std::mutex mutex;
         };
 
         FileStorage::FileStorage(const std::string& path)
@@ -254,6 +256,7 @@ namespace cr
 
         std::shared_ptr<Storage> FileStorage::getStorage(std::uint64_t instanceId)
         {
+            std::lock_guard<std::mutex> locker(impl_->mutex);
             auto instanceIter = impl_->instances.find(instanceId);
             if (instanceIter == impl_->instances.end())
             {
@@ -264,7 +267,7 @@ namespace cr
                     rocksdb::ColumnFamilyHandle* column = nullptr;
                     auto status = impl_->db->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), columnFamilyName, &column);
                     CR_ASSERT_E(cr::raft::StateException, status.ok());
-                    columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, column)).first;
+                    columnFamilyIter = impl_->columnFamilies.emplace(columnFamilyName, column).first;
                 }
                 auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second);
                 instanceIter = impl_->instances.insert(std::make_pair(instanceId, storage)).first;
