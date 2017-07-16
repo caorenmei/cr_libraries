@@ -23,7 +23,7 @@ namespace cr
         };
 
         /** 日志存储异常 */
-        class StoreException : public RaftException
+        class IOException : public RaftException
         {
         public:
             using RaftException::RaftException;

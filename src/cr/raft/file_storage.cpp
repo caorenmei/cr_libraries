@@ -19,14 +19,27 @@ namespace cr
     namespace raft
     {
 
+        static std::string uint64ToString(std::uint64_t value)
+        {
+            return std::string(reinterpret_cast<char*>(&value), sizeof(value));
+        }
+
+        static std::uint64_t stringToUint64(const std::string& value)
+        {
+            std::uint64_t result = 0;
+            CR_ASSERT_E(cr::raft::IOException, value.size() == sizeof(result));
+            std::memcpy(&result, value.data(), sizeof(result));
+            return result;
+        }
+
         static std::string getLogValueKey(std::uint64_t index)
         {
-            return "value_" + std::to_string(index);
+            return "value_" + uint64ToString(index);
         }
 
         static std::string getLogTermKey(std::uint64_t index)
         {
-            return "term_" + std::to_string(index);
+            return "term_" + uint64ToString(index);
         }
 
         static std::string getLastLogIndexKey()
@@ -37,23 +50,6 @@ namespace cr
         static std::string getLastLogTermKey()
         {
             return "last_log_term";
-        }
-
-        static std::string uint64ToString(std::uint64_t value)
-        {
-            return std::to_string(value);
-        }
-
-        static std::uint64_t stringToUint64(const std::string& value)
-        {
-            try
-            {
-                return boost::lexical_cast<std::uint64_t>(value);
-            }
-            catch (boost::bad_lexical_cast& e)
-            {
-                CR_THROW(cr::raft::StateException, e.what());
-            }
         }
 
         static std::string getColumnFamilyNamePrefix()
@@ -76,12 +72,12 @@ namespace cr
             {
                 std::string lastLogIndexValue;
                 auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogIndexKey()), &lastLogIndexValue);
-                CR_ASSERT_E(cr::raft::StoreException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
+                CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
                 lastLogIndex_ = !lastLogIndexValue.empty() ? stringToUint64(lastLogIndexValue) : 0;
 
                 std::string lastLogTermValue;
                 status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogTermKey()), &lastLogTermValue);
-                CR_ASSERT_E(cr::raft::StoreException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
+                CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
                 lastLogTerm_ = !lastLogTermValue.empty() ? stringToUint64(lastLogTermValue) : 0;
             }
 
@@ -92,7 +88,7 @@ namespace cr
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
-                CR_ASSERT_E(cr::raft::StoreException, db != nullptr && column != nullptr)(column.get())(column.get());
+                CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
 
                 auto lastLogIndex = lastLogIndex_;
                 auto lastLogTerm = lastLogTerm_;
@@ -111,7 +107,7 @@ namespace cr
                 rocksdb::WriteOptions writeOptions;
                 writeOptions.sync = sync_;
                 auto status = db->Write(writeOptions, &batch);
-                CR_ASSERT_E(cr::raft::StoreException, status.ok());
+                CR_ASSERT_E(cr::raft::IOException, status.ok());
 
                 lastLogIndex_ = lastLogIndex;
                 lastLogTerm_ = lastLogTerm;
@@ -121,7 +117,7 @@ namespace cr
             {
                 auto db = db_.lock();
                 auto column = column_.lock(); 
-                CR_ASSERT_E(cr::raft::StoreException, db != nullptr && column != nullptr)(column.get())(column.get());
+                CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
                 CR_ASSERT_E(cr::raft::ArgumentException, startIndex >= 1 && startIndex <= lastLogIndex_)(startIndex)(lastLogTerm_);
 
                 auto lastLogIndex = startIndex - 1;
@@ -130,7 +126,7 @@ namespace cr
                 {
                     std::string lastLogTermValue;
                     auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogTermKey(lastLogIndex)), &lastLogTermValue);
-                    CR_ASSERT_E(cr::raft::StoreException, status.ok())(status.ok());
+                    CR_ASSERT_E(cr::raft::IOException, status.ok())(status.ok());
                     lastLogTerm = stringToUint64(lastLogTermValue);
                 }
 
@@ -146,7 +142,7 @@ namespace cr
                 rocksdb::WriteOptions writeOptions;
                 writeOptions.sync = sync_;
                 auto status = db->Write(writeOptions, &batch);
-                CR_ASSERT_E(cr::raft::StoreException, status.ok());
+                CR_ASSERT_E(cr::raft::IOException, status.ok());
 
                 lastLogIndex_ = lastLogIndex;
                 lastLogTerm_ = lastLogTerm;
@@ -156,7 +152,7 @@ namespace cr
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
-                CR_ASSERT_E(cr::raft::StoreException, db != nullptr && column != nullptr)(column.get())(column.get());
+                CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
                 CR_ASSERT_E(cr::raft::ArgumentException, startIndex >= 1 && startIndex <= stopIndex && stopIndex <= lastLogIndex_)(startIndex)(stopIndex)(lastLogIndex_);
 
                 std::vector<Entry> results;
@@ -165,12 +161,12 @@ namespace cr
                     auto logTerm = lastLogTerm_;
                     std::string logTermValue;
                     auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogTermKey(logIndex)), &logTermValue);
-                    CR_ASSERT_E(cr::raft::StoreException, status.ok())(status.ok());
+                    CR_ASSERT_E(cr::raft::IOException, status.ok())(status.ok());
                     logTerm = stringToUint64(logTermValue);
 
                     std::string logValue;
                     status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &logValue);
-                    CR_ASSERT_E(cr::raft::StoreException, status.ok());
+                    CR_ASSERT_E(cr::raft::IOException, status.ok());
                     
                     results.emplace_back(logIndex, logTerm, std::move(logValue));
                 }
@@ -182,14 +178,14 @@ namespace cr
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
-                CR_ASSERT_E(cr::raft::StoreException, db != nullptr && column != nullptr)(column.get())(column.get());
+                CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
                 CR_ASSERT_E(cr::raft::ArgumentException, index >= 1 && index <= lastLogIndex_)(index)(lastLogIndex_);
 
                 if (index != lastLogIndex_)
                 {
                     std::string logTermValue;
                     auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogTermKey(index)), &logTermValue);
-                    CR_ASSERT_E(cr::raft::StoreException, status.ok())(status.ok());
+                    CR_ASSERT_E(cr::raft::IOException, status.ok())(status.ok());
                     return stringToUint64(logTermValue);
                 }
                 return lastLogTerm_;
@@ -233,7 +229,7 @@ namespace cr
 
             std::vector<std::string> columnFamilyNames;
             auto status = rocksdb::DB::ListColumnFamilies(options, path, &columnFamilyNames);
-            CR_ASSERT_E(cr::raft::StateException, status.ok() || status.IsIOError());
+            CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsIOError());
             std::vector<rocksdb::ColumnFamilyDescriptor> existsColumnFamilies;
             for (const auto& columnFamilyName : columnFamilyNames)
             {
@@ -247,7 +243,7 @@ namespace cr
             rocksdb::DB* db = nullptr;
             std::vector<rocksdb::ColumnFamilyHandle*> columnFamilyHandlers;
             status = rocksdb::DB::Open(options, path, existsColumnFamilies, &columnFamilyHandlers, &db);
-            CR_ASSERT_E(cr::raft::StateException, status.ok());
+            CR_ASSERT_E(cr::raft::IOException, status.ok());
             impl_->db.reset(db);
             for (auto columnFamilyHandler : columnFamilyHandlers)
             {
@@ -270,7 +266,7 @@ namespace cr
                 {
                     rocksdb::ColumnFamilyHandle* column = nullptr;
                     auto status = impl_->db->CreateColumnFamily(impl_->options, columnFamilyName, &column);
-                    CR_ASSERT_E(cr::raft::StateException, status.ok());
+                    CR_ASSERT_E(cr::raft::IOException, status.ok());
                     columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, std::shared_ptr<rocksdb::ColumnFamilyHandle>(column))).first;
                 }
                 auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second, impl_->sync);
