@@ -42,7 +42,8 @@ namespace cr
                     .setEexcuteCallback(std::bind(&LeaderStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
                     .setElectionTimeout(100, 200)
                     .setHeartbeatTimeout(50)
-                    .setMaxEntriesNum(2)
+                    .setMaxWaitEntriesNum(8)
+                    .setMaxPacketEntriesNum(2)
                     .setMaxPacketSize(1024)
                     .setRandomSeed(0)
                     .build();

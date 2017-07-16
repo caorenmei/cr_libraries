@@ -113,34 +113,48 @@ namespace cr
                 }
                 // 匹配日志
                 auto lastLogIndex = engine.getStorage()->getLastIndex();
-                if (request.prev_log_index() < lastLogIndex)
+                if (request.prev_log_index() != 0 && request.prev_log_index() <= lastLogIndex)
                 {
-                    lastLogIndex = request.prev_log_index();
-                    engine.getStorage()->remove(lastLogIndex + 1);
+                    auto prevLogTerm = engine.getStorage()->getTermByIndex(request.prev_log_index());
+                    // 起始日志不匹配
+                    if (request.prev_log_term() != prevLogTerm)
+                    {
+                        lastLogIndex = request.prev_log_index() - 1;
+                        engine.getStorage()->remove(lastLogIndex + 1);
+                    }
                 }
-                auto lastLogTerm = engine.getStorage()->getLastTerm();
-                if (request.prev_log_index() == lastLogIndex && lastLogIndex != 0 && request.prev_log_term() != lastLogTerm)
+                // 匹配附加的日志
+                auto leaderLastLogIndex = request.prev_log_index() + request.entries_size();
+                auto stopLogIndex = std::min(leaderLastLogIndex, lastLogIndex);
+                int leaderEntriesIndex = 0;
+                for (auto logIndex = request.prev_log_index() + 1; logIndex <= stopLogIndex; ++logIndex, ++leaderEntriesIndex)
                 {
-                    engine.getStorage()->remove(lastLogIndex);
-                    lastLogIndex = engine.getStorage()->getLastIndex();
-                    lastLogTerm = engine.getStorage()->getLastTerm();
+                    auto logTerm = engine.getStorage()->getTermByIndex(logIndex);
+                    if (request.entries(leaderEntriesIndex).term() != logTerm)
+                    {
+                        lastLogIndex = logIndex - 1;
+                        engine.getStorage()->remove(lastLogIndex + 1);
+                        break;
+                    }
                 }
                 // 日志匹配，则应用到状态机
-                if (request.prev_log_index() == lastLogIndex && request.prev_log_term() == lastLogTerm)
+                if (request.prev_log_index() + leaderEntriesIndex == lastLogIndex && leaderEntriesIndex < request.entries_size())
                 {
                     // 追加日志
-                    auto logIndex = request.prev_log_index();
-                    std::vector<pb::Entry> entries(request.entries().begin(), request.entries().end());
+                    std::vector<pb::Entry> entries(request.entries().begin() + leaderEntriesIndex, request.entries().end());
                     engine.getStorage()->append(lastLogIndex + 1, entries);
                     lastLogIndex = engine.getStorage()->getLastIndex();
-                    // 更新已提交日志索引
+                }
+                // 日志匹配,更新已提交日志索引
+                if (request.prev_log_index() + request.entries_size() <= lastLogIndex)
+                {
                     auto commitIndex = engine.getCommitIndex();
-                    if (request.leader_commit() > commitIndex && commitIndex < lastLogIndex)
+                    if (request.leader_commit() > commitIndex && commitIndex < leaderLastLogIndex)
                     {
-                        commitIndex = std::min(request.leader_commit(), lastLogIndex);
+                        commitIndex = std::min(request.leader_commit(), leaderLastLogIndex);
                         engine.setCommitIndex(commitIndex);
                     }
-                    // ok了
+                    // 日志追加完毕
                     success = true;
                 }
             }

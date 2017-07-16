@@ -26,7 +26,7 @@ namespace cr
 
             virtual void remove(std::uint64_t startIndex) = 0;
 
-            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
+            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex, std::uint64_t maxPacketLength) = 0;
 
             virtual std::uint64_t getTermByIndex(std::uint64_t index) = 0;
 

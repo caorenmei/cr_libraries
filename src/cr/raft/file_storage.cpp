@@ -150,7 +150,7 @@ namespace cr
                 lastLogTerm_ = lastLogTerm;
             }
 
-            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override
+            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex, std::uint64_t maxPacketLength) override
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
@@ -159,12 +159,15 @@ namespace cr
 
                 std::vector<pb::Entry> results;
                 results.reserve(static_cast<std::size_t>(stopIndex - startIndex + 1));
-                for (auto logIndex = startIndex; logIndex <= stopIndex; ++logIndex)
+                maxPacketLength = std::max<std::uint64_t>(maxPacketLength, 1);
+                std::uint64_t packetLength = 0;
+                for (auto logIndex = startIndex; logIndex <= stopIndex && packetLength < maxPacketLength; ++logIndex)
                 {
                     results.emplace_back();
                     std::string entryData;
                     auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &entryData);
                     CR_ASSERT_E(cr::raft::IOException, status.ok() && results.back().ParseFromString(entryData))(status.ok())(entryData.size());
+                    packetLength = packetLength + entryData.size();
                 }
 
                 return results;

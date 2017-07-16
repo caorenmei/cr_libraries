@@ -46,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(append, LogStoragePath)
         cr::raft::FileStorage fileStorage("test_log_path");
         auto storage = fileStorage.getStorage(1);
 
-        auto getEntries = storage->getEntries(1, 2);
+        auto getEntries = storage->getEntries(1, 2, std::numeric_limits<std::uint64_t>::max());
         BOOST_CHECK(cr::from(getEntries).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2" })));
     }
 }
@@ -81,21 +81,21 @@ BOOST_FIXTURE_TEST_CASE(getEntries, LogStoragePath)
         cr::raft::FileStorage fileStorage("test_log_path");
         auto storage = fileStorage.getStorage(1);
 
-        BOOST_CHECK_THROW(storage->getEntries(0, 0), cr::raft::ArgumentException);
-        BOOST_CHECK_THROW(storage->getEntries(0, 1), cr::raft::ArgumentException);
+        BOOST_CHECK_THROW(storage->getEntries(0, 0, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+        BOOST_CHECK_THROW(storage->getEntries(0, 1, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
 
         storage->append(1, { makeEntry(1, "1") });
-        BOOST_CHECK_THROW(storage->getEntries(0, 0), cr::raft::ArgumentException);
-        BOOST_CHECK_THROW(storage->getEntries(0, 1), cr::raft::ArgumentException);
-        BOOST_REQUIRE_NO_THROW(storage->getEntries(1, 1));
-        BOOST_CHECK_THROW(storage->getEntries(1, 2), cr::raft::ArgumentException);
+        BOOST_CHECK_THROW(storage->getEntries(0, 0, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+        BOOST_CHECK_THROW(storage->getEntries(0, 1, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+        BOOST_REQUIRE_NO_THROW(storage->getEntries(1, 1, std::numeric_limits<std::uint64_t>::max()));
+        BOOST_CHECK_THROW(storage->getEntries(1, 2, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
     }
     {
         cr::raft::FileStorage fileStorage("test_log_path");
         auto storage = fileStorage.getStorage(1);
 
-        BOOST_REQUIRE_NO_THROW(storage->getEntries(1, 1));
-        BOOST_CHECK_THROW(storage->getEntries(1, 2), cr::raft::ArgumentException);
+        BOOST_REQUIRE_NO_THROW(storage->getEntries(1, 1, std::numeric_limits<std::uint64_t>::max()));
+        BOOST_CHECK_THROW(storage->getEntries(1, 2, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
     }
 }
 

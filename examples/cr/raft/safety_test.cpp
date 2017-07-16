@@ -27,7 +27,8 @@ public:
             .setEexcuteCallback(std::bind(&IncreStateMachine::onExecute, this, std::placeholders::_1, std::placeholders::_2))
             .setElectionTimeout(200, 300)
             .setHeartbeatTimeout(50)
-            .setMaxEntriesNum(128)
+            .setMaxWaitEntriesNum(256)
+            .setMaxPacketEntriesNum(128)
             .setMaxPacketSize(1024 * 1024)
             .setRandomSeed(randomSeed)
             .build();
@@ -52,7 +53,7 @@ public:
             std::uint64_t value = 0;
             if (lastLogIndex != 0)
             {
-                auto entries = storage_->getEntries(lastLogIndex, lastLogIndex);
+                auto entries = storage_->getEntries(lastLogIndex, lastLogIndex, std::numeric_limits<std::uint64_t>::max());
                 value = boost::lexical_cast<std::uint64_t>(entries[0].value());
             }
             raft_->execute({ boost::lexical_cast<std::string>(value + 1) });

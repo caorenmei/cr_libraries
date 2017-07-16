@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(append)
     BOOST_CHECK_THROW(storage.append(3, { makeEntry(1, "3") }), cr::raft::ArgumentException);
     BOOST_CHECK_NO_THROW(storage.append(2, { makeEntry(1, "2") }));
 
-    auto getEntries = storage.getEntries(1, 2);
+    auto getEntries = storage.getEntries(1, 2, std::numeric_limits<std::uint64_t>::max());
     BOOST_CHECK(cr::from(getEntries).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2" })));
 }
 
@@ -50,14 +50,14 @@ BOOST_AUTO_TEST_CASE(getEntries)
 {
     cr::raft::MemStorage storage;
 
-    BOOST_CHECK_THROW(storage.getEntries(0, 0), cr::raft::ArgumentException);
-    BOOST_CHECK_THROW(storage.getEntries(0, 1), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(storage.getEntries(0, 0, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(storage.getEntries(0, 1, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
 
     storage.append(1, { makeEntry(1, "1") });
-    BOOST_CHECK_THROW(storage.getEntries(0, 0), cr::raft::ArgumentException);
-    BOOST_CHECK_THROW(storage.getEntries(0, 1), cr::raft::ArgumentException);
-    BOOST_REQUIRE_NO_THROW(storage.getEntries(1, 1));
-    BOOST_CHECK_THROW(storage.getEntries(1, 2), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(storage.getEntries(0, 0, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+    BOOST_CHECK_THROW(storage.getEntries(0, 1, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
+    BOOST_REQUIRE_NO_THROW(storage.getEntries(1, 1, std::numeric_limits<std::uint64_t>::max()));
+    BOOST_CHECK_THROW(storage.getEntries(1, 2, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
 }
 
 BOOST_AUTO_TEST_CASE(getTermByIndex)

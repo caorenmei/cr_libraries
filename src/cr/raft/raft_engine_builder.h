@@ -71,11 +71,17 @@ namespace cr
             // 获取心跳超时时间，毫秒
             std::uint64_t getHeatbeatTimeout() const;
 
+            // 设置传输等待最大日志条目
+            RaftEngineBuilder& setMaxWaitEntriesNum(std::uint64_t maxWaitEntriesNum);
+
+            // 获取传输等待最大日志条目
+            std::uint64_t getMaxWaitEntriesNum() const;
+
             // 设置一次传递的最大日志条目
-            RaftEngineBuilder& setMaxEntriesNum(std::uint64_t maxEntriesNum);
+            RaftEngineBuilder& setMaxPacketEntriesNum(std::uint64_t maxPacketEntriesNum);
 
             // 获取一次传递的最大日志条目
-            std::uint64_t getMaxEntriesNum() const;
+            std::uint64_t getMaxPacketEntriesNum() const;
 
             // 设置一次传递的最大日志大小
             RaftEngineBuilder& setMaxPacketSize(std::uint64_t maxPacketSize);
@@ -104,8 +110,10 @@ namespace cr
             std::uint64_t maxElectionTimeout_;
             // 心跳超时时间，毫秒
             std::uint64_t heartbeatTimeout_;
+            // 等待应答的最大日志条目
+            std::uint64_t maxWaitEntriesNum_;
             // 一次传递的最大日志条目数目
-            std::uint64_t maxEntriesNum_;
+            std::uint64_t maxPacketEntriesNum_;
             // 一次传递的最大日志大小
             std::uint64_t maxPacketLength_;
         };

@@ -24,7 +24,7 @@ namespace cr
 
             virtual void remove(std::uint64_t startIndex) override;
 
-            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override;
+            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex, std::uint64_t maxPacketLength) override;
 
             virtual std::uint64_t getTermByIndex(std::uint64_t index) override;
 

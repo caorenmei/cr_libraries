@@ -63,7 +63,10 @@ namespace cr
             std::uint64_t getHeatbeatTimeout() const;
 
             // 最大传输日志数
-            std::uint64_t getMaxEntriesNum() const;
+            std::uint64_t getMaxWaitEntriesNum() const;
+
+            // 一次最大传输日志数
+            std::uint64_t getMaxPacketEntriesNum() const;
 
             // 最大传输包大小
             std::uint64_t getMaxPacketLength() const;
@@ -152,8 +155,9 @@ namespace cr
             std::default_random_engine random_;
             std::uint64_t minElectionTimeout_;
             std::uint64_t maxElectionTimeout_;
-            std::uint64_t heatbeatTimeout_;
-            std::uint64_t maxEntriesNum_;
+            std::uint64_t heatbeatTimeout_; 
+            std::uint64_t maxWaitEntriesNum_;
+            std::uint64_t maxPacketEntriesNum_;
             std::uint64_t maxPacketLength_;
             
             std::shared_ptr<Storage> storage_;

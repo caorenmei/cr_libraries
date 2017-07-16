@@ -412,7 +412,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     engine->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
-    BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
+    BOOST_CHECK(cr::from(storage->getEntries(1, 5, std::numeric_limits<std::uint64_t>::max())).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
     messages.clear();
 }
 

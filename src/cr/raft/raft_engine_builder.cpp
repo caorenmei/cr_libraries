@@ -12,7 +12,8 @@ namespace cr
             maxElectionTimeout_(200),
             heartbeatTimeout_(50),
             randomSeed_(0),
-            maxEntriesNum_(1),
+            maxWaitEntriesNum_(1),
+            maxPacketEntriesNum_(1),
             maxPacketLength_(1)
         {}
 
@@ -102,15 +103,26 @@ namespace cr
             return heartbeatTimeout_;
         }
 
-        RaftEngineBuilder& RaftEngineBuilder::setMaxEntriesNum(std::uint64_t maxEntriesNum)
+        RaftEngineBuilder& RaftEngineBuilder::setMaxWaitEntriesNum(std::uint64_t maxWaitEntriesNum)
         {
-            maxEntriesNum_ = maxEntriesNum;
+            maxWaitEntriesNum_ = maxWaitEntriesNum;
             return *this;
         }
 
-        std::uint64_t RaftEngineBuilder::getMaxEntriesNum() const
+        std::uint64_t RaftEngineBuilder::getMaxWaitEntriesNum() const
         {
-            return maxEntriesNum_;
+            return maxWaitEntriesNum_;
+        }
+
+        RaftEngineBuilder& RaftEngineBuilder::setMaxPacketEntriesNum(std::uint64_t maxPacketEntriesNum)
+        {
+            maxPacketEntriesNum_ = maxPacketEntriesNum;
+            return *this;
+        }
+
+        std::uint64_t RaftEngineBuilder::getMaxPacketEntriesNum() const
+        {
+            return maxPacketEntriesNum_;
         }
 
         RaftEngineBuilder& RaftEngineBuilder::setMaxPacketSize(std::uint64_t maxPacketSize)

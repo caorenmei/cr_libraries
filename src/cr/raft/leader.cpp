@@ -171,7 +171,7 @@ namespace cr
             std::uint64_t nextUpdateTime = nowTime + engine.getHeatbeatTimeout();
             // 更新节点
             auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto maxEntriesNum = engine.getMaxEntriesNum();
+            auto maxWaitEntriesNum = engine.getMaxWaitEntriesNum();
             for (auto&& node : nodes_)
             {
                 bool needAppendLog = updateCommitIndex;
@@ -181,7 +181,7 @@ namespace cr
                     needAppendLog = true;
                 }
                 // 如果有日志待复制
-                else if (node.second.nextLogIndex - node.second.replyLogIndex <= maxEntriesNum && node.second.nextLogIndex <= lastLogIndex)
+                else if (node.second.nextLogIndex - node.second.replyLogIndex <= maxWaitEntriesNum && node.second.nextLogIndex <= lastLogIndex)
                 {
                     needAppendLog = true;
                 }
@@ -217,16 +217,17 @@ namespace cr
             request.set_leader_commit(commitIndex);
 
             auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto maxEntriesNum = std::max(node.nextLogIndex - node.replyLogIndex, engine.getMaxEntriesNum());
-            auto maxPacketLenth = engine.getMaxPacketLength();
-
-            decltype(maxPacketLenth) packetLength = 0;
-            while ((node.nextLogIndex <= lastLogIndex) && (node.nextLogIndex - node.replyLogIndex <= maxEntriesNum) && (packetLength < maxPacketLenth))
+            if (node.nextLogIndex <= lastLogIndex)
             {
-                auto entries = engine.getStorage()->getEntries(node.nextLogIndex, node.nextLogIndex);
-                node.nextLogIndex = node.nextLogIndex + 1;
-                packetLength += entries[0].value().size();
-                *request.add_entries() = std::move(entries[0]);
+                auto stopLogIndex = std::min(lastLogIndex, node.nextLogIndex + engine.getMaxPacketEntriesNum() - 1);
+                stopLogIndex = std::min(stopLogIndex, node.replyLogIndex + engine.getMaxWaitEntriesNum());
+                stopLogIndex = std::max(stopLogIndex, node.nextLogIndex);
+                auto entries = engine.getStorage()->getEntries(node.nextLogIndex, stopLogIndex, engine.getMaxPacketLength());
+                for (auto& entry : entries)
+                {
+                    *request.add_entries() = std::move(entry);
+                }
+                node.nextLogIndex = node.nextLogIndex + entries.size();
             }
 
             outMessages.push_back(std::move(raftMsg));

@@ -19,7 +19,8 @@ namespace cr
             minElectionTimeout_(builder.getMinElectionTimeout()),
             maxElectionTimeout_(builder.getMaxElectionTimeout()),
             heatbeatTimeout_(builder.getHeatbeatTimeout()),
-            maxEntriesNum_(builder.getMaxEntriesNum()),
+            maxWaitEntriesNum_(builder.getMaxWaitEntriesNum()),
+            maxPacketEntriesNum_(builder.getMaxPacketEntriesNum()),
             maxPacketLength_(builder.getMaxPacketLength()), 
             storage_(builder.getStorage()),
             executable_(builder.getEexcuteCallback()),
@@ -37,7 +38,7 @@ namespace cr
             // 心跳不能大于选举超时时间
             CR_ASSERT_E(ArgumentException, heatbeatTimeout_ != 0 && heatbeatTimeout_ <= minElectionTimeout_)(heatbeatTimeout_)(minElectionTimeout_);
             // 日志复制窗口不能0
-            CR_ASSERT_E(ArgumentException, maxEntriesNum_ >= 1)(maxEntriesNum_);
+            CR_ASSERT_E(ArgumentException, maxPacketEntriesNum_ >= 1)(maxPacketEntriesNum_);
             // 最大数据大小不能为0
             CR_ASSERT_E(ArgumentException, maxPacketLength_ >= 1)(maxPacketLength_);
             // 日志存储不能为null
@@ -68,9 +69,14 @@ namespace cr
             return heatbeatTimeout_;
         }
 
-        std::uint64_t RaftEngine::getMaxEntriesNum() const
+        std::uint64_t RaftEngine::getMaxWaitEntriesNum() const
         {
-            return maxEntriesNum_;
+            return maxWaitEntriesNum_;
+        }
+
+        std::uint64_t RaftEngine::getMaxPacketEntriesNum() const
+        {
+            return maxPacketEntriesNum_;
         }
 
         std::uint64_t RaftEngine::getMaxPacketLength() const
@@ -254,13 +260,13 @@ namespace cr
         {
             auto nextApplied = std::min(lastApplied_ + 10, commitIndex_);
             auto logIndex = lastApplied_ + 1;
-            auto getEntries = storage_->getEntries(logIndex, nextApplied);
-            for (auto&& entry : getEntries)
+            auto entries = storage_->getEntries(logIndex, nextApplied, std::numeric_limits<std::uint64_t>::max());
+            for (auto&& entry : entries)
             {
                 executable_(logIndex, entry.value());
                 logIndex = logIndex + 1;
             }
-            lastApplied_ = nextApplied;
+            lastApplied_ = lastApplied_ + entries.size();
         }
 
         void RaftEngine::setVotedFor(boost::optional<std::uint64_t> voteFor)

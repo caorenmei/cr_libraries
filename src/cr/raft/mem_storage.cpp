@@ -31,10 +31,21 @@ namespace cr
             entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
         }
 
-        std::vector<pb::Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex)
+        std::vector<pb::Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex, std::uint64_t maxPacketLength)
         {
-            CR_ASSERT_E(cr::raft::ArgumentException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= getLastIndex())(startIndex)(stopIndex)(getLastIndex());
-            return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
+            auto lastLogIndex = getLastIndex();
+            CR_ASSERT_E(cr::raft::ArgumentException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= lastLogIndex)(startIndex)(stopIndex)(lastLogIndex);
+            std::vector<pb::Entry> results;
+            results.reserve(static_cast<std::size_t>(stopIndex - startIndex + 1));
+            maxPacketLength = std::max<std::uint64_t>(maxPacketLength, 1);
+            std::uint64_t packetLength = 0;
+            for (auto logIndex = startIndex; logIndex <= stopIndex && packetLength < maxPacketLength; ++logIndex)
+            {
+                const auto& entry = entries_[static_cast<std::size_t>(logIndex - 1)];
+                results.emplace_back(entry);
+                packetLength += entry.ByteSize();
+            }
+            return results;
         }
 
         std::uint64_t MemStorage::getTermByIndex(std::uint64_t index)
