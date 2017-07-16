@@ -1,4 +1,5 @@
 ﻿
+#include <iostream>
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
@@ -10,11 +11,11 @@
 #include <cr/raft/mem_storage.h>
 
 
-class SafetyTest
+class IncreStateMachine
 {
 public:
 
-    SafetyTest(std::uint64_t nodeId, std::shared_ptr<cr::raft::Storage> storage, std::vector<std::uint64_t> nodeIds, std::size_t randomSeed)
+    IncreStateMachine(std::uint64_t nodeId, std::shared_ptr<cr::raft::Storage> storage, std::vector<std::uint64_t> nodeIds, std::size_t randomSeed)
         : storage_(storage),
         value_(0)
     {
@@ -23,7 +24,7 @@ public:
         raft_ = builder.setNodeId(nodeId)
             .setBuddyNodeIds(nodeIds)
             .setStorage(storage)
-            .setEexcuteCallback(std::bind(&SafetyTest::onExecute, this, std::placeholders::_1, std::placeholders::_2))
+            .setEexcuteCallback(std::bind(&IncreStateMachine::onExecute, this, std::placeholders::_1, std::placeholders::_2))
             .setElectionTimeout(200, 300)
             .setHeartbeatTimeout(50)
             .setMaxEntriesNum(128)
@@ -33,7 +34,7 @@ public:
         raft_->initialize(0);
     }
 
-    ~SafetyTest()
+    ~IncreStateMachine()
     {}
 
     void onMessage(std::shared_ptr<cr::raft::pb::RaftMsg> message)
@@ -65,66 +66,128 @@ public:
         value_ = intValue;
     }
 
+    const std::shared_ptr<cr::raft::RaftEngine>& getRaft() const
+    {
+        return raft_;
+    }
+
+    std::uint64_t getValue() const
+    {
+        return value_;
+    }
+
 private:
     std::shared_ptr<cr::raft::Storage> storage_;
     std::shared_ptr<cr::raft::RaftEngine> raft_;
     std::uint64_t value_;
 };
 
-int main(int argc, char* argv[])
+class RaftSafetyTest
 {
-    std::default_random_engine random;
-    std::bernoulli_distribution lostDistribution(0.1);
-    std::bernoulli_distribution crashDistribution(0.002);
-    std::uniform_int_distribution<std::size_t> restartPeriod(1, 4);
-    // 5个节点
-    std::vector<std::uint64_t> nodeIds = { 0,1,2,3,4 };
-    std::vector<std::shared_ptr<cr::raft::Storage>> storages;
-    for (auto nodeId : nodeIds)
+public:
+
+    RaftSafetyTest()
+        : lostDistribution(0.001),
+        crashDistribution(0.0001),
+        restartPeriod(1, 4),
+        nodeIds({ 0,1,2,3,4 }),
+        nowTime(0)
     {
-        storages.push_back(std::make_shared<cr::raft::MemStorage>());
-    }
-    std::vector <std::pair<std::size_t, std::shared_ptr<SafetyTest>>> tests;
-    for (auto nodeId : nodeIds)
-    {
-        tests.emplace_back(1, nullptr);
-    }
-    std::uint64_t nowTime = 0;
-    std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>> messages;
-    for (std::size_t i = 0; i != 10 * 10000; ++i)
-    {
-        nowTime = nowTime + 10;
-        // crash 恢复
         for (auto nodeId : nodeIds)
         {
-            if (tests[nodeId].second == nullptr && --tests[nodeId].first == 0)
+            storages.push_back(std::make_shared<cr::raft::MemStorage>());
+            logMatchingIndexs.push_back(0);
+        }
+        for (auto nodeId : nodeIds)
+        {
+            stateMachines.emplace_back(1, nullptr);
+        }
+    }
+
+    void update()
+    {
+        nowTime = nowTime + 10;
+        crashRestart();
+        dispatchMessage();
+        stateMachineUpdate();
+        ensureElectionSafety();
+        packetLost();
+        stateMachineCrash();
+    }
+
+private:
+
+    // crash 恢复
+    void crashRestart()
+    {
+        for (auto nodeId : nodeIds)
+        {
+            if (stateMachines[nodeId].second == nullptr && --stateMachines[nodeId].first == 0)
             {
-                tests[nodeId].second = std::make_shared<SafetyTest>(nodeId, storages[nodeId], nodeIds, random());
+                stateMachines[nodeId].second = std::make_shared<IncreStateMachine>(nodeId, storages[nodeId], nodeIds, random());
             }
         }
-        // 派发消息
+    }
+
+    // 派发消息
+    void dispatchMessage()
+    {
         for (auto&& message : messages)
         {
             if (message != nullptr)
             {
-                const auto& test = tests[message->dest_node_id()].second;
-                if (test != nullptr && message != nullptr)
+                auto destNodeId = message->dest_node_id();
+                if (stateMachines[destNodeId].second != nullptr)
                 {
-                    test->onMessage(std::move(message));
+                    stateMachines[destNodeId].second->onMessage(std::move(message));
                 }
             }
         }
         messages.clear();
-        // 驱动raft
+    }
+
+    // 驱动raft
+    void stateMachineUpdate()
+    {
         for (auto nodeId : nodeIds)
         {
-            const auto& test = tests[nodeId].second;
-            if (test != nullptr)
+            if (stateMachines[nodeId].second != nullptr)
             {
-                test->update(nowTime, messages);
+                stateMachines[nodeId].second->update(nowTime, messages);
             }
         }
-        // 丢包
+    }
+
+    // 选举安全特性
+    void ensureElectionSafety()
+    {
+        for (const auto& stateMachine : stateMachines)
+        {
+            if (stateMachine.second != nullptr)
+            {
+                if (stateMachine.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
+                {
+                    for (const auto& stateMachine1 : stateMachines)
+                    {
+                        if (stateMachine1.second != stateMachine.second && stateMachine1.second != nullptr && stateMachine1.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
+                        {
+                            CR_ASSERT(stateMachine1.second->getRaft()->getCurrentTerm() != stateMachine.second->getRaft()->getCurrentTerm());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 日志匹配
+    void ensureLogMatching()
+    {
+        
+    }
+
+    // 丢包
+    void packetLost()
+    {
         for (auto&& message : messages)
         {
             if (lostDistribution(random))
@@ -132,8 +195,13 @@ int main(int argc, char* argv[])
                 message.reset();
             }
         }
-        // crash
-        for (auto& test : tests)
+        messages.erase(std::remove(messages.begin(), messages.end(), nullptr), messages.end());
+    }
+
+    // crash
+    void stateMachineCrash()
+    {
+        for (auto& test : stateMachines)
         {
             if (test.second && crashDistribution(random))
             {
@@ -143,4 +211,25 @@ int main(int argc, char* argv[])
         }
     }
 
+    std::default_random_engine random;
+    std::bernoulli_distribution lostDistribution;
+    std::bernoulli_distribution crashDistribution;
+    std::uniform_int_distribution<std::size_t> restartPeriod;
+    std::vector<std::uint64_t> nodeIds;
+    std::vector<std::shared_ptr<cr::raft::Storage>> storages;
+    std::vector<std::uint64_t> logMatchingIndexs;
+    std::vector<std::pair<std::size_t, std::shared_ptr<IncreStateMachine>>> tests;
+    std::vector<std::pair<std::size_t, std::shared_ptr<IncreStateMachine>>> stateMachines;
+    std::uint64_t nowTime;
+    std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>> messages;
+};
+
+
+int main(int argc, char* argv[])
+{
+    RaftSafetyTest test;
+    for (std::size_t i = 0; i < 100 * 10000; ++i)
+    {
+        test.update();
+    }
 }
