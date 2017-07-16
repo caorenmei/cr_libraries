@@ -153,7 +153,7 @@ namespace cr
             std::sort(matchLogIndexs_.begin(), matchLogIndexs_.end(), std::greater<std::uint64_t>());
             // 大部分节点都已提交N，则N为已提交日志索引
             auto commitIndexIndex = (1 + nodes_.size()) / 2;
-            return matchLogIndexs_[commitIndexIndex];;
+            return std::min(matchLogIndexs_[commitIndexIndex], lastLogIndex);
         }
 
         std::uint64_t Leader::processAppendEntriesReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
