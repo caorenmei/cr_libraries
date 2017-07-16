@@ -14,7 +14,7 @@ class SafetyTest
 {
 public:
 
-    SafetyTest(std::uint64_t nodeId, std::shared_ptr<cr::raft::Storage> storage, std::vector<std::uint64_t> nodeIds)
+    SafetyTest(std::uint64_t nodeId, std::shared_ptr<cr::raft::Storage> storage, std::vector<std::uint64_t> nodeIds, std::size_t randomSeed)
         : storage_(storage),
         value_(0)
     {
@@ -28,7 +28,7 @@ public:
             .setHeartbeatTimeout(50)
             .setMaxEntriesNum(128)
             .setMaxPacketSize(1024 * 1024)
-            .setRandomSeed(std::random_device()())
+            .setRandomSeed(randomSeed)
             .build();
         raft_->initialize(0);
     }
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
         {
             if (tests[nodeId].second == nullptr && --tests[nodeId].first == 0)
             {
-                tests[nodeId].second = std::make_shared<SafetyTest>(nodeId, storages[nodeId], nodeIds);
+                tests[nodeId].second = std::make_shared<SafetyTest>(nodeId, storages[nodeId], nodeIds, random());
             }
         }
         // 派发消息
