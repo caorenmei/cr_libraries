@@ -130,13 +130,8 @@ namespace cr
                 {
                     // 追加日志
                     auto logIndex = request.prev_log_index();
-                    std::vector<Entry> entries;
-                    for (int i = 0; i != request.entries_size(); ++i)
-                    {
-                        logIndex = logIndex + 1;
-                        entries.emplace_back(logIndex, currentTerm, request.entries(i));
-                    }
-                    engine.getStorage()->append(entries);
+                    std::vector<pb::Entry> entries(request.entries().begin(), request.entries().end());
+                    engine.getStorage()->append(lastLogIndex + 1, entries);
                     lastLogIndex = engine.getStorage()->getLastIndex();
                     // 更新已提交日志索引
                     auto commitIndex = engine.getCommitIndex();

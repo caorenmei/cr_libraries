@@ -13,6 +13,7 @@
 #include <cr/common/assert.h>
 #include <cr/common/throw.h>
 #include <cr/raft/exception.h>
+#include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
@@ -84,21 +85,22 @@ namespace cr
             ~RocksdbStorage()
             {}
 
-            virtual void append(const std::vector<Entry>& entries) override
+            virtual void append(std::uint64_t startIndex, const std::vector<pb::Entry>& entries) override
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
                 CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
 
+                CR_ASSERT_E(cr::raft::ArgumentException, startIndex == lastLogIndex_ + 1)(startIndex)(lastLogIndex_);
                 auto lastLogIndex = lastLogIndex_;
                 auto lastLogTerm = lastLogTerm_;
                 rocksdb::WriteBatch batch;
                 for (auto&& entry : entries)
                 {
-                    CR_ASSERT_E(cr::raft::ArgumentException, entry.getIndex() == lastLogIndex + 1 && entry.getTerm() >= lastLogTerm)(entry.getIndex())(entry.getTerm())(lastLogIndex)(lastLogTerm);
-                    lastLogIndex = entry.getIndex();
-                    batch.Put(column.get(), rocksdb::Slice(getLogValueKey(lastLogIndex)), rocksdb::Slice(entry.getValue()));
-                    lastLogTerm = entry.getTerm();
+                    CR_ASSERT_E(cr::raft::ArgumentException, entry.term() >= lastLogTerm)(entry.term())(lastLogTerm);
+                    lastLogIndex = lastLogIndex + 1;
+                    batch.Put(column.get(), rocksdb::Slice(getLogValueKey(lastLogIndex)), rocksdb::Slice(entry.SerializeAsString()));
+                    lastLogTerm = entry.term();
                     batch.Put(column.get(), rocksdb::Slice(getLogTermKey(lastLogIndex)), rocksdb::Slice(uint64ToString(lastLogTerm)));
                 }
                 batch.Put(column.get(), rocksdb::Slice(getLastLogIndexKey()), rocksdb::Slice(uint64ToString(lastLogIndex)));
@@ -148,27 +150,21 @@ namespace cr
                 lastLogTerm_ = lastLogTerm;
             }
 
-            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override
+            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) override
             {
                 auto db = db_.lock();
                 auto column = column_.lock();
                 CR_ASSERT_E(cr::raft::IOException, db != nullptr && column != nullptr)(column.get())(column.get());
                 CR_ASSERT_E(cr::raft::ArgumentException, startIndex >= 1 && startIndex <= stopIndex && stopIndex <= lastLogIndex_)(startIndex)(stopIndex)(lastLogIndex_);
 
-                std::vector<Entry> results;
+                std::vector<pb::Entry> results;
+                results.reserve(static_cast<std::size_t>(stopIndex - startIndex + 1));
                 for (auto logIndex = startIndex; logIndex <= stopIndex; ++logIndex)
                 {
-                    auto logTerm = lastLogTerm_;
-                    std::string logTermValue;
-                    auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogTermKey(logIndex)), &logTermValue);
-                    CR_ASSERT_E(cr::raft::IOException, status.ok())(status.ok());
-                    logTerm = stringToUint64(logTermValue);
-
-                    std::string logValue;
-                    status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &logValue);
-                    CR_ASSERT_E(cr::raft::IOException, status.ok());
-                    
-                    results.emplace_back(logIndex, logTerm, std::move(logValue));
+                    results.emplace_back();
+                    std::string entryData;
+                    auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &entryData);
+                    CR_ASSERT_E(cr::raft::IOException, status.ok() && results.back().ParseFromString(entryData))(status.ok())(entryData.size());
                 }
 
                 return results;
@@ -267,7 +263,8 @@ namespace cr
                     rocksdb::ColumnFamilyHandle* column = nullptr;
                     auto status = impl_->db->CreateColumnFamily(impl_->options, columnFamilyName, &column);
                     CR_ASSERT_E(cr::raft::IOException, status.ok());
-                    columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, std::shared_ptr<rocksdb::ColumnFamilyHandle>(column))).first;
+                    std::shared_ptr<rocksdb::ColumnFamilyHandle> columnFamily(column);
+                    columnFamilyIter = impl_->columnFamilies.insert(std::make_pair(columnFamilyName, columnFamily)).first;
                 }
                 auto storage = std::make_shared<RocksdbStorage>(impl_->db, columnFamilyIter->second, impl_->sync);
                 instanceIter = impl_->instances.insert(std::make_pair(instanceId, storage)).first;

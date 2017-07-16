@@ -4,18 +4,24 @@
 
 #include <cr/common/assert.h>
 #include <cr/raft/exception.h>
+#include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
     namespace raft
     {
 
-        void MemStorage::append(const std::vector<Entry>& entries)
+        void MemStorage::append(std::uint64_t startIndex, const std::vector<pb::Entry>& entries)
         {
+            std::uint64_t lastIndex = getLastIndex();
+            std::uint64_t lastTerm = getLastTerm();
+            CR_ASSERT_E(cr::raft::ArgumentException, startIndex == lastIndex + 1)(startIndex)(lastIndex);
             for (auto&& entry : entries)
             {
-                CR_ASSERT_E(cr::raft::ArgumentException, entry.getIndex() == getLastIndex() + 1 && entry.getTerm() >= getLastTerm())(entry.getIndex())(entry.getTerm())(getLastIndex())(getLastTerm());
+                CR_ASSERT_E(cr::raft::ArgumentException, entry.term() >= lastTerm)(entry.term())(lastTerm);
                 entries_.push_back(entry);
+                lastIndex = lastIndex + 1;
+                lastTerm = entry.term();
             }
         }
 
@@ -25,7 +31,7 @@ namespace cr
             entries_.erase(entries_.begin() + startIndex - 1, entries_.end());
         }
 
-        std::vector<Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex)
+        std::vector<pb::Entry> MemStorage::getEntries(std::uint64_t startIndex, std::uint64_t stopIndex)
         {
             CR_ASSERT_E(cr::raft::ArgumentException, startIndex >=1 && startIndex <= stopIndex && stopIndex <= getLastIndex())(startIndex)(stopIndex)(getLastIndex());
             return { entries_.begin() + startIndex - 1, entries_.begin() + stopIndex };
@@ -34,7 +40,7 @@ namespace cr
         std::uint64_t MemStorage::getTermByIndex(std::uint64_t index)
         {
             CR_ASSERT_E(cr::raft::ArgumentException, index >= 1 && index <= getLastIndex())(index)(getLastIndex());
-            return entries_[static_cast<std::size_t>(index - 1)].getTerm();
+            return entries_[static_cast<std::size_t>(index - 1)].term();
         }
 
         std::uint64_t MemStorage::getLastIndex()
@@ -44,7 +50,7 @@ namespace cr
 
         std::uint64_t MemStorage::getLastTerm()
         {
-            return !entries_.empty() ? entries_.back().getTerm() : 0;
+            return !entries_.empty() ? entries_.back().term() : 0;
         }
     }
 }

@@ -50,6 +50,14 @@ namespace cr
             ~DebugVisitor()
             {}
 
+            auto makeEntry(std::uint64_t term, std::string value)
+            {
+                cr::raft::pb::Entry entry;
+                entry.set_term(term);
+                entry.set_value(value);
+                return entry;
+            }
+
             auto makeRequestVoteReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
                 std::uint64_t lastLogIndex, std::uint64_t lastLogTerm, std::uint64_t candidateTerm)
             {
@@ -99,7 +107,7 @@ namespace cr
 
                 for (auto&& entry : entries)
                 {
-                    request.add_entries(std::move(entry));
+                    *request.add_entries() = makeEntry(prevLogTerm, entry);
                 }
 
                 return raftMsg;

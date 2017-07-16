@@ -17,8 +17,6 @@ set(cr_raft_SRCS
     ${PROTO_HDRS} ${PROTO_SRCS}
     candidate.h
     candidate.cpp
-    entry.h
-    entry.cpp
     exception.h
     file_storage.h
     file_storage.cpp
@@ -39,7 +37,6 @@ set(cr_raft_SRCS
 
 set(cr_raft_HEADERS
     ${PROTO_HDRS}
-    entry.h
     exception.h
     file_storage.h
     log_storage.h

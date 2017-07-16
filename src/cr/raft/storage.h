@@ -5,12 +5,15 @@
 #include <string>
 #include <vector>
 
-#include <cr/raft/entry.h>
-
 namespace cr
 {
     namespace raft
     {
+        namespace pb
+        {
+            class Entry;
+        }
+
         class Storage
         {
         public:
@@ -19,11 +22,11 @@ namespace cr
 
             virtual ~Storage() = default;
 
-            virtual void append(const std::vector<Entry>& entries) = 0;
+            virtual void append(std::uint64_t startIndex, const std::vector<pb::Entry>& entries) = 0;
 
             virtual void remove(std::uint64_t startIndex) = 0;
 
-            virtual std::vector<Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
+            virtual std::vector<pb::Entry> getEntries(std::uint64_t startIndex, std::uint64_t stopIndex) = 0;
 
             virtual std::uint64_t getTermByIndex(std::uint64_t index) = 0;
 

@@ -70,6 +70,14 @@ namespace cr
                 engine->setCurrentTerm(currentTerm);
             }
 
+            auto makeEntry(std::uint64_t term, std::string value)
+            {
+                pb::Entry entry;
+                entry.set_term(term);
+                entry.set_value(value);
+                return entry;
+            }
+
             auto makeRequestVoteReqMsg(std::uint64_t fromNodeId, std::uint64_t destNodeId,
                 std::uint64_t lastLogIndex, std::uint64_t lastLogTerm, std::uint64_t candidateTerm)
             {
@@ -104,7 +112,7 @@ namespace cr
 
                 for (auto&& entry : entries)
                 {
-                    request.add_entries(std::move(entry));
+                    *request.add_entries() = makeEntry(prevLogTerm, entry);
                 }
 
                 return raftMsg;
@@ -265,8 +273,8 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixt
 // 日志不匹配，投票失败
 BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ { 1, 1, "1" } });
-    storage->append({ { 2, 3, "2" } });
+    storage->append(1, { makeEntry(1, "1") });
+    storage->append(2, { makeEntry(3, "2" ) });
 
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
 
@@ -291,8 +299,8 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
 // 日志匹配，投票成功
 BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ { 1, 1, "1" } });
-    storage->append({ { 2, 3, "2" } });
+    storage->append(1, { makeEntry(1, "1") });
+    storage->append(2, { makeEntry(3, "2") });
 
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 2, 3, 1);
     engine->pushMessageQueue(raftMsg);
@@ -358,8 +366,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
 // 日志不匹配
 BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ { 1,1,"1" } });
-    storage->append({ { 2,2,"2" } });
+    storage->append(1, { makeEntry(1,"1") });
+    storage->append(2, { makeEntry(2,"2") });
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 3, 2);
     engine->pushMessageQueue(raftMsg);
@@ -382,8 +390,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
 // 日志不匹配
 BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ { 1,1,"1" } });
-    storage->append({ { 2,2,"2" } });
+    storage->append(1, { makeEntry(1,"1") });
+    storage->append(2, { makeEntry(2,"2") });
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 2, 2);
     engine->pushMessageQueue(raftMsg);
@@ -395,8 +403,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
 // 追加3条日志
 BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerFixture>)
 {
-    storage->append({ { 1,1,"1" } });
-    storage->append({ { 2,2,"2" } });
+    storage->append(1, { makeEntry(1,"1") });
+    storage->append(2, { makeEntry(2,"2") });
     setCurrentTerm(2);
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 4, 2, 2, { "3", "4", "5" });
@@ -404,7 +412,7 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     engine->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
-    BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.getValue(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
+    BOOST_CHECK(cr::from(storage->getEntries(1, 5)).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
     messages.clear();
 }
 

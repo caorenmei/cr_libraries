@@ -160,14 +160,15 @@ namespace cr
         void RaftEngine::execute(const std::vector<std::string>& values)
         {
             CR_ASSERT_E(StateException, currentState_->getState() == LEADER)(currentState_->getState())(LEADER);
-            std::vector<Entry> entries;
+            std::vector<pb::Entry> entries;
             auto logIndex = storage_->getLastIndex();
             for (auto&& value : values)
             {
-                logIndex = logIndex + 1;
-                entries.emplace_back(logIndex, currentTerm_, value);
+                entries.emplace_back();
+                entries.back().set_term(currentTerm_);
+                entries.back().set_value(std::move(value));
             }
-            storage_->append(entries);
+            storage_->append(logIndex + 1, entries);
         }
 
         std::uint64_t RaftEngine::getNodeId() const
@@ -252,10 +253,12 @@ namespace cr
         void RaftEngine::applyStateMachine()
         {
             auto nextApplied = std::min(lastApplied_ + 10, commitIndex_);
-            auto getEntries = storage_->getEntries(lastApplied_ + 1, nextApplied);
+            auto logIndex = lastApplied_ + 1;
+            auto getEntries = storage_->getEntries(logIndex, nextApplied);
             for (auto&& entry : getEntries)
             {
-                executable_(entry.getIndex(), entry.getValue());
+                executable_(logIndex, entry.value());
+                logIndex = logIndex + 1;
             }
             lastApplied_ = nextApplied;
         }

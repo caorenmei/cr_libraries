@@ -52,7 +52,7 @@ public:
             if (lastLogIndex != 0)
             {
                 auto entries = storage_->getEntries(lastLogIndex, lastLogIndex);
-                value = boost::lexical_cast<std::uint64_t>(entries[0].getValue());
+                value = boost::lexical_cast<std::uint64_t>(entries[0].value());
             }
             raft_->execute({ boost::lexical_cast<std::string>(value + 1) });
         }

@@ -1,6 +1,15 @@
 ﻿syntax = "proto3";
 package cr.raft.pb;
 
+// 日志条目
+message Entry
+{
+    // 任期
+    uint64 term = 1;
+    // 数据
+    bytes value = 2;
+}
+
 // 附加日志
 message AppendEntriesReq
 {
@@ -11,7 +20,7 @@ message AppendEntriesReq
     // prevLogIndex 条目的任期号
     uint64 prev_log_term = 3;
     // 准备存储的日志条目（表示心跳时为空；一次性发送多个是为了提高效率）
-    repeated bytes entries = 4;
+    repeated Entry entries = 4;
     // 领导人已经提交的日志的索引值
     uint64 leader_commit = 5;
 }

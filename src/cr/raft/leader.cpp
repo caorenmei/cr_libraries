@@ -223,10 +223,10 @@ namespace cr
             decltype(maxPacketLenth) packetLength = 0;
             while ((node.nextLogIndex <= lastLogIndex) && (node.nextLogIndex - node.replyLogIndex <= maxEntriesNum) && (packetLength < maxPacketLenth))
             {
-                auto getEntries = engine.getStorage()->getEntries(node.nextLogIndex, node.nextLogIndex);
-                *request.add_entries() = std::move(getEntries[0].getValue());
+                auto entries = engine.getStorage()->getEntries(node.nextLogIndex, node.nextLogIndex);
                 node.nextLogIndex = node.nextLogIndex + 1;
-                packetLength += getEntries[0].getValue().size();
+                packetLength += entries[0].value().size();
+                *request.add_entries() = std::move(entries[0]);
             }
 
             outMessages.push_back(std::move(raftMsg));
