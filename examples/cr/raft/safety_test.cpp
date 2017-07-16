@@ -134,13 +134,10 @@ private:
     {
         for (auto&& message : messages)
         {
-            if (message != nullptr)
+            auto destNodeId = message->dest_node_id();
+            if (stateMachines[destNodeId].second != nullptr)
             {
-                auto destNodeId = message->dest_node_id();
-                if (stateMachines[destNodeId].second != nullptr)
-                {
-                    stateMachines[destNodeId].second->onMessage(std::move(message));
-                }
+                stateMachines[destNodeId].second->onMessage(message);
             }
         }
         messages.clear();
@@ -163,16 +160,13 @@ private:
     {
         for (const auto& stateMachine : stateMachines)
         {
-            if (stateMachine.second != nullptr)
+            if (stateMachine.second != nullptr && stateMachine.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
             {
-                if (stateMachine.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
+                for (const auto& stateMachine1 : stateMachines)
                 {
-                    for (const auto& stateMachine1 : stateMachines)
+                    if (stateMachine1.second != stateMachine.second && stateMachine1.second != nullptr && stateMachine1.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
                     {
-                        if (stateMachine1.second != stateMachine.second && stateMachine1.second != nullptr && stateMachine1.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
-                        {
-                            CR_ASSERT(stateMachine1.second->getRaft()->getCurrentTerm() != stateMachine.second->getRaft()->getCurrentTerm());
-                        }
+                        CR_ASSERT(stateMachine1.second->getRaft()->getCurrentTerm() != stateMachine.second->getRaft()->getCurrentTerm());
                     }
                 }
             }
