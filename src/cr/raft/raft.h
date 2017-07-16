@@ -152,29 +152,49 @@ namespace cr
             // 设置提交日志索引
             void setCommitIndex(std::uint64_t commitIndex);
 
+            // 随机种子
             std::default_random_engine random_;
+            // 最小选举超时时间，毫秒
             std::uint64_t minElectionTimeout_;
+            // 最大选举超时时间，毫秒
             std::uint64_t maxElectionTimeout_;
+            // 心跳超时时间，毫秒
             std::uint64_t heatbeatTimeout_; 
+            // 最大等待应答日志条目
             std::uint64_t maxWaitEntriesNum_;
+            // 一次最多发送日志条目
             std::uint64_t maxPacketEntriesNum_;
+            // 一次最多发送日志大小
             std::uint64_t maxPacketLength_;
             
+            // 日志存储
             std::shared_ptr<Storage> storage_;
+            // 状态机
             std::function<void(std::uint64_t, const std::string&)> executable_;
 
+            // 当前时间
             std::uint64_t nowTime_;
+            // 消息队列
             std::deque<RaftMsgPtr> messages_;
+            // 当前状态
             std::shared_ptr<RaftState> currentState_;
+            // 下一个状态
             State nextState_;
 
+            // 本节点Id
             std::uint64_t nodeId_;
+            // 伙伴节点Id
             std::vector<std::uint64_t> buddyNodeIds_;
+            // 当前投票
             boost::optional<std::uint64_t> votedFor_;
+            // 当前领导者
             boost::optional<std::uint64_t> leaderId_;
 
+            // 当前任期
             std::uint64_t currentTerm_;
+            // 当前提交日志的日志索引
             std::uint64_t commitIndex_;
+            // 最后应用到状态机的日志索引
             std::uint64_t lastApplied_;
         };
     }
