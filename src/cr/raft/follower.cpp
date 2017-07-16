@@ -3,15 +3,15 @@
 #include <tuple>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
     namespace raft
     {
-        Follower::Follower(RaftEngine& engine)
-            : RaftState(engine),
+        Follower::Follower(Raft& raft)
+            : RaftState(raft),
             nextElectionTime_(0)
         {}
 
@@ -20,12 +20,12 @@ namespace cr
 
         int Follower::getState() const
         {
-            return RaftEngine::FOLLOWER;
+            return Raft::FOLLOWER;
         }
 
         void Follower::onEnter(std::shared_ptr<RaftState> prevState)
         {
-            auto nowTime = engine.getNowTime();
+            auto nowTime = raft.getNowTime();
             updateNextElectionTime(nowTime);
         }
 
@@ -40,7 +40,7 @@ namespace cr
             {
                 // 则处理消息
                 processOneMessage(nowTime, outMessages);
-                if (engine.getMessageQueue().empty())
+                if (raft.getMessageQueue().empty())
                 {
                     nextUpdateTime = nextElectionTime_ ;
                 }
@@ -50,16 +50,16 @@ namespace cr
 
         void Follower::updateNextElectionTime(std::uint64_t nowTime)
         {
-            nextElectionTime_ = nowTime + engine.randElectionTimeout();
+            nextElectionTime_ = nowTime + raft.randElectionTimeout();
         }
 
         bool Follower::checkElectionTimeout(std::uint64_t nowTime)
         {
             if (nextElectionTime_ <= nowTime)
             {
-                engine.setNextState(RaftEngine::CANDIDATE);
-                engine.setLeaderId(boost::none);
-                engine.setVotedFor(boost::none);
+                raft.setNextState(Raft::CANDIDATE);
+                raft.setLeaderId(boost::none);
+                raft.setVotedFor(boost::none);
                 return true;
             }
             return false;
@@ -67,10 +67,10 @@ namespace cr
 
         void Follower::processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            if (!engine.getMessageQueue().empty())
+            if (!raft.getMessageQueue().empty())
             {
-                auto message = std::move(engine.getMessageQueue().front());
-                engine.getMessageQueue().pop_front();
+                auto message = std::move(raft.getMessageQueue().front());
+                raft.getMessageQueue().pop_front();
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
@@ -91,12 +91,12 @@ namespace cr
             auto& request = message->append_entries_req();
             bool success = false;
             // 如果比当前任期大，则更新任期
-            auto currentTerm = engine.getCurrentTerm();
+            auto currentTerm = raft.getCurrentTerm();
             if (request.leader_term() > currentTerm)
             {
                 currentTerm = request.leader_term();
-                engine.setCurrentTerm(currentTerm);
-                engine.setVotedFor(boost::none);
+                raft.setCurrentTerm(currentTerm);
+                raft.setVotedFor(boost::none);
             }
             // 任期有效，处理附加日志
             if (request.leader_term() != 0 && request.leader_term() == currentTerm)
@@ -104,23 +104,23 @@ namespace cr
                 // 更新超时时间
                 updateNextElectionTime(nowTime);
                 // 更新领导者
-                auto currentLeaderId = engine.getLeaderId();
+                auto currentLeaderId = raft.getLeaderId();
                 if (!currentLeaderId || leaderId != *currentLeaderId)
                 {
                     currentLeaderId = leaderId;
-                    engine.setVotedFor(boost::none);
-                    engine.setLeaderId(currentLeaderId);
+                    raft.setVotedFor(boost::none);
+                    raft.setLeaderId(currentLeaderId);
                 }
                 // 匹配日志
-                auto lastLogIndex = engine.getStorage()->getLastIndex();
+                auto lastLogIndex = raft.getStorage()->getLastIndex();
                 if (request.prev_log_index() != 0 && request.prev_log_index() <= lastLogIndex)
                 {
-                    auto prevLogTerm = engine.getStorage()->getTermByIndex(request.prev_log_index());
+                    auto prevLogTerm = raft.getStorage()->getTermByIndex(request.prev_log_index());
                     // 起始日志不匹配
                     if (request.prev_log_term() != prevLogTerm)
                     {
                         lastLogIndex = request.prev_log_index() - 1;
-                        engine.getStorage()->remove(lastLogIndex + 1);
+                        raft.getStorage()->remove(lastLogIndex + 1);
                     }
                 }
                 // 匹配附加的日志
@@ -129,11 +129,11 @@ namespace cr
                 int leaderEntriesIndex = 0;
                 for (auto logIndex = request.prev_log_index() + 1; logIndex <= stopLogIndex; ++logIndex, ++leaderEntriesIndex)
                 {
-                    auto logTerm = engine.getStorage()->getTermByIndex(logIndex);
+                    auto logTerm = raft.getStorage()->getTermByIndex(logIndex);
                     if (request.entries(leaderEntriesIndex).term() != logTerm)
                     {
                         lastLogIndex = logIndex - 1;
-                        engine.getStorage()->remove(lastLogIndex + 1);
+                        raft.getStorage()->remove(lastLogIndex + 1);
                         break;
                     }
                 }
@@ -142,17 +142,17 @@ namespace cr
                 {
                     // 追加日志
                     std::vector<pb::Entry> entries(request.entries().begin() + leaderEntriesIndex, request.entries().end());
-                    engine.getStorage()->append(lastLogIndex + 1, entries);
-                    lastLogIndex = engine.getStorage()->getLastIndex();
+                    raft.getStorage()->append(lastLogIndex + 1, entries);
+                    lastLogIndex = raft.getStorage()->getLastIndex();
                 }
                 // 日志匹配,更新已提交日志索引
                 if (request.prev_log_index() + request.entries_size() <= lastLogIndex)
                 {
-                    auto commitIndex = engine.getCommitIndex();
+                    auto commitIndex = raft.getCommitIndex();
                     if (request.leader_commit() > commitIndex && commitIndex < leaderLastLogIndex)
                     {
                         commitIndex = std::min(request.leader_commit(), leaderLastLogIndex);
-                        engine.setCommitIndex(commitIndex);
+                        raft.setCommitIndex(commitIndex);
                     }
                     // 日志追加完毕
                     success = true;
@@ -164,11 +164,11 @@ namespace cr
 
         void Follower::appendEntriesResp(std::uint64_t leaderId, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto currentTerm = raft.getCurrentTerm();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
 
             auto raftMsg = std::make_shared<pb::RaftMsg>();
-            raftMsg->set_from_node_id(engine.getNodeId());
+            raftMsg->set_from_node_id(raft.getNodeId());
             raftMsg->set_dest_node_id(leaderId);
             raftMsg->set_msg_type(pb::RaftMsg::APPEND_ENTRIES_RESP);
 
@@ -183,9 +183,9 @@ namespace cr
         void Follower::onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto candidateId = message->from_node_id();
-            auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto lastLogTerm = engine.getStorage()->getLastTerm();
+            auto currentTerm = raft.getCurrentTerm();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
+            auto lastLogTerm = raft.getStorage()->getLastTerm();
 
             auto& request = message->request_vote_req();
             bool success = false;
@@ -195,14 +195,14 @@ namespace cr
                 if (currentTerm < request.candidate_term())
                 {
                     currentTerm = request.candidate_term();
-                    engine.setCurrentTerm(currentTerm);
-                    engine.setVotedFor(boost::none);
+                    raft.setCurrentTerm(currentTerm);
+                    raft.setVotedFor(boost::none);
                 }
-                auto voteFor = engine.getVotedFor();
+                auto voteFor = raft.getVotedFor();
                 if (!voteFor)
                 {
                     voteFor = candidateId;
-                    engine.setVotedFor(voteFor);
+                    raft.setVotedFor(voteFor);
                 }
                 success = (*voteFor == candidateId);
             }
@@ -213,13 +213,13 @@ namespace cr
         void Follower::requestVoteResp(std::uint64_t candidateId, const pb::RequestVoteReq& request, bool success, std::vector<RaftMsgPtr>& outMessages)
         {
             RaftMsgPtr raftMsg = std::make_shared<pb::RaftMsg>();
-            raftMsg->set_from_node_id(engine.getNodeId());
+            raftMsg->set_from_node_id(raft.getNodeId());
             raftMsg->set_dest_node_id(candidateId);
             raftMsg->set_msg_type(pb::RaftMsg::REQUEST_VOTE_RESP);
 
             auto& response = *(raftMsg->mutable_request_vote_resp());
             response.set_success(success);
-            response.set_follower_term(engine.getCurrentTerm());
+            response.set_follower_term(raft.getCurrentTerm());
 
             outMessages.push_back(std::move(raftMsg));
         }

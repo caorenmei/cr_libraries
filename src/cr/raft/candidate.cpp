@@ -5,7 +5,7 @@
 #include <tuple>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 namespace cr
@@ -13,8 +13,8 @@ namespace cr
     namespace raft
     {
 
-        Candidate::Candidate(RaftEngine& engine)
-            : RaftState(engine),
+        Candidate::Candidate(Raft& raft)
+            : RaftState(raft),
             nextElectionTime_(0)
         {}
 
@@ -23,12 +23,12 @@ namespace cr
 
         int Candidate::getState() const
         {
-            return RaftEngine::CANDIDATE;
+            return Raft::CANDIDATE;
         }
 
         void Candidate::onEnter(std::shared_ptr<RaftState> prevState)
         {
-            nextElectionTime_ = engine.getNowTime();
+            nextElectionTime_ = raft.getNowTime();
         }
 
         void Candidate::onLeave()
@@ -43,7 +43,7 @@ namespace cr
                 if (!processOneMessage(nowTime, outMessages))
                 {
                     // 如果没有转换状态，则等待超时
-                    if (engine.getMessageQueue().empty())
+                    if (raft.getMessageQueue().empty())
                     {
                         nextUpdateTime = nextElectionTime_;
                     }
@@ -54,7 +54,7 @@ namespace cr
 
         void Candidate::updateNextElectionTime(std::uint64_t nowTime)
         {
-            nextElectionTime_ = nowTime + engine.randElectionTimeout();
+            nextElectionTime_ = nowTime + raft.randElectionTimeout();
         }
 
         bool Candidate::checkElectionTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
@@ -65,11 +65,11 @@ namespace cr
                 // 重设超时时间
                 updateNextElectionTime(nowTime);
                 // 增加任期
-                engine.setCurrentTerm(engine.getCurrentTerm() + 1);
+                raft.setCurrentTerm(raft.getCurrentTerm() + 1);
                 // 给自己一票
                 grantNodeIds_.clear();
-                engine.setVotedFor(engine.getNodeId());
-                grantNodeIds_.insert(engine.getNodeId());
+                raft.setVotedFor(raft.getNodeId());
+                grantNodeIds_.insert(raft.getNodeId());
                 // 发送请求投票消息
                 processRequestVoteReq(nowTime, outMessages);
                 // 如果只有一个节点，则选举自己
@@ -80,13 +80,13 @@ namespace cr
 
         void Candidate::processRequestVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto currentTerm = engine.getCurrentTerm();
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto lastLogTerm = engine.getStorage()->getLastTerm();
-            for (auto buddyNodeId : engine.getBuddyNodeIds())
+            auto currentTerm = raft.getCurrentTerm();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
+            auto lastLogTerm = raft.getStorage()->getLastTerm();
+            for (auto buddyNodeId : raft.getBuddyNodeIds())
             {
                 auto raftMsg = std::make_shared<pb::RaftMsg>();
-                raftMsg->set_from_node_id(engine.getNodeId());
+                raftMsg->set_from_node_id(raft.getNodeId());
                 raftMsg->set_dest_node_id(buddyNodeId);
                 raftMsg->set_msg_type(pb::RaftMsg::REQUEST_VOTE_REQ);
 
@@ -101,10 +101,10 @@ namespace cr
 
         bool Candidate::processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            if (!engine.getMessageQueue().empty())
+            if (!raft.getMessageQueue().empty())
             {
-                auto message = std::move(engine.getMessageQueue().front());
-                engine.getMessageQueue().pop_front();
+                auto message = std::move(raft.getMessageQueue().front());
+                raft.getMessageQueue().pop_front();
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
@@ -122,11 +122,11 @@ namespace cr
         {
             auto& request = message->append_entries_req();
             // 如果领导者任期符合,则转换到跟随者
-            if (engine.getCurrentTerm() <= request.leader_term())
+            if (raft.getCurrentTerm() <= request.leader_term())
             {
-                engine.getMessageQueue().push_front(std::move(message));
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setVotedFor(boost::none);
+                raft.getMessageQueue().push_front(std::move(message));
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setVotedFor(boost::none);
                 return true;
             }
             return false;
@@ -136,11 +136,11 @@ namespace cr
         {
             auto& request = message->request_vote_req();
             // 如果对方任期比自己大，则转换到跟随者
-            if (engine.getCurrentTerm() < request.candidate_term())
+            if (raft.getCurrentTerm() < request.candidate_term())
             {
-                engine.getMessageQueue().push_front(std::move(message));
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setVotedFor(boost::none);
+                raft.getMessageQueue().push_front(std::move(message));
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setVotedFor(boost::none);
                 return true;
             }
             return false;
@@ -150,7 +150,7 @@ namespace cr
         {
             auto& response = message->request_vote_resp();
             auto followerId = message->from_node_id();
-            auto currentTerm = engine.getCurrentTerm();
+            auto currentTerm = raft.getCurrentTerm();
             // 是本次投票结果,判断是否选举成功，成功转换到领导者
             if (currentTerm == response.follower_term() && response.success())
             {
@@ -161,9 +161,9 @@ namespace cr
             else if (currentTerm < response.follower_term())
             {
                 currentTerm = response.follower_term();
-                engine.setCurrentTerm(currentTerm);
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setVotedFor(boost::none);
+                raft.setCurrentTerm(currentTerm);
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setVotedFor(boost::none);
                 return true;
             }
             return false;
@@ -172,11 +172,11 @@ namespace cr
         bool Candidate::checkVoteGranted(std::uint64_t nowTime)
         {
             // 超过半数选票，选举成功,转换到领导者
-            if (grantNodeIds_.size() > (1 + engine.getBuddyNodeIds().size()) / 2)
+            if (grantNodeIds_.size() > (1 + raft.getBuddyNodeIds().size()) / 2)
             {
-                engine.setNextState(RaftEngine::LEADER);
-                engine.setLeaderId(engine.getNodeId());
-                engine.setVotedFor(boost::none);
+                raft.setNextState(Raft::LEADER);
+                raft.setLeaderId(raft.getNodeId());
+                raft.setVotedFor(boost::none);
                 return true;
             }
             return false;

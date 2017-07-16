@@ -4,8 +4,8 @@ namespace cr
 {
     namespace raft
     {
-        RaftState::RaftState(RaftEngine& engine)
-            : engine(engine)
+        RaftState::RaftState(Raft& raft)
+            : raft(raft)
         {}
 
         RaftState::~RaftState()

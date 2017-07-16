@@ -5,8 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft_engine.h>
-#include <cr/raft/raft_engine_builder.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 #include <cr/raft/mem_storage.h>
 
@@ -20,7 +19,7 @@ public:
         value_(0)
     {
         nodeIds.erase(std::remove(nodeIds.begin(), nodeIds.end(), nodeId), nodeIds.end());
-        cr::raft::RaftEngineBuilder builder;
+        cr::raft::RaftBuilder builder;
         raft_ = builder.setNodeId(nodeId)
             .setBuddyNodeIds(nodeIds)
             .setStorage(storage)
@@ -47,7 +46,7 @@ public:
     {
         raft_->update(nowTime, messages);
         auto lastLogIndex = storage_->getLastIndex();
-        if (raft_->getCurrentState() == cr::raft::RaftEngine::LEADER
+        if (raft_->getCurrentState() == cr::raft::Raft::LEADER
             && lastLogIndex <= raft_->getCommitIndex() + 20)
         {
             std::uint64_t value = 0;
@@ -67,7 +66,7 @@ public:
         value_ = intValue;
     }
 
-    const std::shared_ptr<cr::raft::RaftEngine>& getRaft() const
+    const std::shared_ptr<cr::raft::Raft>& getRaft() const
     {
         return raft_;
     }
@@ -79,7 +78,7 @@ public:
 
 private:
     std::shared_ptr<cr::raft::Storage> storage_;
-    std::shared_ptr<cr::raft::RaftEngine> raft_;
+    std::shared_ptr<cr::raft::Raft> raft_;
     std::uint64_t value_;
 };
 
@@ -161,11 +160,11 @@ private:
     {
         for (const auto& stateMachine : stateMachines)
         {
-            if (stateMachine.second != nullptr && stateMachine.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
+            if (stateMachine.second != nullptr && stateMachine.second->getRaft()->getCurrentState() == cr::raft::Raft::LEADER)
             {
                 for (const auto& stateMachine1 : stateMachines)
                 {
-                    if (stateMachine1.second != stateMachine.second && stateMachine1.second != nullptr && stateMachine1.second->getRaft()->getCurrentState() == cr::raft::RaftEngine::LEADER)
+                    if (stateMachine1.second != stateMachine.second && stateMachine1.second != nullptr && stateMachine1.second->getRaft()->getCurrentState() == cr::raft::Raft::LEADER)
                     {
                         CR_ASSERT(stateMachine1.second->getRaft()->getCurrentTerm() != stateMachine.second->getRaft()->getCurrentTerm());
                     }

@@ -1,5 +1,5 @@
-﻿#ifndef CR_RAFT_RAFT_ENGINE_H_
-#define CR_RAFT_RAFT_ENGINE_H_
+﻿#ifndef CR_RAFT_RAFT_H_
+#define CR_RAFT_RAFT_H_
 
 #include <cstdint>
 #include <deque>
@@ -9,7 +9,7 @@
 #include <boost/optional.hpp>
 
 #include <cr/raft/storage.h>
-#include <cr/raft/raft_engine_builder.h>
+#include <cr/raft/raft_builder.h>
 
 namespace cr
 {
@@ -27,13 +27,13 @@ namespace cr
         class DebugVisitor;
 
         // Raft 引擎
-        class RaftEngine
+        class Raft
         {
         public:
 
             using RaftMsgPtr = std::shared_ptr<pb::RaftMsg>;
 
-            using Builder = RaftEngineBuilder;
+            using Builder = RaftBuilder;
 
             // 状态
             enum State : int
@@ -46,12 +46,12 @@ namespace cr
                 LEADER,
             };
 
-            explicit RaftEngine(const Builder& builder);
+            explicit Raft(const Builder& builder);
 
-            ~RaftEngine();
+            ~Raft();
 
-            RaftEngine(const RaftEngine&) = delete;
-            RaftEngine& operator=(const RaftEngine&) = delete;
+            Raft(const Raft&) = delete;
+            Raft& operator=(const Raft&) = delete;
 
             // 最小超时时间
             std::uint64_t getMinElectionTimeout() const;

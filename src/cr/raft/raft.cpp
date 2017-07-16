@@ -1,4 +1,4 @@
-﻿#include <cr/raft/raft_engine.h>
+﻿#include <cr/raft/raft.h>
 
 #include <algorithm>
 
@@ -14,7 +14,7 @@ namespace cr
     namespace raft
     {
 
-        RaftEngine::RaftEngine(const Builder& builder)
+        Raft::Raft(const Builder& builder)
             : random_(builder.getRandomSeed()),
             minElectionTimeout_(builder.getMinElectionTimeout()),
             maxElectionTimeout_(builder.getMaxElectionTimeout()),
@@ -51,50 +51,50 @@ namespace cr
             CR_ASSERT_E(ArgumentException, std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId_) == buddyNodeIds_.end());   
         }
 
-        RaftEngine::~RaftEngine()
+        Raft::~Raft()
         {}
 
-        std::uint64_t RaftEngine::getMinElectionTimeout() const
+        std::uint64_t Raft::getMinElectionTimeout() const
         {
             return minElectionTimeout_;
         }
 
-        std::uint64_t RaftEngine::getMaxElectionTimeout() const
+        std::uint64_t Raft::getMaxElectionTimeout() const
         {
             return maxElectionTimeout_;
         }
 
-        std::uint64_t RaftEngine::getHeatbeatTimeout() const
+        std::uint64_t Raft::getHeatbeatTimeout() const
         {
             return heatbeatTimeout_;
         }
 
-        std::uint64_t RaftEngine::getMaxWaitEntriesNum() const
+        std::uint64_t Raft::getMaxWaitEntriesNum() const
         {
             return maxWaitEntriesNum_;
         }
 
-        std::uint64_t RaftEngine::getMaxPacketEntriesNum() const
+        std::uint64_t Raft::getMaxPacketEntriesNum() const
         {
             return maxPacketEntriesNum_;
         }
 
-        std::uint64_t RaftEngine::getMaxPacketLength() const
+        std::uint64_t Raft::getMaxPacketLength() const
         {
             return maxPacketLength_;
         }
 
-        std::uint64_t RaftEngine::getNowTime() const
+        std::uint64_t Raft::getNowTime() const
         {
             return nowTime_;
         }
 
-        RaftEngine::State RaftEngine::getCurrentState() const
+        Raft::State Raft::getCurrentState() const
         {
             return static_cast<State>(currentState_->getState());
         }
 
-        void RaftEngine::initialize(std::uint64_t nowTime)
+        void Raft::initialize(std::uint64_t nowTime)
         {
             CR_ASSERT(nowTime >= 0 && currentState_ == nullptr)(nowTime)(currentState_.get());
             nowTime_ = nowTime;
@@ -102,7 +102,7 @@ namespace cr
             currentState_->onEnter(nullptr);
         }
 
-        std::uint64_t RaftEngine::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
+        std::uint64_t Raft::update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
             CR_ASSERT(currentState_ != nullptr);
             // 更新时间
@@ -132,12 +132,12 @@ namespace cr
             return nextUpdateTime;
         }
 
-        std::deque<RaftEngine::RaftMsgPtr>& RaftEngine::getMessageQueue()
+        std::deque<Raft::RaftMsgPtr>& Raft::getMessageQueue()
         {
             return messages_;
         }
 
-        void RaftEngine::pushMessageQueue(RaftMsgPtr raftMsg)
+        void Raft::pushMessageQueue(RaftMsgPtr raftMsg)
         {
             CR_ASSERT_E(ArgumentException, raftMsg != nullptr);
             CR_ASSERT_E(ArgumentException, raftMsg->dest_node_id() == nodeId_)(raftMsg->dest_node_id())(nodeId_);
@@ -163,7 +163,7 @@ namespace cr
             messages_.push_back(std::move(raftMsg));
         }
 
-        void RaftEngine::execute(const std::vector<std::string>& values)
+        void Raft::execute(const std::vector<std::string>& values)
         {
             CR_ASSERT_E(StateException, currentState_->getState() == LEADER)(currentState_->getState())(LEADER);
             std::vector<pb::Entry> entries;
@@ -177,64 +177,64 @@ namespace cr
             storage_->append(logIndex + 1, entries);
         }
 
-        std::uint64_t RaftEngine::getNodeId() const
+        std::uint64_t Raft::getNodeId() const
         {
             return nodeId_;
         }
 
-        const std::vector<std::uint64_t>& RaftEngine::getBuddyNodeIds() const
+        const std::vector<std::uint64_t>& Raft::getBuddyNodeIds() const
         {
             return buddyNodeIds_;
         }
 
-        bool RaftEngine::isBuddyNodeId(std::uint64_t nodeId) const
+        bool Raft::isBuddyNodeId(std::uint64_t nodeId) const
         {
             return std::find(buddyNodeIds_.begin(), buddyNodeIds_.end(), nodeId) != buddyNodeIds_.end();
         }
 
-        boost::optional<std::uint64_t> RaftEngine::getVotedFor() const
+        boost::optional<std::uint64_t> Raft::getVotedFor() const
         {
             return votedFor_;
         }
 
-        boost::optional<std::uint64_t> RaftEngine::getLeaderId() const
+        boost::optional<std::uint64_t> Raft::getLeaderId() const
         {
             return leaderId_;
         }
 
-        std::uint64_t RaftEngine::getCurrentTerm() const
+        std::uint64_t Raft::getCurrentTerm() const
         {
             return currentTerm_;
         }
 
-        std::uint64_t RaftEngine::getCommitIndex() const
+        std::uint64_t Raft::getCommitIndex() const
         {
             return commitIndex_;
         }
 
-        std::uint64_t RaftEngine::getLastApplied() const
+        std::uint64_t Raft::getLastApplied() const
         {
             return lastApplied_;
         }
 
-        std::uint64_t RaftEngine::randElectionTimeout()
+        std::uint64_t Raft::randElectionTimeout()
         {
             std::uniform_int_distribution<std::uint64_t> distribution(minElectionTimeout_, maxElectionTimeout_);
             auto electionTime = distribution(random_);
             return electionTime;
         }
 
-        const std::shared_ptr<Storage>& RaftEngine::getStorage() const
+        const std::shared_ptr<Storage>& Raft::getStorage() const
         {
             return storage_;
         }
 
-        void RaftEngine::setNextState(State nextState)
+        void Raft::setNextState(State nextState)
         {
             nextState_ = nextState;
         }
 
-        void RaftEngine::onTransitionState()
+        void Raft::onTransitionState()
         {
             currentState_->onLeave();
             auto prevState = std::move(currentState_);
@@ -256,7 +256,7 @@ namespace cr
             currentState_->onEnter(std::move(prevState));
         }
 
-        void RaftEngine::applyStateMachine()
+        void Raft::applyStateMachine()
         {
             auto nextApplied = std::min(lastApplied_ + 10, commitIndex_);
             auto logIndex = lastApplied_ + 1;
@@ -269,23 +269,23 @@ namespace cr
             lastApplied_ = lastApplied_ + entries.size();
         }
 
-        void RaftEngine::setVotedFor(boost::optional<std::uint64_t> voteFor)
+        void Raft::setVotedFor(boost::optional<std::uint64_t> voteFor)
         {
             votedFor_ = voteFor;
         }
 
-        void RaftEngine::setCommitIndex(std::uint64_t commitIndex)
+        void Raft::setCommitIndex(std::uint64_t commitIndex)
         {
             CR_ASSERT(commitIndex_ <= commitIndex_)(commitIndex)(commitIndex_);
             commitIndex_ = commitIndex;
         }
 
-        void RaftEngine::setLeaderId(boost::optional<std::uint64_t> leaderId)
+        void Raft::setLeaderId(boost::optional<std::uint64_t> leaderId)
         {
             leaderId_ = leaderId;
         }
 
-        void RaftEngine::setCurrentTerm(std::uint64_t currentTerm)
+        void Raft::setCurrentTerm(std::uint64_t currentTerm)
         {
             CR_ASSERT(currentTerm_ <= currentTerm)(currentTerm_)(currentTerm);
             currentTerm_ = currentTerm;

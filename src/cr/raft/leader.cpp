@@ -3,15 +3,15 @@
 #include <algorithm>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 namespace cr
 {
     namespace raft
     {
-        Leader::Leader(RaftEngine& engine)
-            : RaftState(engine)
+        Leader::Leader(Raft& raft)
+            : RaftState(raft)
         {}
 
         Leader::~Leader()
@@ -19,17 +19,17 @@ namespace cr
 
         int Leader::getState() const
         {
-            return RaftEngine::LEADER;
+            return Raft::LEADER;
         }
 
         void Leader::onEnter(std::shared_ptr<RaftState> prevState)
         {
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            for (auto nodeId : engine.getBuddyNodeIds())
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
+            for (auto nodeId : raft.getBuddyNodeIds())
             {
                 auto& node = nodes_[nodeId];
                 node.nodeId = nodeId;
-                node.nextUpdateTime = engine.getNowTime();;
+                node.nextUpdateTime = raft.getNowTime();;
                 node.nextLogIndex = lastLogIndex + 1;
                 node.replyLogIndex = lastLogIndex;
                 node.matchLogIndex = 0;
@@ -53,10 +53,10 @@ namespace cr
 
         bool Leader::processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            if (!engine.getMessageQueue().empty())
+            if (!raft.getMessageQueue().empty())
             {
-                auto message = std::move(engine.getMessageQueue().front());
-                engine.getMessageQueue().pop_front();
+                auto message = std::move(raft.getMessageQueue().front());
+                raft.getMessageQueue().pop_front();
                 switch (message->msg_type())
                 {
                 case pb::RaftMsg::APPEND_ENTRIES_REQ:
@@ -73,15 +73,15 @@ namespace cr
         bool Leader::onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto& request = message->append_entries_req();
-            auto currentTerm = engine.getCurrentTerm();
+            auto currentTerm = raft.getCurrentTerm();
             // 如果是新的领导者,则转换到跟随者
             if (request.leader_term() > currentTerm)
             {
-                engine.getMessageQueue().push_front(std::move(message));
+                raft.getMessageQueue().push_front(std::move(message));
                 currentTerm = request.leader_term();
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setCurrentTerm(currentTerm);
-                engine.setLeaderId(boost::none);
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setCurrentTerm(currentTerm);
+                raft.setLeaderId(boost::none);
                 return true;
             }
             return false;
@@ -90,9 +90,9 @@ namespace cr
         bool Leader::onAppendEntriesRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto& response = message->append_entries_resp();
-            auto currentTerm = engine.getCurrentTerm();
+            auto currentTerm = raft.getCurrentTerm();
             // 如果是本任期的消息
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
             if (response.follower_term() == currentTerm && response.last_log_index() <= lastLogIndex)
             {
                 auto nodeId = message->from_node_id();
@@ -115,9 +115,9 @@ namespace cr
             else if (response.follower_term() > currentTerm)
             {
                 currentTerm = response.follower_term();
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setCurrentTerm(currentTerm);
-                engine.setLeaderId(boost::none);
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setCurrentTerm(currentTerm);
+                raft.setLeaderId(boost::none);
                 return true;
             }
             return false;
@@ -126,15 +126,15 @@ namespace cr
         bool Leader::onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages)
         {
             auto& request = message->request_vote_req();
-            auto currentTerm = engine.getCurrentTerm();
+            auto currentTerm = raft.getCurrentTerm();
             // 如果候选者任期更新，则转换为跟随者
-            if (request.candidate_term() > engine.getCurrentTerm())
+            if (request.candidate_term() > raft.getCurrentTerm())
             {
-                engine.getMessageQueue().push_front(std::move(message));
+                raft.getMessageQueue().push_front(std::move(message));
                 currentTerm = request.candidate_term();
-                engine.setNextState(RaftEngine::FOLLOWER);
-                engine.setCurrentTerm(currentTerm);
-                engine.setLeaderId(boost::none);
+                raft.setNextState(Raft::FOLLOWER);
+                raft.setCurrentTerm(currentTerm);
+                raft.setLeaderId(boost::none);
                 return true;
             }
             return false;
@@ -144,7 +144,7 @@ namespace cr
         {
             matchLogIndexs_.clear();
             // 对所有已匹配日志排序
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
             matchLogIndexs_.push_back(lastLogIndex);
             for (auto&& node : nodes_)
             {
@@ -158,7 +158,7 @@ namespace cr
 
         std::uint64_t Leader::processAppendEntriesReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages)
         {
-            auto commitIndex = engine.getCommitIndex();
+            auto commitIndex = raft.getCommitIndex();
             auto newCommitIndex = calNewCommitIndex();
             // 更新已提交日志索引
             bool updateCommitIndex = false;
@@ -166,12 +166,12 @@ namespace cr
             {
                 updateCommitIndex = true;
                 commitIndex = newCommitIndex;
-                engine.setCommitIndex(commitIndex);
+                raft.setCommitIndex(commitIndex);
             }
-            std::uint64_t nextUpdateTime = nowTime + engine.getHeatbeatTimeout();
+            std::uint64_t nextUpdateTime = nowTime + raft.getHeatbeatTimeout();
             // 更新节点
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
-            auto maxWaitEntriesNum = engine.getMaxWaitEntriesNum();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
+            auto maxWaitEntriesNum = raft.getMaxWaitEntriesNum();
             for (auto&& node : nodes_)
             {
                 bool needAppendLog = updateCommitIndex;
@@ -191,7 +191,7 @@ namespace cr
                     // 传送日志
                     appendEntriesReq(node.second, outMessages);
                     // 更新心跳时间
-                    node.second.nextUpdateTime = nowTime + engine.getHeatbeatTimeout();
+                    node.second.nextUpdateTime = nowTime + raft.getHeatbeatTimeout();
                 }
                 nextUpdateTime = std::min(nextUpdateTime, node.second.nextUpdateTime);
             }
@@ -201,14 +201,14 @@ namespace cr
         void Leader::appendEntriesReq(BuddyNode& node, std::vector<RaftMsgPtr>& outMessages)
         {
             auto raftMsg = std::make_shared<pb::RaftMsg>();
-            raftMsg->set_from_node_id(engine.getNodeId());
+            raftMsg->set_from_node_id(raft.getNodeId());
             raftMsg->set_dest_node_id(node.nodeId);
             raftMsg->set_msg_type(pb::RaftMsg::APPEND_ENTRIES_REQ);
 
-            auto currentTerm = engine.getCurrentTerm();
-            auto commitIndex = engine.getCommitIndex();
+            auto currentTerm = raft.getCurrentTerm();
+            auto commitIndex = raft.getCommitIndex();
             auto prevLogIndex = node.nextLogIndex - 1;
-            auto prevLogTerm = prevLogIndex != 0 ? engine.getStorage()->getTermByIndex(prevLogIndex) : 0;
+            auto prevLogTerm = prevLogIndex != 0 ? raft.getStorage()->getTermByIndex(prevLogIndex) : 0;
 
             auto& request = *(raftMsg->mutable_append_entries_req());
             request.set_leader_term(currentTerm);
@@ -216,13 +216,13 @@ namespace cr
             request.set_prev_log_term(prevLogTerm);
             request.set_leader_commit(commitIndex);
 
-            auto lastLogIndex = engine.getStorage()->getLastIndex();
+            auto lastLogIndex = raft.getStorage()->getLastIndex();
             if (node.nextLogIndex <= lastLogIndex)
             {
-                auto stopLogIndex = std::min(lastLogIndex, node.nextLogIndex + engine.getMaxPacketEntriesNum() - 1);
-                stopLogIndex = std::min(stopLogIndex, node.replyLogIndex + engine.getMaxWaitEntriesNum());
+                auto stopLogIndex = std::min(lastLogIndex, node.nextLogIndex + raft.getMaxPacketEntriesNum() - 1);
+                stopLogIndex = std::min(stopLogIndex, node.replyLogIndex + raft.getMaxWaitEntriesNum());
                 stopLogIndex = std::max(stopLogIndex, node.nextLogIndex);
-                auto entries = engine.getStorage()->getEntries(node.nextLogIndex, stopLogIndex, engine.getMaxPacketLength());
+                auto entries = raft.getStorage()->getEntries(node.nextLogIndex, stopLogIndex, raft.getMaxPacketLength());
                 for (auto& entry : entries)
                 {
                     *request.add_entries() = std::move(entry);

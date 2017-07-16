@@ -16,7 +16,7 @@ namespace cr
 
             struct BuddyNode;
 
-            explicit Leader(RaftEngine& engine);
+            explicit Leader(Raft& raft);
 
             ~Leader();
 

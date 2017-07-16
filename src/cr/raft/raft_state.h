@@ -15,7 +15,7 @@ namespace cr
             class RaftMsg;
         }
 
-        class RaftEngine;
+        class Raft;
 
         class RaftState
         {
@@ -23,7 +23,7 @@ namespace cr
 
             using RaftMsgPtr = std::shared_ptr<pb::RaftMsg>;
 
-            explicit RaftState(RaftEngine& engine);
+            explicit RaftState(Raft& raft);
 
             virtual ~RaftState();
 
@@ -37,7 +37,7 @@ namespace cr
 
         protected:
 
-            RaftEngine& engine;
+            Raft& raft;
         };
     }
 }

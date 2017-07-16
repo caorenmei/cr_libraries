@@ -9,7 +9,7 @@
 #include <cr/raft/exception.h>
 #include <cr/raft/follower.h>
 #include <cr/raft/mem_storage.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 class CandidateStatMachine
@@ -36,7 +36,7 @@ namespace cr
             DebugVisitor()
             {
                 storage = std::make_shared<cr::raft::MemStorage>();
-                engine = builder.setNodeId(1)
+                raft = builder.setNodeId(1)
                     .setBuddyNodeIds({ 2,3,4,5 })
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&CandidateStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
@@ -44,7 +44,7 @@ namespace cr
                     .setHeartbeatTimeout(50)
                     .setRandomSeed(0)
                     .build();
-                engine->initialize(0);
+                raft->initialize(0);
             }
 
             ~DebugVisitor()
@@ -115,17 +115,17 @@ namespace cr
 
             int checkVoteRequest()
             {
-                if (messages.size() != engine->getBuddyNodeIds().size())
+                if (messages.size() != raft->getBuddyNodeIds().size())
                 {
                     return 1;
                 }
-                if (!engine->getVotedFor() || *engine->getVotedFor() != engine->getNodeId())
+                if (!raft->getVotedFor() || *raft->getVotedFor() != raft->getNodeId())
                 {
                     return 2;
                 }
                 for (auto&& message : messages)
                 {
-                    if (message->from_node_id() != engine->getNodeId())
+                    if (message->from_node_id() != raft->getNodeId())
                     {
                         return 3;
                     }
@@ -134,7 +134,7 @@ namespace cr
                         return 4;
                     }
                     auto& voteReq = message->request_vote_req();
-                    if (voteReq.candidate_term() != engine->getCurrentTerm())
+                    if (voteReq.candidate_term() != raft->getCurrentTerm())
                     {
                         return 5;
                     }
@@ -146,11 +146,11 @@ namespace cr
                 return 0;
             }
 
-            cr::raft::RaftEngine::Builder builder;
-            std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
+            cr::raft::Raft::Builder builder;
+            std::vector<cr::raft::Raft::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
             CandidateStatMachine stateMachine;
-            std::shared_ptr<cr::raft::RaftEngine> engine;
+            std::shared_ptr<cr::raft::Raft> raft;
         };
     }
 }
@@ -160,12 +160,12 @@ BOOST_AUTO_TEST_SUITE(RaftCandidate)
 BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<CandidateFixture>)
 {
     std::uint64_t nowTime = 0;
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(checkVoteRequest(), 0);
     messages.clear();
 }
@@ -175,21 +175,21 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<CandidateFix
     std::uint64_t nowTime = 0;
 
     auto raftMsg = makeRequestVoteRespMsg(2, 1, 0, false);
-    engine->pushMessageQueue(raftMsg);
+    raft->pushMessageQueue(raftMsg);
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
 
     nowTime = nowTime + 1;
-    raftMsg = makeRequestVoteRespMsg(2, 1, engine->getCurrentTerm(), true);
-    engine->pushMessageQueue(raftMsg);
-    BOOST_CHECK_LT(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    raftMsg = makeRequestVoteRespMsg(2, 1, raft->getCurrentTerm(), true);
+    raft->pushMessageQueue(raftMsg);
+    BOOST_CHECK_LT(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     BOOST_CHECK_EQUAL(checkVoteRequest(), 0);
     messages.clear();
 }
@@ -199,27 +199,27 @@ BOOST_FIXTURE_TEST_CASE(receivesMajority, cr::raft::DebugVisitor<CandidateFixtur
     std::uint64_t nowTime = 0;
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
     messages.clear();
 
-    auto raftMsg = makeRequestVoteRespMsg(2, 1, engine->getCurrentTerm(), true);
-    engine->pushMessageQueue(raftMsg);
+    auto raftMsg = makeRequestVoteRespMsg(2, 1, raft->getCurrentTerm(), true);
+    raft->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
 
-    raftMsg = makeRequestVoteRespMsg(3, 1, engine->getCurrentTerm(), false);
-    engine->pushMessageQueue(raftMsg);
+    raftMsg = makeRequestVoteRespMsg(3, 1, raft->getCurrentTerm(), false);
+    raft->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
 
-    raftMsg = makeRequestVoteRespMsg(4, 1, engine->getCurrentTerm(), true);
-    engine->pushMessageQueue(raftMsg);
+    raftMsg = makeRequestVoteRespMsg(4, 1, raft->getCurrentTerm(), true);
+    raft->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
 }
 
 BOOST_FIXTURE_TEST_CASE(appendEntriesReq, cr::raft::DebugVisitor<CandidateFixture>)
@@ -227,22 +227,22 @@ BOOST_FIXTURE_TEST_CASE(appendEntriesReq, cr::raft::DebugVisitor<CandidateFixtur
     std::uint64_t nowTime = 0;
 
     nowTime = nowTime + builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
     messages.clear();
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 0, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
+    raft->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
 
     raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
+    raft->pushMessageQueue(raftMsg);
     nowTime = nowTime + 1;
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 }
 
 

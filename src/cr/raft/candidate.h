@@ -14,7 +14,7 @@ namespace cr
         {
         public:
 
-            explicit Candidate(RaftEngine& engine);
+            explicit Candidate(Raft& raft);
 
             ~Candidate();
 

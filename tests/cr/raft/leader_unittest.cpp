@@ -9,7 +9,7 @@
 #include <cr/raft/exception.h>
 #include <cr/raft/leader.h>
 #include <cr/raft/mem_storage.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 class LeaderStatMachine
@@ -36,7 +36,7 @@ namespace cr
             DebugVisitor()
             {
                 storage = std::make_shared<cr::raft::MemStorage>();
-                engine = builder.setNodeId(1)
+                raft = builder.setNodeId(1)
                     .setBuddyNodeIds({ 2,3,4,5 })
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&LeaderStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
@@ -47,7 +47,7 @@ namespace cr
                     .setMaxPacketSize(1024)
                     .setRandomSeed(0)
                     .build();
-                engine->initialize(nowTime);
+                raft->initialize(nowTime);
             }
 
             ~DebugVisitor()
@@ -104,7 +104,7 @@ namespace cr
             auto makeAppendEntriesResp(std::uint64_t fromNode, std::uint64_t followerTerm, std::uint64_t lastLogIndex, bool success)
             {
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
-                raftMsg->set_dest_node_id(engine->getNodeId());
+                raftMsg->set_dest_node_id(raft->getNodeId());
                 raftMsg->set_from_node_id(fromNode);
                 raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_RESP);
 
@@ -119,8 +119,8 @@ namespace cr
             void transactionLeader()
             {
                 nowTime = nowTime + builder.getMaxElectionTimeout();
-                engine->update(nowTime, messages);
-                engine->update(nowTime, messages);
+                raft->update(nowTime, messages);
+                raft->update(nowTime, messages);
                 messages.clear();
 
                 for (auto nodeId : { 2,3 })
@@ -131,12 +131,12 @@ namespace cr
                     raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
 
                     auto& request = *(raftMsg->mutable_request_vote_resp());
-                    request.set_follower_term(engine->getCurrentTerm());
+                    request.set_follower_term(raft->getCurrentTerm());
                     request.set_success(true);
 
-                    engine->pushMessageQueue(raftMsg);
+                    raft->pushMessageQueue(raftMsg);
                     nowTime = nowTime + 1;
-                    engine->update(nowTime, messages);
+                    raft->update(nowTime, messages);
                 }
             }
 
@@ -145,7 +145,7 @@ namespace cr
                 std::set<std::uint64_t> destNodeIds;
                 for (auto&& message : messages)
                 {
-                    if (!engine->isBuddyNodeId(message->dest_node_id()))
+                    if (!raft->isBuddyNodeId(message->dest_node_id()))
                     {
                         return 1;
                     }
@@ -158,11 +158,11 @@ namespace cr
                         return 3;
                     }
                     auto& appendReq = message->append_entries_req();
-                    if (appendReq.leader_commit() != engine->getCommitIndex())
+                    if (appendReq.leader_commit() != raft->getCommitIndex())
                     {
                         return 4;
                     }
-                    if (appendReq.leader_term() != engine->getCurrentTerm())
+                    if (appendReq.leader_term() != raft->getCurrentTerm())
                     {
                         return 5;
                     }
@@ -180,7 +180,7 @@ namespace cr
 
             int checkNextLogIndex(std::uint64_t nodeId, std::uint64_t nextLogIndex)
             {
-                auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
+                auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
                 {
                     return 1;
@@ -194,7 +194,7 @@ namespace cr
 
             int checkMatchLogIndex(std::uint64_t nodeId, std::uint64_t matchLogIndex)
             {
-                auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
+                auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
                 {
                     return 1;
@@ -208,7 +208,7 @@ namespace cr
 
             int checkReplyLogIndex(std::uint64_t nodeId, std::uint64_t replyLogIndex)
             {
-                auto leader = std::dynamic_pointer_cast<Leader>(engine->currentState_);
+                auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
                 if (leader->nodes_.count(nodeId) == 0)
                 {
                     return 1;
@@ -220,12 +220,12 @@ namespace cr
                 return 0;
             }
 
-            cr::raft::RaftEngine::Builder builder;
-            std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
+            cr::raft::Raft::Builder builder;
+            std::vector<cr::raft::Raft::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
             LeaderStatMachine stateMachine;
             std::default_random_engine random_;
-            std::shared_ptr<cr::raft::RaftEngine> engine;
+            std::shared_ptr<cr::raft::Raft> raft;
             std::uint64_t nowTime = 0;
         };
     }
@@ -236,11 +236,11 @@ BOOST_AUTO_TEST_SUITE(RaftLeader)
 BOOST_FIXTURE_TEST_CASE(firstHeatbeatMsg, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
     BOOST_CHECK(messages.empty());
 
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(messages.size(), engine->getBuddyNodeIds().size());
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(messages.size(), raft->getBuddyNodeIds().size());
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
 }
@@ -248,13 +248,13 @@ BOOST_FIXTURE_TEST_CASE(firstHeatbeatMsg, cr::raft::DebugVisitor<LeaderFixture>)
 BOOST_FIXTURE_TEST_CASE(heatbeat, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
     BOOST_CHECK(messages.empty());
 
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(messages.size(), engine->getBuddyNodeIds().size());
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(messages.size(), raft->getBuddyNodeIds().size());
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
-    for (auto&& nodeId : engine->getBuddyNodeIds())
+    for (auto&& nodeId : raft->getBuddyNodeIds())
     {
         BOOST_CHECK_EQUAL(checkNextLogIndex(nodeId, 1), 0);
         BOOST_CHECK_EQUAL(checkMatchLogIndex(nodeId, 0), 0);
@@ -262,13 +262,13 @@ BOOST_FIXTURE_TEST_CASE(heatbeat, cr::raft::DebugVisitor<LeaderFixture>)
     }
     messages.clear();
 
-    nowTime += engine->getHeatbeatTimeout() - 1;
-    engine->update(nowTime, messages);
+    nowTime += raft->getHeatbeatTimeout() - 1;
+    raft->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 0);
 
-    nowTime += engine->getHeatbeatTimeout();
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(messages.size(), engine->getBuddyNodeIds().size());
+    nowTime += raft->getHeatbeatTimeout();
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(messages.size(), raft->getBuddyNodeIds().size());
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
 }
@@ -279,13 +279,13 @@ BOOST_FIXTURE_TEST_CASE(logAppend, cr::raft::DebugVisitor<LeaderFixture>)
     storage->append(2, { makeEntry(1, "2") });
     storage->append(3, { makeEntry(1, "3") });
     transactionLeader();
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
     BOOST_CHECK(messages.empty());
 
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(messages.size(), engine->getBuddyNodeIds().size());
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(messages.size(), raft->getBuddyNodeIds().size());
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
-    for (auto&& nodeId : engine->getBuddyNodeIds())
+    for (auto&& nodeId : raft->getBuddyNodeIds())
     {
         BOOST_CHECK_EQUAL(checkNextLogIndex(nodeId, 4), 0);
         BOOST_CHECK_EQUAL(checkMatchLogIndex(nodeId, 0), 0);
@@ -300,16 +300,16 @@ BOOST_FIXTURE_TEST_CASE(logAppendNotMatch, cr::raft::DebugVisitor<LeaderFixture>
     storage->append(2, { makeEntry(1, "2") });
     storage->append(3, { makeEntry(1, "3") });
     transactionLeader();
-    BOOST_REQUIRE_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    BOOST_REQUIRE_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
     BOOST_CHECK(messages.empty());
 
-    engine->update(nowTime, messages);
+    raft->update(nowTime, messages);
     messages.clear();
 
     nowTime += 1;
     auto logAppendResp0 = makeAppendEntriesResp(2, 1, 1, false);
-    engine->pushMessageQueue(logAppendResp0);
-    engine->update(nowTime, messages);
+    raft->pushMessageQueue(logAppendResp0);
+    raft->update(nowTime, messages);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_REQUIRE_EQUAL(checkLogAppendMsg(), 0);
     BOOST_REQUIRE_EQUAL(checkNextLogIndex(2, 4), 0);
@@ -326,41 +326,41 @@ BOOST_FIXTURE_TEST_CASE(logAppendUpdateCommit, cr::raft::DebugVisitor<LeaderFixt
     storage->append(2, { makeEntry(1, "2") });
     storage->append(3, { makeEntry(1, "3") });
     transactionLeader();
-    BOOST_REQUIRE_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    BOOST_REQUIRE_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
     BOOST_CHECK(messages.empty());
 
-    engine->update(nowTime, messages);
+    raft->update(nowTime, messages);
     messages.clear();
 
     nowTime += 1;
     auto logAppendResp0 = makeAppendEntriesResp(2, 1, 1, false);
-    engine->pushMessageQueue(logAppendResp0);
-    engine->update(nowTime, messages);
+    raft->pushMessageQueue(logAppendResp0);
+    raft->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
 
     nowTime += 1;
     auto logAppendResp1 = makeAppendEntriesResp(3, 1, 1, false);
-    engine->pushMessageQueue(logAppendResp1);
-    engine->update(nowTime, messages);
+    raft->pushMessageQueue(logAppendResp1);
+    raft->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
 
     nowTime += 1;
     auto logAppendResp2 = makeAppendEntriesResp(2, 1, 3, true);
-    engine->pushMessageQueue(logAppendResp2);
-    engine->update(nowTime, messages);
+    raft->pushMessageQueue(logAppendResp2);
+    raft->update(nowTime, messages);
     BOOST_CHECK_EQUAL(messages.size(), 0);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
 
     nowTime += 1;
     auto logAppendResp3 = makeAppendEntriesResp(3, 1, 2, true);
-    engine->pushMessageQueue(logAppendResp3);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCommitIndex(), 2);
+    raft->pushMessageQueue(logAppendResp3);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCommitIndex(), 2);
     BOOST_CHECK_EQUAL(messages.size(), 4);
     BOOST_CHECK_EQUAL(checkLogAppendMsg(), 0);
     messages.clear();
@@ -370,54 +370,54 @@ BOOST_FIXTURE_TEST_CASE(RequestVoteLowTerm, cr::raft::DebugVisitor<LeaderFixture
 {
     transactionLeader();
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
 }
 
 BOOST_FIXTURE_TEST_CASE(RequestVoteEqualTerm, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
 }
 
 BOOST_FIXTURE_TEST_CASE(RequestVoteHighTerm, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 2);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 }
 
 BOOST_FIXTURE_TEST_CASE(AppendEntriesLowTerm, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 0, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
 }
 
 BOOST_FIXTURE_TEST_CASE(AppendEntriesEqualTerm, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::LEADER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::LEADER);
 }
 
 BOOST_FIXTURE_TEST_CASE(AppendEntriesHighTerm, cr::raft::DebugVisitor<LeaderFixture>)
 {
     transactionLeader();
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 0, 0, 0);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(nowTime, messages);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(nowTime, messages);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -27,10 +27,10 @@ set(cr_raft_SRCS
     storage.h
     mem_storage.h
     mem_storage.cpp
-    raft_engine.h
-    raft_engine.cpp
-    raft_engine_builder.h
-    raft_engine_builder.cpp
+    raft.h
+    raft.cpp
+    raft_builder.h
+    raft_builder.cpp
     raft_state.h
     raft_state.cpp
 )

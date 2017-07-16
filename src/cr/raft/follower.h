@@ -15,7 +15,7 @@ namespace cr
         {
         public:
 
-            explicit Follower(RaftEngine& engine);
+            explicit Follower(Raft& raft);
 
             ~Follower();
 

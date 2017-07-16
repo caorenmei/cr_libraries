@@ -9,7 +9,7 @@
 #include <cr/raft/exception.h>
 #include <cr/raft/follower.h>
 #include <cr/raft/mem_storage.h>
-#include <cr/raft/raft_engine.h>
+#include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>
 
 class FollowerStatMachine
@@ -36,7 +36,7 @@ namespace cr
             DebugVisitor()
             {
                 storage = std::make_shared<cr::raft::MemStorage>();
-                engine = builder.setNodeId(1)
+                raft = builder.setNodeId(1)
                     .setBuddyNodeIds({ 2,3,4 })
                     .setStorage(storage)
                     .setEexcuteCallback(std::bind(&FollowerStatMachine::execute, &stateMachine, std::placeholders::_1, std::placeholders::_2))
@@ -44,7 +44,7 @@ namespace cr
                     .setElectionTimeout(100, 200)
                     .setRandomSeed(0)
                     .build();
-                engine->initialize(0);
+                raft->initialize(0);
             }
 
             ~DebugVisitor()
@@ -52,22 +52,22 @@ namespace cr
 
             void setVoteFor(boost::optional<std::uint64_t> voteFor)
             {
-                engine->setVotedFor(voteFor);
+                raft->setVotedFor(voteFor);
             }
 
             void setLeaderId(boost::optional<std::uint64_t> leaderId)
             {
-                engine->setLeaderId(leaderId);
+                raft->setLeaderId(leaderId);
             }
 
             void setCommitIndex(std::uint64_t commitIndex)
             {
-                engine->setCommitIndex(commitIndex);
+                raft->setCommitIndex(commitIndex);
             }
 
             void setCurrentTerm(std::uint64_t currentTerm)
             {
-                engine->setCurrentTerm(currentTerm);
+                raft->setCurrentTerm(currentTerm);
             }
 
             auto makeEntry(std::uint64_t term, std::string value)
@@ -130,7 +130,7 @@ namespace cr
                     return 2;
                 }
                 auto& response = messages[0]->request_vote_resp();
-                if (response.follower_term() != engine->getCurrentTerm())
+                if (response.follower_term() != raft->getCurrentTerm())
                 {
                     return 3;
                 }
@@ -138,7 +138,7 @@ namespace cr
                 {
                     return 4;
                 }
-                if (!engine->getVotedFor() || *engine->getVotedFor() != candidateId)
+                if (!raft->getVotedFor() || *raft->getVotedFor() != candidateId)
                 {
                     return 5;
                 }
@@ -155,7 +155,7 @@ namespace cr
                 {
                     return 1;
                 }
-                if (!engine->getLeaderId() || *engine->getLeaderId() != leaderId)
+                if (!raft->getLeaderId() || *raft->getLeaderId() != leaderId)
                 {
                     return 2;
                 }
@@ -168,7 +168,7 @@ namespace cr
                 {
                     return 4;
                 }
-                if (response.follower_term() != engine->getCurrentTerm())
+                if (response.follower_term() != raft->getCurrentTerm())
                 {
                     return 5;
                 }
@@ -183,11 +183,11 @@ namespace cr
                 return 0;
             }
 
-            cr::raft::RaftEngine::Builder builder;
-            std::vector<cr::raft::RaftEngine::RaftMsgPtr> messages;
+            cr::raft::Raft::Builder builder;
+            std::vector<cr::raft::Raft::RaftMsgPtr> messages;
             std::shared_ptr<cr::raft::MemStorage> storage;
             FollowerStatMachine stateMachine;
-            std::shared_ptr<cr::raft::RaftEngine> engine;
+            std::shared_ptr<cr::raft::Raft> raft;
         };
     }
 }
@@ -197,16 +197,16 @@ BOOST_AUTO_TEST_SUITE(RaftFollower)
 BOOST_FIXTURE_TEST_CASE(electionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
 {
     std::uint64_t nowTime = 0;
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = builder.getMinElectionTimeout() - 1;
-    BOOST_CHECK_LE(engine->update(nowTime, messages), builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = builder.getMaxElectionTimeout();
-    BOOST_CHECK_EQUAL(engine->update(nowTime, messages), nowTime);
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::CANDIDATE);
+    BOOST_CHECK_EQUAL(raft->update(nowTime, messages), nowTime);
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::CANDIDATE);
 }
 
 BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixture>)
@@ -214,24 +214,24 @@ BOOST_FIXTURE_TEST_CASE(nextElectionTimeout, cr::raft::DebugVisitor<FollowerFixt
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 1, 0);
 
     std::uint64_t nowTime = 1;
-    engine->pushMessageQueue(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->pushMessageQueue(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->pushMessageQueue(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 
     nowTime = nowTime + builder.getMinElectionTimeout() - 1;
-    engine->pushMessageQueue(raftMsg);
-    BOOST_CHECK_LE(engine->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
-    BOOST_CHECK_EQUAL(engine->getCurrentState(), cr::raft::RaftEngine::FOLLOWER);
+    raft->pushMessageQueue(raftMsg);
+    BOOST_CHECK_LE(raft->update(nowTime, messages), nowTime + builder.getMaxElectionTimeout());
+    BOOST_CHECK_EQUAL(raft->getCurrentState(), cr::raft::Raft::FOLLOWER);
 }
 
 // 任期为0，投票肯定失败
@@ -239,8 +239,8 @@ BOOST_FIXTURE_TEST_CASE(voteZeroTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 0);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
@@ -250,8 +250,8 @@ BOOST_FIXTURE_TEST_CASE(voteOneTerm, cr::raft::DebugVisitor<FollowerFixture>)
 {
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
 
 
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
@@ -264,8 +264,8 @@ BOOST_FIXTURE_TEST_CASE(voteRepeatedOneTerm, cr::raft::DebugVisitor<FollowerFixt
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
     
     setVoteFor(2);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
@@ -278,20 +278,20 @@ BOOST_FIXTURE_TEST_CASE(voteLogMismatch, cr::raft::DebugVisitor<FollowerFixture>
 
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 0, 0, 1);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
     raftMsg = makeRequestVoteReqMsg(2, 1, 2, 2, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
     raftMsg = makeRequestVoteReqMsg(2, 1, 1, 3, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
@@ -303,20 +303,20 @@ BOOST_FIXTURE_TEST_CASE(voteLogMatch, cr::raft::DebugVisitor<FollowerFixture>)
     storage->append(2, { makeEntry(3, "2") });
 
     auto raftMsg = makeRequestVoteReqMsg(2, 1, 2, 3, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
     raftMsg = makeRequestVoteReqMsg(2, 1, 3, 3, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 
     raftMsg = makeRequestVoteReqMsg(2, 1, 0, 4, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkVoteSuccess(2, raftMsg->request_vote_req()), 0);
     messages.clear();
 }
@@ -326,8 +326,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendOneTerm, cr::raft::DebugVisitor<FollowerFixture
 {
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
@@ -340,8 +340,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendTwoTerm, cr::raft::DebugVisitor<FollowerFixture
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 0, 0, 0);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
@@ -354,8 +354,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendTermLittle, cr::raft::DebugVisitor<FollowerFixt
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 0, 0);
 
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
 
     BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
@@ -370,16 +370,16 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMismatch, cr::raft::DebugVisitor<FollowerFix
     storage->append(2, { makeEntry(2,"2") });
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 3, 2);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 2);
     messages.clear();
 
     raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 2, 1);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_NE(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     BOOST_REQUIRE_EQUAL(messages.size(), 1);
     BOOST_CHECK_EQUAL(messages[0]->append_entries_resp().last_log_index(), 1);
@@ -394,8 +394,8 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogMatch, cr::raft::DebugVisitor<FollowerFixtur
     storage->append(2, { makeEntry(2,"2") });
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 1, 0, 2, 2);
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
     messages.clear();
 }
@@ -408,10 +408,10 @@ BOOST_FIXTURE_TEST_CASE(logAppendLogThreeEntry, cr::raft::DebugVisitor<FollowerF
     setCurrentTerm(2);
 
     auto raftMsg = makeAppendEntriesReqMsg(2, 1, 2, 4, 2, 2, { "3", "4", "5" });
-    engine->pushMessageQueue(raftMsg);
-    engine->update(1, messages);
+    raft->pushMessageQueue(raftMsg);
+    raft->update(1, messages);
     BOOST_CHECK_EQUAL(checkLogAppendSuccess(2, raftMsg->append_entries_req()), 0);
-    BOOST_CHECK_EQUAL(engine->getCommitIndex(), 4);
+    BOOST_CHECK_EQUAL(raft->getCommitIndex(), 4);
     BOOST_CHECK(cr::from(storage->getEntries(1, 5, std::numeric_limits<std::uint64_t>::max())).map([](auto&& e) {return e.value(); }).equals(cr::from({ "1", "2", "3", "4", "5" })));
     messages.clear();
 }
