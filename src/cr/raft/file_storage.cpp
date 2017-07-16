@@ -22,6 +22,7 @@ namespace cr
 
         static std::string uint64ToString(std::uint64_t value)
         {
+            boost::endian::native_to_little_inplace(value);
             return std::string(reinterpret_cast<char*>(&value), sizeof(value));
         }
 
@@ -30,6 +31,7 @@ namespace cr
             std::uint64_t result = 0;
             CR_ASSERT_E(cr::raft::IOException, value.size() == sizeof(result));
             std::memcpy(&result, value.data(), sizeof(result));
+            boost::endian::little_to_native_inplace(result);
             return result;
         }
 
@@ -95,11 +97,14 @@ namespace cr
                 auto lastLogIndex = lastLogIndex_;
                 auto lastLogTerm = lastLogTerm_;
                 rocksdb::WriteBatch batch;
+                std::string buffer;
                 for (auto&& entry : entries)
                 {
                     CR_ASSERT_E(cr::raft::ArgumentException, entry.term() >= lastLogTerm)(entry.term())(lastLogTerm);
                     lastLogIndex = lastLogIndex + 1;
-                    batch.Put(column.get(), rocksdb::Slice(getLogValueKey(lastLogIndex)), rocksdb::Slice(entry.SerializeAsString()));
+                    entry.SerializeToString(&buffer);
+                    batch.Put(column.get(), rocksdb::Slice(getLogValueKey(lastLogIndex)), rocksdb::Slice(buffer));
+                    buffer.clear();
                     lastLogTerm = entry.term();
                     batch.Put(column.get(), rocksdb::Slice(getLogTermKey(lastLogIndex)), rocksdb::Slice(uint64ToString(lastLogTerm)));
                 }
@@ -161,13 +166,14 @@ namespace cr
                 results.reserve(static_cast<std::size_t>(stopIndex - startIndex + 1));
                 maxPacketLength = std::max<std::uint64_t>(maxPacketLength, 1);
                 std::uint64_t packetLength = 0;
+                std::string buffer;
                 for (auto logIndex = startIndex; logIndex <= stopIndex && packetLength < maxPacketLength; ++logIndex)
                 {
                     results.emplace_back();
-                    std::string entryData;
-                    auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &entryData);
-                    CR_ASSERT_E(cr::raft::IOException, status.ok() && results.back().ParseFromString(entryData))(status.ok())(entryData.size());
-                    packetLength = packetLength + entryData.size();
+                    auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLogValueKey(logIndex)), &buffer);
+                    CR_ASSERT_E(cr::raft::IOException, status.ok() && results.back().ParseFromString(buffer))(status.ok())(buffer.size());
+                    packetLength = packetLength + buffer.size();
+                    buffer.clear();
                 }
 
                 return results;
