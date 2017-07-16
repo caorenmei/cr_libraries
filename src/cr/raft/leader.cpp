@@ -150,7 +150,7 @@ namespace cr
             {
                 matchLogIndexs_.push_back(node.second.matchLogIndex);
             }
-            std::sort(matchLogIndexs_.begin(), matchLogIndexs_.end(), std::greater_equal<std::uint64_t>());
+            std::sort(matchLogIndexs_.begin(), matchLogIndexs_.end(), std::greater<std::uint64_t>());
             // 大部分节点都已提交N，则N为已提交日志索引
             auto commitIndexIndex = (1 + nodes_.size()) / 2;
             return matchLogIndexs_[commitIndexIndex];;

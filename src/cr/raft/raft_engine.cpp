@@ -257,6 +257,7 @@ namespace cr
             {
                 executable_(entry.getIndex(), entry.getValue());
             }
+            lastApplied_ = nextApplied;
         }
 
         void RaftEngine::setVotedFor(boost::optional<std::uint64_t> voteFor)

@@ -18,7 +18,7 @@ public:
         : storage_(storage),
         value_(0)
     {
-        nodeIds.erase(std::find(nodeIds.begin(), nodeIds.end(), nodeId), nodeIds.end());
+        nodeIds.erase(std::remove(nodeIds.begin(), nodeIds.end(), nodeId), nodeIds.end());
         cr::raft::RaftEngineBuilder builder;
         raft_ = builder.setNodeId(nodeId)
             .setBuddyNodeIds(nodeIds)
@@ -41,20 +41,20 @@ public:
         raft_->pushMessageQueue(std::move(message));
     }
 
-    void update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>> messages)
+    void update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>>& messages)
     {
         raft_->update(nowTime, messages);
         auto lastLogIndex = storage_->getLastIndex();
         if (raft_->getCurrentState() == cr::raft::RaftEngine::LEADER
             && lastLogIndex <= raft_->getCommitIndex() + 20)
         {
-            std::uint64_t value = 1;
+            std::uint64_t value = 0;
             if (lastLogIndex != 0)
             {
                 auto entries = storage_->getEntries(lastLogIndex, lastLogIndex);
                 value = boost::lexical_cast<std::uint64_t>(entries[0].getValue());
             }
-            raft_->execute({ boost::lexical_cast<std::string>(value) });
+            raft_->execute({ boost::lexical_cast<std::string>(value + 1) });
         }
     }
 
@@ -105,10 +105,13 @@ int main(int argc, char* argv[])
         // 派发消息
         for (auto&& message : messages)
         {
-            const auto& test = tests[message->dest_node_id()].second;
-            if (test != nullptr && message != nullptr)
+            if (message != nullptr)
             {
-                test->onMessage(std::move(message));
+                const auto& test = tests[message->dest_node_id()].second;
+                if (test != nullptr && message != nullptr)
+                {
+                    test->onMessage(std::move(message));
+                }
             }
         }
         messages.clear();
