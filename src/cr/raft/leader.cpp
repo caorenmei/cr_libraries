@@ -27,7 +27,8 @@ namespace cr
             auto lastLogIndex = raft.getStorage()->getLastIndex();
             for (auto nodeId : raft.getBuddyNodeIds())
             {
-                auto& node = nodes_[nodeId];
+                nodes_.emplace_back();
+                auto& node = nodes_.back();
                 node.nodeId = nodeId;
                 node.nextUpdateTime = raft.getNowTime();;
                 node.nextLogIndex = lastLogIndex + 1;
@@ -95,7 +96,9 @@ namespace cr
             if (response.follower_term() == currentTerm)
             {
                 auto nodeId = message->from_node_id();
-                auto& node = nodes_[nodeId];
+                auto nodeIter = std::find_if(nodes_.begin(), nodes_.end(), [&](auto& node) { return node.nodeId == nodeId; });
+                CR_ASSERT(nodeIter != nodes_.end());
+                auto& node = *nodeIter;
                 auto lastLogIndex = raft.getStorage()->getLastIndex();
                 auto nodeLastLogIndex = std::min(lastLogIndex, response.last_log_index());
                 //日志匹配成功,更新伙伴节点信息
