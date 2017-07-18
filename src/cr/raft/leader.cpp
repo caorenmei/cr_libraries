@@ -27,8 +27,7 @@ namespace cr
             auto lastLogIndex = raft.getStorage()->getLastIndex();
             for (auto nodeId : raft.getBuddyNodeIds())
             {
-                nodes_.emplace_back();
-                auto& node = nodes_.back();
+                auto& node = nodes_[nodeId];
                 node.nodeId = nodeId;
                 node.nextUpdateTime = raft.getNowTime();;
                 node.nextLogIndex = lastLogIndex + 1;
@@ -93,24 +92,23 @@ namespace cr
             auto& response = message->append_entries_resp();
             auto currentTerm = raft.getCurrentTerm();
             // 如果是本任期的消息
-            auto lastLogIndex = raft.getStorage()->getLastIndex();
-            if (response.follower_term() == currentTerm && response.last_log_index() <= lastLogIndex)
+            if (response.follower_term() == currentTerm)
             {
                 auto nodeId = message->from_node_id();
-                auto nodeIter = std::find_if(nodes_.begin(), nodes_.end(), [&](auto& node) { return node.nodeId == nodeId; });
-                CR_ASSERT(nodeIter != nodes_.end());
-                auto& node = *nodeIter;
+                auto& node = nodes_[nodeId];
+                auto lastLogIndex = raft.getStorage()->getLastIndex();
+                auto nodeLastLogIndex = std::min(lastLogIndex, response.last_log_index());
                 //日志匹配成功,更新伙伴节点信息
                 if (response.success())
                 {
-                    node.replyLogIndex = std::max(node.replyLogIndex, response.last_log_index());
+                    node.replyLogIndex = std::max(node.replyLogIndex, nodeLastLogIndex);
                     node.matchLogIndex = std::max(node.matchLogIndex, node.replyLogIndex);
                 }
                 // 匹配失败，减小节点重试
                 else
                 {
-                    node.nextLogIndex = response.last_log_index() + 1;
-                    node.replyLogIndex = response.last_log_index();
+                    node.nextLogIndex = nodeLastLogIndex + 1;
+                    node.replyLogIndex = nodeLastLogIndex;
                     node.matchLogIndex = std::min(node.matchLogIndex, node.replyLogIndex);
                 }
             }
@@ -167,9 +165,9 @@ namespace cr
             bool updateCommitIndex = false;
             if (commitIndex < newCommitIndex)
             {
-                updateCommitIndex = true;
                 commitIndex = newCommitIndex;
                 raft.setCommitIndex(commitIndex);
+                updateCommitIndex = true;
             }
             std::uint64_t nextUpdateTime = nowTime + raft.getHeatbeatTimeout();
             // 更新节点
@@ -177,19 +175,9 @@ namespace cr
             auto maxWaitEntriesNum = raft.getMaxWaitEntriesNum();
             for (auto&& node : nodes_)
             {
-                bool needAppendLog = updateCommitIndex;
-                // 需要发送心跳
-                if (node.nextUpdateTime <= nowTime)
-                {
-                    needAppendLog = true;
-                }
-                // 如果有日志待复制
-                else if (node.nextLogIndex - node.replyLogIndex <= maxWaitEntriesNum && node.nextLogIndex <= lastLogIndex)
-                {
-                    needAppendLog = true;
-                }
-                // 传送日志
-                if (needAppendLog)
+                // 需要发送心跳或需要复制日志
+                if (((node.nextLogIndex - node.replyLogIndex <= maxWaitEntriesNum) 
+                    && (updateCommitIndex || (node.nextLogIndex <= lastLogIndex))) || (node.nextUpdateTime <= nowTime))
                 {
                     // 传送日志
                     appendEntriesReq(node, outMessages);
