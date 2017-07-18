@@ -181,11 +181,12 @@ namespace cr
             int checkNextLogIndex(std::uint64_t nodeId, std::uint64_t nextLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
-                if (leader->nodes_.count(nodeId) == 0)
+                auto nodeIter = std::find_if(leader->nodes_.begin(), leader->nodes_.end(), [&](auto& node) {return node.nodeId == nodeId; });
+                if (nodeIter == leader->nodes_.end())
                 {
                     return 1;
                 }
-                if (leader->nodes_[nodeId].nextLogIndex != nextLogIndex)
+                if (nodeIter->nextLogIndex != nextLogIndex)
                 {
                     return 2;
                 }
@@ -195,11 +196,12 @@ namespace cr
             int checkMatchLogIndex(std::uint64_t nodeId, std::uint64_t matchLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
-                if (leader->nodes_.count(nodeId) == 0)
+                auto nodeIter = std::find_if(leader->nodes_.begin(), leader->nodes_.end(), [&](auto& node) {return node.nodeId == nodeId; });
+                if (nodeIter == leader->nodes_.end())
                 {
                     return 1;
                 }
-                if (leader->nodes_[nodeId].matchLogIndex != matchLogIndex)
+                if (nodeIter->matchLogIndex != matchLogIndex)
                 {
                     return 2;
                 }
@@ -209,11 +211,12 @@ namespace cr
             int checkReplyLogIndex(std::uint64_t nodeId, std::uint64_t replyLogIndex)
             {
                 auto leader = std::dynamic_pointer_cast<Leader>(raft->currentState_);
-                if (leader->nodes_.count(nodeId) == 0)
+                auto nodeIter = std::find_if(leader->nodes_.begin(), leader->nodes_.end(), [&](auto& node) {return node.nodeId == nodeId; });
+                if (nodeIter == leader->nodes_.end())
                 {
                     return 1;
                 }
-                if (leader->nodes_[nodeId].replyLogIndex != replyLogIndex)
+                if (nodeIter->replyLogIndex != replyLogIndex)
                 {
                     return 2;
                 }

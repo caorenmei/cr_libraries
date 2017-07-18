@@ -27,7 +27,8 @@ namespace cr
             auto lastLogIndex = raft.getStorage()->getLastIndex();
             for (auto nodeId : raft.getBuddyNodeIds())
             {
-                auto& node = nodes_[nodeId];
+                nodes_.emplace_back();
+                auto& node = nodes_.back();
                 node.nodeId = nodeId;
                 node.nextUpdateTime = raft.getNowTime();;
                 node.nextLogIndex = lastLogIndex + 1;
@@ -96,7 +97,9 @@ namespace cr
             if (response.follower_term() == currentTerm && response.last_log_index() <= lastLogIndex)
             {
                 auto nodeId = message->from_node_id();
-                auto& node = nodes_[nodeId];
+                auto nodeIter = std::find_if(nodes_.begin(), nodes_.end(), [&](auto& node) { return node.nodeId == nodeId; });
+                CR_ASSERT(nodeIter != nodes_.end());
+                auto& node = *nodeIter;
                 //日志匹配成功,更新伙伴节点信息
                 if (response.success())
                 {
@@ -148,7 +151,7 @@ namespace cr
             matchLogIndexs_.push_back(lastLogIndex);
             for (auto&& node : nodes_)
             {
-                matchLogIndexs_.push_back(node.second.matchLogIndex);
+                matchLogIndexs_.push_back(node.matchLogIndex);
             }
             std::sort(matchLogIndexs_.begin(), matchLogIndexs_.end(), std::greater<std::uint64_t>());
             // 大部分节点都已提交N，则N为已提交日志索引
@@ -176,12 +179,12 @@ namespace cr
             {
                 bool needAppendLog = updateCommitIndex;
                 // 需要发送心跳
-                if (node.second.nextUpdateTime <= nowTime)
+                if (node.nextUpdateTime <= nowTime)
                 {
                     needAppendLog = true;
                 }
                 // 如果有日志待复制
-                else if (node.second.nextLogIndex - node.second.replyLogIndex <= maxWaitEntriesNum && node.second.nextLogIndex <= lastLogIndex)
+                else if (node.nextLogIndex - node.replyLogIndex <= maxWaitEntriesNum && node.nextLogIndex <= lastLogIndex)
                 {
                     needAppendLog = true;
                 }
@@ -189,11 +192,11 @@ namespace cr
                 if (needAppendLog)
                 {
                     // 传送日志
-                    appendEntriesReq(node.second, outMessages);
+                    appendEntriesReq(node, outMessages);
                     // 更新心跳时间
-                    node.second.nextUpdateTime = nowTime + raft.getHeatbeatTimeout();
+                    node.nextUpdateTime = nowTime + raft.getHeatbeatTimeout();
                 }
-                nextUpdateTime = std::min(nextUpdateTime, node.second.nextUpdateTime);
+                nextUpdateTime = std::min(nextUpdateTime, node.nextUpdateTime);
             }
             return nextUpdateTime;
         }

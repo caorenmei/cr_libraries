@@ -68,7 +68,7 @@ namespace cr
                 std::uint64_t matchLogIndex;
             };
             // 节点列表
-            std::map<std::uint64_t, BuddyNode> nodes_;
+            std::vector<BuddyNode> nodes_;
             // 用于计算CommitIndex
             std::vector<std::uint64_t> matchLogIndexs_;
         };
