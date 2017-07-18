@@ -1,5 +1,6 @@
 #include <cr/raft/file_storage.h>
 
+#include <array>
 #include <map>
 #include <mutex>
 
@@ -45,15 +46,31 @@ namespace cr
             return "term_" + uint64ToString(index);
         }
 
-        static std::string getLastLogIndexKey()
+        static std::string getLastLogIndexTermKey()
         {
-            return "last_log_index";
+            return "last_log_index_term";
         }
 
-        static std::string getLastLogTermKey()
+        static std::string getLastLogIndexTermValue(std::uint64_t key, std::uint64_t value)
         {
-            return "last_log_term";
+            boost::endian::native_to_little_inplace(key);
+            boost::endian::native_to_little_inplace(value);
+            std::array<std::uint64_t, 2> buffer = { key, value };
+            return std::string(reinterpret_cast<char*>(buffer.data()), sizeof(buffer));
         }
+
+        static std::pair<std::uint64_t, std::uint64_t> parseLastLogIndexTermValue(const std::string& value)
+        {
+            std::array<std::uint64_t, 2> result = {};
+            CR_ASSERT_E(cr::raft::IOException, value.size() == sizeof(result))(value.size())(sizeof(result));
+            std::memcpy(result.data(), value.data(), value.size());
+            for (auto& value : result)
+            {
+                boost::endian::little_to_native_inplace(value);
+            }
+            return { result[0], result[1] };
+        }
+
 
         static std::string getColumnFamilyNamePrefix()
         {
@@ -73,15 +90,10 @@ namespace cr
                 column_(column),
                 sync_(sync)
             {
-                std::string lastLogIndexValue;
-                auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogIndexKey()), &lastLogIndexValue);
+                std::string lastLogIndexTermValue;
+                auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogIndexTermKey()), &lastLogIndexTermValue);
                 CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
-                lastLogIndex_ = !lastLogIndexValue.empty() ? stringToUint64(lastLogIndexValue) : 0;
-
-                std::string lastLogTermValue;
-                status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogTermKey()), &lastLogTermValue);
-                CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
-                lastLogTerm_ = !lastLogTermValue.empty() ? stringToUint64(lastLogTermValue) : 0;
+                std::tie(lastLogIndex_, lastLogTerm_) = !lastLogIndexTermValue.empty() ? parseLastLogIndexTermValue(lastLogIndexTermValue ) : std::make_pair(0, 0);
             }
 
             ~RocksdbStorage()
@@ -108,8 +120,7 @@ namespace cr
                     lastLogTerm = entry.term();
                     batch.Put(column.get(), rocksdb::Slice(getLogTermKey(lastLogIndex)), rocksdb::Slice(uint64ToString(lastLogTerm)));
                 }
-                batch.Put(column.get(), rocksdb::Slice(getLastLogIndexKey()), rocksdb::Slice(uint64ToString(lastLogIndex)));
-                batch.Put(column.get(), rocksdb::Slice(getLastLogTermKey()), rocksdb::Slice(uint64ToString(lastLogTerm)));
+                batch.Put(column.get(), rocksdb::Slice(getLastLogIndexTermKey()), rocksdb::Slice(getLastLogIndexTermValue(lastLogIndex, lastLogTerm)));
 
                 rocksdb::WriteOptions writeOptions;
                 writeOptions.sync = sync_;
@@ -143,8 +154,7 @@ namespace cr
                     batch.Delete(column.get(), rocksdb::Slice(getLogValueKey(logIndex)));
                     batch.Delete(column.get(), rocksdb::Slice(getLogTermKey(logIndex)));
                 }
-                batch.Put(column.get(), rocksdb::Slice(getLastLogIndexKey()), rocksdb::Slice(uint64ToString(lastLogIndex)));
-                batch.Put(column.get(), rocksdb::Slice(getLastLogTermKey()), rocksdb::Slice(uint64ToString(lastLogTerm)));
+                batch.Put(column.get(), rocksdb::Slice(getLastLogIndexTermKey()), rocksdb::Slice(getLastLogIndexTermValue(lastLogIndex, lastLogTerm)));
 
                 rocksdb::WriteOptions writeOptions;
                 writeOptions.sync = sync_;
