@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cmath>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
@@ -26,6 +25,7 @@
 #include <boost/fiber/all.hpp>
 
 #include "barrier.hpp"
+#include "bind/bind_processor.hpp"
 
 using clock_type = std::chrono::steady_clock;
 using duration_type = clock_type::duration;
@@ -59,9 +59,9 @@ void skynet( allocator_type & salloc, channel_type & c, std::size_t num, std::si
     }
 }
 
-void thread( std::uint32_t thread_count, barrier * b) {
-    // thread registers itself at work-stealing scheduler
-    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >( thread_count);
+void thread( unsigned int max_idx, unsigned int idx, barrier * b) {
+    bind_to_processor( idx);
+    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >( max_idx, idx);
     b->wait();
     lock_type lk( mtx);
     cnd.wait( lk, [](){ return done; });
@@ -70,29 +70,27 @@ void thread( std::uint32_t thread_count, barrier * b) {
 
 int main() {
     try {
-        // count of logical cpus
-        std::uint32_t thread_count = std::thread::hardware_concurrency();
-        // main-thread registers itself at work-stealing scheduler
-        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >( thread_count);
-        barrier b{ thread_count };
+        unsigned int cpus = std::thread::hardware_concurrency();
+        barrier b( cpus);
+        unsigned int max_idx = cpus - 1;
+        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >( max_idx, max_idx);
+        bind_to_processor( max_idx);
         std::size_t size{ 1000000 };
         std::size_t div{ 10 };
-        allocator_type salloc{ 2*allocator_type::traits_type::page_size() };
-        std::uint64_t result{ 0 };
-        channel_type rc{ 2 };
         std::vector< std::thread > threads;
-        for ( std::uint32_t i = 1 /* count main-thread */; i < thread_count; ++i) {
-            // spawn thread
-            threads.emplace_back( thread, thread_count, & b);
-        }
+        for ( unsigned int idx = 0; idx < max_idx; ++idx) {
+            threads.push_back( std::thread( thread, max_idx, idx, & b) );
+        };
+        allocator_type salloc{ allocator_type::traits_type::page_size() };
+        std::uint64_t result{ 0 };
+        duration_type duration{ duration_type::zero() };
+        channel_type rc{ 2 };
         b.wait();
         time_point_type start{ clock_type::now() };
         skynet( salloc, rc, 0, size, div);
         result = rc.value_pop();
-        if ( 499999500000 != result) {
-            throw std::runtime_error("invalid result");
-        }
-        auto duration = clock_type::now() - start;
+        duration = clock_type::now() - start;
+        std::cout << "Result: " << result << " in " << duration.count() / 1000000 << " ms" << std::endl;
         lock_type lk( mtx);
         done = true;
         lk.unlock();
@@ -100,7 +98,7 @@ int main() {
         for ( std::thread & t : threads) {
             t.join();
         }
-        std::cout << "duration: " << duration.count() / 1000000 << " ms" << std::endl;
+        std::cout << "done." << std::endl;
         return EXIT_SUCCESS;
     } catch ( std::exception const& e) {
         std::cerr << "exception: " << e.what() << std::endl;

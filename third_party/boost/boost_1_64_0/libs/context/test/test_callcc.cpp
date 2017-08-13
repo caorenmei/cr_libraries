@@ -600,14 +600,14 @@ void test_snprintf() {
                 char buf[15];
                 snprintf( buf, sizeof( buf), fmt, std::sqrt( 2) );
                 BOOST_CHECK( 0 < sizeof( buf) );
-                BOOST_ASSERT( std::string("sqrt(2) = 1.41") == std::string( buf, 14) );
+                BOOST_ASSERT( std::string("sqrt(2) = 1.41") == std::string( buf) );
             }
             {
                 std::uint64_t n = 0xbcdef1234567890;
                 const char *fmt = "0x%016llX";
                 char buf[100];
                 snprintf( buf, sizeof( buf), fmt, n);
-                BOOST_ASSERT( std::string("0x0BCDEF1234567890") == std::string( buf, 18) );
+                BOOST_ASSERT( std::string("0x0BCDEF1234567890") == std::string( buf) );
             }
 			return std::move( c);
 	});
@@ -633,6 +633,7 @@ boost::unit_test::test_suite * init_unit_test_suite( int, char* [])
     test->add( BOOST_TEST_CASE( & test_bind) );
     test->add( BOOST_TEST_CASE( & test_exception) );
     test->add( BOOST_TEST_CASE( & test_fp) );
+    test->add( BOOST_TEST_CASE( & test_stacked) );
     test->add( BOOST_TEST_CASE( & test_stacked) );
     test->add( BOOST_TEST_CASE( & test_prealloc) );
     test->add( BOOST_TEST_CASE( & test_ontop) );

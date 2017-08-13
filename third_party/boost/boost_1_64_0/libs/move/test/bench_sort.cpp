@@ -24,7 +24,6 @@ using boost::timer::cpu_times;
 using boost::timer::nanosecond_type;
 
 #include "order_type.hpp"
-#include "random_shuffle.hpp"
 
 //#define BOOST_MOVE_ADAPTIVE_SORT_STATS
 //#define BOOST_MOVE_ADAPTIVE_SORT_INVARIANTS
@@ -49,9 +48,9 @@ void generate_elements(T elements[], std::size_t element_count, std::size_t key_
       std::size_t  key = key_len ? (i % key_len) : i;
       elements[i].key=key;
    }
-   ::random_shuffle(elements, elements + element_count);
-   ::random_shuffle(elements, elements + element_count);
-   ::random_shuffle(elements, elements + element_count);
+   std::random_shuffle(elements, elements + element_count);
+   std::random_shuffle(elements, elements + element_count);
+   std::random_shuffle(elements, elements + element_count);
    for(std::size_t i = 0; i < element_count; ++i){
       elements[i].val = key_reps[elements[i].key]++;
    }

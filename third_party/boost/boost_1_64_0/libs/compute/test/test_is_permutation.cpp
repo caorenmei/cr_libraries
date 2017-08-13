@@ -24,10 +24,10 @@ namespace bc = boost::compute;
 
 BOOST_AUTO_TEST_CASE(is_permutation_int)
 {
-    bc::int_ dataset1[] = {1, 3, 1, 2, 5};
+    int dataset1[] = {1, 3, 1, 2, 5};
     bc::vector<bc::int_> vector1(dataset1, dataset1 + 5, queue);
 
-    bc::int_ dataset2[] = {3, 1, 5, 1, 2};
+    int dataset2[] = {3, 1, 5, 1, 2};
     bc::vector<bc::int_> vector2(dataset2, dataset2 + 5, queue);
 
     bool result =
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(is_permutation_int)
 
     BOOST_VERIFY(result == true);
 
-    vector2.begin().write(bc::int_(1), queue);
+    vector2[0] = 1;
 
     result = bc::is_permutation(vector1.begin(), vector1.begin() + 5,
                                 vector2.begin(), vector2.begin() + 5,
@@ -47,10 +47,10 @@ BOOST_AUTO_TEST_CASE(is_permutation_int)
 
 BOOST_AUTO_TEST_CASE(is_permutation_string)
 {
-    bc::char_ dataset1[] = "abade";
+    char dataset1[] = "abade";
     bc::vector<bc::char_> vector1(dataset1, dataset1 + 5, queue);
 
-    bc::char_ dataset2[] = "aadeb";
+    char dataset2[] = "aadeb";
     bc::vector<bc::char_> vector2(dataset2, dataset2 + 5, queue);
 
     bool result =
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(is_permutation_string)
 
     BOOST_VERIFY(result == true);
 
-    vector2.begin().write(bc::char_('b'), queue);
+    vector2[0] = 'b';
 
     result = bc::is_permutation(vector1.begin(), vector1.begin() + 5,
                                 vector2.begin(), vector2.begin() + 5,

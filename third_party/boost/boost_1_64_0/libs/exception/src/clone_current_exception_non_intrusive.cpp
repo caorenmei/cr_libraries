@@ -10,17 +10,18 @@
 #error This file requires exception handling to be enabled.
 #endif
 
-#include <boost/config.hpp>
 #include <boost/exception/detail/clone_current_exception.hpp>
 
-#if defined(BOOST_ENABLE_NON_INTRUSIVE_EXCEPTION_PTR) && defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#if defined(BOOST_ENABLE_NON_INTRUSIVE_EXCEPTION_PTR) && defined(_MSC_VER) && defined(_M_IX86) && !defined(_M_X64)
 
 //Non-intrusive cloning support implemented below, only for MSVC versions mentioned above.
 //Thanks Anthony Williams!
-//Thanks to Martin Weiss for implementing 64-bit support!
 
 #include <boost/exception/exception.hpp>
 #include <boost/shared_ptr.hpp>
+#ifndef BOOST_NO_RTTI
+#include <typeinfo>
+#endif
 #include <windows.h>
 #include <malloc.h>
 
@@ -31,10 +32,8 @@ namespace
 
 #if _MSC_VER==1310
     int const exception_info_offset=0x74;
-#elif ((_MSC_VER==1400 || _MSC_VER==1500) && !defined _M_X64)
+#elif (_MSC_VER==1400 || _MSC_VER==1500)
     int const exception_info_offset=0x80;
-#elif ((_MSC_VER==1400 || _MSC_VER==1500) && defined _M_X64)
-    int const exception_info_offset=0xE0;
 #else
     int const exception_info_offset=-1;
 #endif
@@ -59,11 +58,7 @@ namespace
 
     unsigned const cpp_exception_code=0xE06D7363;
     unsigned const cpp_exception_magic_flag=0x19930520;
-#ifdef _M_X64
-    unsigned const cpp_exception_parameter_count=4;
-#else
     unsigned const cpp_exception_parameter_count=3;
-#endif
 
     struct
     dummy_exception_type
@@ -77,16 +72,8 @@ namespace
     union
     cpp_copy_constructor
         {
-        void * address;
         normal_copy_constructor_ptr normal_copy_constructor;
         copy_constructor_with_virtual_base_ptr copy_constructor_with_virtual_base;
-        };
-
-    union
-    cpp_destructor
-        {
-        void * address;
-        destructor_ptr destructor;
         };
 
     enum
@@ -96,46 +83,45 @@ namespace
         class_has_virtual_base=4
         };
 
-    // ATTENTION: On x86 fields such as type_info and copy_constructor are really pointers
-    // but on 64bit these are 32bit offsets from HINSTANCE. Hints on the 64bit handling from
-    // http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx .
     struct
     cpp_type_info
         {
         unsigned flags;
-        int type_info;
+#ifndef BOOST_NO_RTTI
+        void const * type_info;
+#else
+        std::type_info * type_info;
+#endif
         int this_offset;
         int vbase_descr;
         int vbase_offset;
         unsigned long size;
-        int copy_constructor;
+        cpp_copy_constructor copy_constructor;
         };
 
     struct
     cpp_type_info_table
         {
         unsigned count;
-        int info;
+        const cpp_type_info * info[1];
         };
 
     struct
     cpp_exception_type
         {
         unsigned flags;
-        int destructor;
-        int custom_handler;
-        int type_info_table;
+        destructor_ptr destructor;
+        void(*custom_handler)();
+        cpp_type_info_table const * type_info_table;
         };
 
     struct
     exception_object_deleter
         {
         cpp_exception_type const & et_;
-        size_t image_base_;
 
-        exception_object_deleter( cpp_exception_type const & et, size_t image_base ):
-            et_(et),
-            image_base_(image_base)
+        exception_object_deleter( cpp_exception_type const & et ):
+            et_(et)
             {
             }
 
@@ -143,54 +129,45 @@ namespace
         operator()( void * obj )
             {
             BOOST_ASSERT(obj!=0);
-            dummy_exception_type* dummy_exception_ptr = static_cast<dummy_exception_type *>(obj);
-            if( et_.destructor )
-                {
-                cpp_destructor destructor;
-                destructor.address = reinterpret_cast<void *>(et_.destructor + image_base_);
-                (dummy_exception_ptr->*(destructor.destructor))();
-                }
+            dummy_exception_type * dummy_exception_ptr=reinterpret_cast<dummy_exception_type *>(obj);
+            (dummy_exception_ptr->*(et_.destructor))();
             free(obj);
             }
         };
 
     cpp_type_info const &
-    get_cpp_type_info( cpp_exception_type const & et, size_t image_base )
+    get_cpp_type_info( cpp_exception_type const & et )
         {
-        cpp_type_info_table * const typearray = reinterpret_cast<cpp_type_info_table * const>(et.type_info_table + image_base);
-        cpp_type_info * const ti = reinterpret_cast<cpp_type_info * const>(typearray->info + image_base);
+        cpp_type_info const * ti = et.type_info_table->info[0];
         BOOST_ASSERT(ti!=0);
         return *ti;
         }
 
     void
-    copy_msvc_exception( void * dst, void * src, cpp_type_info const & ti, size_t image_base )
+    copy_msvc_exception( void * dst, void * src, cpp_type_info const & ti )
         {
-        cpp_copy_constructor copy_constructor;
-        copy_constructor.address = reinterpret_cast<void *>(ti.copy_constructor + image_base);
-
-        if( !(ti.flags & class_is_simple_type) && copy_constructor.normal_copy_constructor )
+        if( !(ti.flags & class_is_simple_type) && ti.copy_constructor.normal_copy_constructor )
             {
-            dummy_exception_type * dummy_exception_ptr = static_cast<dummy_exception_type *>(dst);
+            dummy_exception_type * dummy_exception_ptr = reinterpret_cast<dummy_exception_type *>(dst);
             if( ti.flags & class_has_virtual_base )
-                (dummy_exception_ptr->*(copy_constructor.copy_constructor_with_virtual_base))(src,dst);
+                (dummy_exception_ptr->*(ti.copy_constructor.copy_constructor_with_virtual_base))(src,dst);
             else
-                (dummy_exception_ptr->*(copy_constructor.normal_copy_constructor))(src);
+                (dummy_exception_ptr->*(ti.copy_constructor.normal_copy_constructor))(src);
             }
         else
             memmove(dst,src,ti.size);
         }
 
     boost::shared_ptr<void>
-    clone_msvc_exception( void * src, cpp_exception_type const & et, size_t image_base )
+    clone_msvc_exception( void * src, cpp_exception_type const & et )
         {
-        BOOST_ASSERT(src!=0);
-        cpp_type_info const & ti=get_cpp_type_info(et,image_base);
+        assert(src!=0);
+        cpp_type_info const & ti=get_cpp_type_info(et);
         if( void * dst = malloc(ti.size) )
             {
             try
                 {
-                copy_msvc_exception(dst,src,ti,image_base);
+                copy_msvc_exception(dst,src,ti);
                 }
             catch(
             ... )
@@ -198,7 +175,7 @@ namespace
                 free(dst);
                 throw;
                 }
-            return boost::shared_ptr<void>(dst,exception_object_deleter(et,image_base));
+            return boost::shared_ptr<void>(dst,exception_object_deleter(et));
             }
         else
             throw std::bad_alloc();
@@ -212,21 +189,13 @@ namespace
         cloned_exception & operator=( cloned_exception const & );
 
         cpp_exception_type const & et_;
-        size_t image_base_;
         boost::shared_ptr<void> exc_;
 
         public:
-        cloned_exception( EXCEPTION_RECORD const * record ):
-            et_(*reinterpret_cast<cpp_exception_type const *>(record->ExceptionInformation[2])),
-            image_base_((cpp_exception_parameter_count==4) ? record->ExceptionInformation[3] : 0),
-            exc_(clone_msvc_exception(reinterpret_cast<void *>(record->ExceptionInformation[1]),et_,image_base_))
-            {
-            }
 
-        cloned_exception( void * exc, cpp_exception_type const & et, size_t image_base ):
+        cloned_exception( void * exc, cpp_exception_type const & et ):
             et_(et),
-            image_base_(image_base),
-            exc_(clone_msvc_exception(exc,et_,image_base))
+            exc_(clone_msvc_exception(exc,et_))
             {
             }
 
@@ -237,22 +206,19 @@ namespace
         boost::exception_detail::clone_base const *
         clone() const
             {
-            return new cloned_exception(exc_.get(),et_,image_base_);
+            return new cloned_exception(exc_.get(),et_);
             }
 
         void
         rethrow() const
             {
-            cpp_type_info const & ti=get_cpp_type_info(et_,image_base_);
+            cpp_type_info const & ti=get_cpp_type_info(et_);
             void * dst = _alloca(ti.size);
-            copy_msvc_exception(dst,exc_.get(),ti,image_base_);
+            copy_msvc_exception(dst,exc_.get(),ti);
             ULONG_PTR args[cpp_exception_parameter_count];
             args[0]=cpp_exception_magic_flag;
             args[1]=reinterpret_cast<ULONG_PTR>(dst);
             args[2]=reinterpret_cast<ULONG_PTR>(&et_);
-            if (cpp_exception_parameter_count==4)
-                args[3]=image_base_;
-
             RaiseException(cpp_exception_code,EXCEPTION_NONCONTINUABLE,cpp_exception_parameter_count,args);
             }
         };
@@ -271,7 +237,8 @@ namespace
         {
         BOOST_ASSERT(exception_info_offset>=0);
         BOOST_ASSERT(info_!=0);
-        EXCEPTION_RECORD* record = static_cast<EXCEPTION_POINTERS *>(info_)->ExceptionRecord;
+        EXCEPTION_POINTERS * info=reinterpret_cast<EXCEPTION_POINTERS *>(info_);
+        EXCEPTION_RECORD * record=info->ExceptionRecord;
         if( is_cpp_exception(record) )
             {
             if( !record->ExceptionInformation[2] )
@@ -279,7 +246,9 @@ namespace
             if( is_cpp_exception(record) && record->ExceptionInformation[2] )
                 try
                     {
-                    ptr = new cloned_exception(record);
+                    ptr = new cloned_exception(
+                            reinterpret_cast<void *>(record->ExceptionInformation[1]),
+                            *reinterpret_cast<cpp_exception_type const *>(record->ExceptionInformation[2]));
                     result = boost::exception_detail::clone_current_exception_result::success;
                     }
                 catch(
@@ -331,6 +300,8 @@ boost
 
 //On all other compilers, return clone_current_exception_result::not_supported.
 //On such platforms, only the intrusive enable_current_exception() cloning will work.
+
+#include <boost/config.hpp>
 
 namespace
 boost

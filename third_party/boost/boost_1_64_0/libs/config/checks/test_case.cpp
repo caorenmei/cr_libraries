@@ -1,4 +1,4 @@
-//  This file was automatically generated on Sun May 28 10:05:49 2017
+//  This file was automatically generated on Sun Feb  5 19:09:22 2017
 //  by libs/config/tools/generate.cpp
 //  Copyright John Maddock 2002-4.
 //  Use, modification and distribution are subject to the 
@@ -9,946 +9,809 @@
 //  Revision $Id$
 //
 
-#include <boost/config.hpp>
-
 #ifdef TEST_BOOST_HAS_TWO_ARG_USE_FACET
-#  ifndef BOOST_HAS_TWO_ARG_USE_FACET
-#     error "Feature macro BOOST_HAS_TWO_ARG_USE_FACET is not defined."
-#  endif
+#  include "../test/boost_has_2arg_use_facet.ipp"
+namespace test = boost_has_two_arg_use_facet;
 #endif
 #ifdef TEST_BOOST_HAS_BETHREADS
-#  ifndef BOOST_HAS_BETHREADS
-#     error "Feature macro BOOST_HAS_BETHREADS is not defined."
-#  endif
+#  include "../test/boost_has_bethreads.ipp"
+namespace test = boost_has_bethreads;
 #endif
 #ifdef TEST_BOOST_HAS_CLOCK_GETTIME
-#  ifndef BOOST_HAS_CLOCK_GETTIME
-#     error "Feature macro BOOST_HAS_CLOCK_GETTIME is not defined."
-#  endif
+#  include "../test/boost_has_clock_gettime.ipp"
+namespace test = boost_has_clock_gettime;
 #endif
 #ifdef TEST_BOOST_HAS_DIRENT_H
-#  ifndef BOOST_HAS_DIRENT_H
-#     error "Feature macro BOOST_HAS_DIRENT_H is not defined."
-#  endif
+#  include "../test/boost_has_dirent_h.ipp"
+namespace test = boost_has_dirent_h;
 #endif
 #ifdef TEST_BOOST_HAS_EXPM1
-#  ifndef BOOST_HAS_EXPM1
-#     error "Feature macro BOOST_HAS_EXPM1 is not defined."
-#  endif
+#  include "../test/boost_has_expm1.ipp"
+namespace test = boost_has_expm1;
 #endif
 #ifdef TEST_BOOST_HAS_FLOAT128
-#  ifndef BOOST_HAS_FLOAT128
-#     error "Feature macro BOOST_HAS_FLOAT128 is not defined."
-#  endif
+#  include "../test/boost_has_float128.ipp"
+namespace test = boost_has_float128;
 #endif
 #ifdef TEST_BOOST_HAS_FTIME
-#  ifndef BOOST_HAS_FTIME
-#     error "Feature macro BOOST_HAS_FTIME is not defined."
-#  endif
+#  include "../test/boost_has_ftime.ipp"
+namespace test = boost_has_ftime;
 #endif
 #ifdef TEST_BOOST_HAS_GETSYSTEMTIMEASFILETIME
-#  ifndef BOOST_HAS_GETSYSTEMTIMEASFILETIME
-#     error "Feature macro BOOST_HAS_GETSYSTEMTIMEASFILETIME is not defined."
-#  endif
+#  include "../test/boost_has_getsystemtimeasfiletime.ipp"
+namespace test = boost_has_getsystemtimeasfiletime;
 #endif
 #ifdef TEST_BOOST_HAS_GETTIMEOFDAY
-#  ifndef BOOST_HAS_GETTIMEOFDAY
-#     error "Feature macro BOOST_HAS_GETTIMEOFDAY is not defined."
-#  endif
+#  include "../test/boost_has_gettimeofday.ipp"
+namespace test = boost_has_gettimeofday;
 #endif
 #ifdef TEST_BOOST_HAS_HASH
-#  ifndef BOOST_HAS_HASH
-#     error "Feature macro BOOST_HAS_HASH is not defined."
-#  endif
+#  include "../test/boost_has_hash.ipp"
+namespace test = boost_has_hash;
 #endif
 #ifdef TEST_BOOST_HAS_INT128
-#  ifndef BOOST_HAS_INT128
-#     error "Feature macro BOOST_HAS_INT128 is not defined."
-#  endif
+#  include "../test/boost_has_int128.ipp"
+namespace test = boost_has_int128;
 #endif
 #ifdef TEST_BOOST_HAS_LOG1P
-#  ifndef BOOST_HAS_LOG1P
-#     error "Feature macro BOOST_HAS_LOG1P is not defined."
-#  endif
+#  include "../test/boost_has_log1p.ipp"
+namespace test = boost_has_log1p;
 #endif
 #ifdef TEST_BOOST_HAS_LONG_LONG
-#  ifndef BOOST_HAS_LONG_LONG
-#     error "Feature macro BOOST_HAS_LONG_LONG is not defined."
-#  endif
+#  include "../test/boost_has_long_long.ipp"
+namespace test = boost_has_long_long;
 #endif
 #ifdef TEST_BOOST_HAS_MACRO_USE_FACET
-#  ifndef BOOST_HAS_MACRO_USE_FACET
-#     error "Feature macro BOOST_HAS_MACRO_USE_FACET is not defined."
-#  endif
+#  include "../test/boost_has_macro_use_facet.ipp"
+namespace test = boost_has_macro_use_facet;
 #endif
 #ifdef TEST_BOOST_HAS_MS_INT64
-#  ifndef BOOST_HAS_MS_INT64
-#     error "Feature macro BOOST_HAS_MS_INT64 is not defined."
-#  endif
+#  include "../test/boost_has_ms_int64.ipp"
+namespace test = boost_has_ms_int64;
 #endif
 #ifdef TEST_BOOST_HAS_NANOSLEEP
-#  ifndef BOOST_HAS_NANOSLEEP
-#     error "Feature macro BOOST_HAS_NANOSLEEP is not defined."
-#  endif
+#  include "../test/boost_has_nanosleep.ipp"
+namespace test = boost_has_nanosleep;
 #endif
 #ifdef TEST_BOOST_HAS_NL_TYPES_H
-#  ifndef BOOST_HAS_NL_TYPES_H
-#     error "Feature macro BOOST_HAS_NL_TYPES_H is not defined."
-#  endif
+#  include "../test/boost_has_nl_types_h.ipp"
+namespace test = boost_has_nl_types_h;
 #endif
 #ifdef TEST_BOOST_HAS_NRVO
-#  ifndef BOOST_HAS_NRVO
-#     error "Feature macro BOOST_HAS_NRVO is not defined."
-#  endif
+#  include "../test/boost_has_nrvo.ipp"
+namespace test = boost_has_nrvo;
 #endif
 #ifdef TEST_BOOST_HAS_PARTIAL_STD_ALLOCATOR
-#  ifndef BOOST_HAS_PARTIAL_STD_ALLOCATOR
-#     error "Feature macro BOOST_HAS_PARTIAL_STD_ALLOCATOR is not defined."
-#  endif
+#  include "../test/boost_has_part_alloc.ipp"
+namespace test = boost_has_partial_std_allocator;
 #endif
 #ifdef TEST_BOOST_HAS_PTHREAD_DELAY_NP
-#  ifndef BOOST_HAS_PTHREAD_DELAY_NP
-#     error "Feature macro BOOST_HAS_PTHREAD_DELAY_NP is not defined."
-#  endif
+#  include "../test/boost_has_pthread_delay_np.ipp"
+namespace test = boost_has_pthread_delay_np;
 #endif
 #ifdef TEST_BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
-#  ifndef BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
-#     error "Feature macro BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE is not defined."
-#  endif
+#  include "../test/boost_has_pthread_ma_st.ipp"
+namespace test = boost_has_pthread_mutexattr_settype;
 #endif
 #ifdef TEST_BOOST_HAS_PTHREAD_YIELD
-#  ifndef BOOST_HAS_PTHREAD_YIELD
-#     error "Feature macro BOOST_HAS_PTHREAD_YIELD is not defined."
-#  endif
+#  include "../test/boost_has_pthread_yield.ipp"
+namespace test = boost_has_pthread_yield;
 #endif
 #ifdef TEST_BOOST_HAS_PTHREADS
-#  ifndef BOOST_HAS_PTHREADS
-#     error "Feature macro BOOST_HAS_PTHREADS is not defined."
-#  endif
+#  include "../test/boost_has_pthreads.ipp"
+namespace test = boost_has_pthreads;
 #endif
 #ifdef TEST_BOOST_HAS_RVALUE_REFS
-#  ifndef BOOST_HAS_RVALUE_REFS
-#     error "Feature macro BOOST_HAS_RVALUE_REFS is not defined."
-#  endif
+#  include "../test/boost_has_rvalue_refs.ipp"
+namespace test = boost_has_rvalue_refs;
 #endif
 #ifdef TEST_BOOST_HAS_SCHED_YIELD
-#  ifndef BOOST_HAS_SCHED_YIELD
-#     error "Feature macro BOOST_HAS_SCHED_YIELD is not defined."
-#  endif
+#  include "../test/boost_has_sched_yield.ipp"
+namespace test = boost_has_sched_yield;
 #endif
 #ifdef TEST_BOOST_HAS_SGI_TYPE_TRAITS
-#  ifndef BOOST_HAS_SGI_TYPE_TRAITS
-#     error "Feature macro BOOST_HAS_SGI_TYPE_TRAITS is not defined."
-#  endif
+#  include "../test/boost_has_sgi_type_traits.ipp"
+namespace test = boost_has_sgi_type_traits;
 #endif
 #ifdef TEST_BOOST_HAS_SIGACTION
-#  ifndef BOOST_HAS_SIGACTION
-#     error "Feature macro BOOST_HAS_SIGACTION is not defined."
-#  endif
+#  include "../test/boost_has_sigaction.ipp"
+namespace test = boost_has_sigaction;
 #endif
 #ifdef TEST_BOOST_HAS_SLIST
-#  ifndef BOOST_HAS_SLIST
-#     error "Feature macro BOOST_HAS_SLIST is not defined."
-#  endif
+#  include "../test/boost_has_slist.ipp"
+namespace test = boost_has_slist;
 #endif
 #ifdef TEST_BOOST_HAS_STATIC_ASSERT
-#  ifndef BOOST_HAS_STATIC_ASSERT
-#     error "Feature macro BOOST_HAS_STATIC_ASSERT is not defined."
-#  endif
+#  include "../test/boost_has_static_assert.ipp"
+namespace test = boost_has_static_assert;
 #endif
 #ifdef TEST_BOOST_HAS_STDINT_H
-#  ifndef BOOST_HAS_STDINT_H
-#     error "Feature macro BOOST_HAS_STDINT_H is not defined."
-#  endif
+#  include "../test/boost_has_stdint_h.ipp"
+namespace test = boost_has_stdint_h;
 #endif
 #ifdef TEST_BOOST_HAS_STLP_USE_FACET
-#  ifndef BOOST_HAS_STLP_USE_FACET
-#     error "Feature macro BOOST_HAS_STLP_USE_FACET is not defined."
-#  endif
+#  include "../test/boost_has_stlp_use_facet.ipp"
+namespace test = boost_has_stlp_use_facet;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_ARRAY
+#  include "../test/boost_has_tr1_array.ipp"
+namespace test = boost_has_tr1_array;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_BIND
+#  include "../test/boost_has_tr1_bind.ipp"
+namespace test = boost_has_tr1_bind;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_COMPLEX_OVERLOADS
+#  include "../test/boost_has_tr1_complex_over.ipp"
+namespace test = boost_has_tr1_complex_overloads;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_COMPLEX_INVERSE_TRIG
+#  include "../test/boost_has_tr1_complex_trig.ipp"
+namespace test = boost_has_tr1_complex_inverse_trig;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_FUNCTION
+#  include "../test/boost_has_tr1_function.ipp"
+namespace test = boost_has_tr1_function;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_HASH
+#  include "../test/boost_has_tr1_hash.ipp"
+namespace test = boost_has_tr1_hash;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_MEM_FN
+#  include "../test/boost_has_tr1_mem_fn.ipp"
+namespace test = boost_has_tr1_mem_fn;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_RANDOM
+#  include "../test/boost_has_tr1_random.ipp"
+namespace test = boost_has_tr1_random;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_REFERENCE_WRAPPER
+#  include "../test/boost_has_tr1_ref_wrap.ipp"
+namespace test = boost_has_tr1_reference_wrapper;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_REGEX
+#  include "../test/boost_has_tr1_regex.ipp"
+namespace test = boost_has_tr1_regex;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_RESULT_OF
+#  include "../test/boost_has_tr1_result_of.ipp"
+namespace test = boost_has_tr1_result_of;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_SHARED_PTR
+#  include "../test/boost_has_tr1_shared_ptr.ipp"
+namespace test = boost_has_tr1_shared_ptr;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_TUPLE
+#  include "../test/boost_has_tr1_tuple.ipp"
+namespace test = boost_has_tr1_tuple;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_TYPE_TRAITS
+#  include "../test/boost_has_tr1_type_traits.ipp"
+namespace test = boost_has_tr1_type_traits;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_UNORDERED_MAP
+#  include "../test/boost_has_tr1_unordered_map.ipp"
+namespace test = boost_has_tr1_unordered_map;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_UNORDERED_SET
+#  include "../test/boost_has_tr1_unordered_set.ipp"
+namespace test = boost_has_tr1_unordered_set;
+#endif
+#ifdef TEST_BOOST_HAS_TR1_UTILITY
+#  include "../test/boost_has_tr1_utility.ipp"
+namespace test = boost_has_tr1_utility;
 #endif
 #ifdef TEST_BOOST_HAS_UNISTD_H
-#  ifndef BOOST_HAS_UNISTD_H
-#     error "Feature macro BOOST_HAS_UNISTD_H is not defined."
-#  endif
+#  include "../test/boost_has_unistd_h.ipp"
+namespace test = boost_has_unistd_h;
 #endif
 #ifdef TEST_BOOST_HAS_VARIADIC_TMPL
-#  ifndef BOOST_HAS_VARIADIC_TMPL
-#     error "Feature macro BOOST_HAS_VARIADIC_TMPL is not defined."
-#  endif
+#  include "../test/boost_has_variadic_tmpl.ipp"
+namespace test = boost_has_variadic_tmpl;
 #endif
 #ifdef TEST_BOOST_MSVC6_MEMBER_TEMPLATES
-#  ifndef BOOST_MSVC6_MEMBER_TEMPLATES
-#     error "Feature macro BOOST_MSVC6_MEMBER_TEMPLATES is not defined."
-#  endif
+#  include "../test/boost_has_vc6_mem_templ.ipp"
+namespace test = boost_msvc6_member_templates;
 #endif
 #ifdef TEST_BOOST_MSVC_STD_ITERATOR
-#  ifndef BOOST_MSVC_STD_ITERATOR
-#     error "Feature macro BOOST_MSVC_STD_ITERATOR is not defined."
-#  endif
+#  include "../test/boost_has_vc_iterator.ipp"
+namespace test = boost_msvc_std_iterator;
 #endif
 #ifdef TEST_BOOST_HAS_WINTHREADS
-#  ifndef BOOST_HAS_WINTHREADS
-#     error "Feature macro BOOST_HAS_WINTHREADS is not defined."
-#  endif
+#  include "../test/boost_has_winthreads.ipp"
+namespace test = boost_has_winthreads;
 #endif
 #ifdef TEST_BOOST_NO_ADL_BARRIER
-#  ifdef BOOST_NO_ADL_BARRIER
-#     error "Defect macro BOOST_NO_ADL_BARRIER is defined."
-#  endif
+#  include "../test/boost_no_adl_barrier.ipp"
+namespace test = boost_no_adl_barrier;
 #endif
 #ifdef TEST_BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP
-#  ifdef BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP
-#     error "Defect macro BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP is defined."
-#  endif
+#  include "../test/boost_no_arg_dep_lookup.ipp"
+namespace test = boost_no_argument_dependent_lookup;
 #endif
 #ifdef TEST_BOOST_NO_ARRAY_TYPE_SPECIALIZATIONS
-#  ifdef BOOST_NO_ARRAY_TYPE_SPECIALIZATIONS
-#     error "Defect macro BOOST_NO_ARRAY_TYPE_SPECIALIZATIONS is defined."
-#  endif
+#  include "../test/boost_no_array_type_spec.ipp"
+namespace test = boost_no_array_type_specializations;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_AUTO_DECLARATIONS
-#  ifdef BOOST_NO_CXX11_AUTO_DECLARATIONS
-#     error "Defect macro BOOST_NO_CXX11_AUTO_DECLARATIONS is defined."
-#  endif
+#  include "../test/boost_no_auto_declarations.ipp"
+namespace test = boost_no_cxx11_auto_declarations;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_AUTO_MULTIDECLARATIONS
-#  ifdef BOOST_NO_CXX11_AUTO_MULTIDECLARATIONS
-#     error "Defect macro BOOST_NO_CXX11_AUTO_MULTIDECLARATIONS is defined."
-#  endif
+#  include "../test/boost_no_auto_multidecl.ipp"
+namespace test = boost_no_cxx11_auto_multideclarations;
 #endif
 #ifdef TEST_BOOST_NO_AUTO_PTR
-#  ifdef BOOST_NO_AUTO_PTR
-#     error "Defect macro BOOST_NO_AUTO_PTR is defined."
-#  endif
+#  include "../test/boost_no_auto_ptr.ipp"
+namespace test = boost_no_auto_ptr;
 #endif
 #ifdef TEST_BOOST_BCB_PARTIAL_SPECIALIZATION_BUG
-#  ifdef BOOST_BCB_PARTIAL_SPECIALIZATION_BUG
-#     error "Defect macro BOOST_BCB_PARTIAL_SPECIALIZATION_BUG is defined."
-#  endif
+#  include "../test/boost_no_bcb_partial_spec.ipp"
+namespace test = boost_bcb_partial_specialization_bug;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_CHAR16_T
-#  ifdef BOOST_NO_CXX11_CHAR16_T
-#     error "Defect macro BOOST_NO_CXX11_CHAR16_T is defined."
-#  endif
+#  include "../test/boost_no_char16_t.ipp"
+namespace test = boost_no_cxx11_char16_t;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_CHAR32_T
-#  ifdef BOOST_NO_CXX11_CHAR32_T
-#     error "Defect macro BOOST_NO_CXX11_CHAR32_T is defined."
-#  endif
+#  include "../test/boost_no_char32_t.ipp"
+namespace test = boost_no_cxx11_char32_t;
 #endif
 #ifdef TEST_BOOST_NO_COMPLETE_VALUE_INITIALIZATION
-#  ifdef BOOST_NO_COMPLETE_VALUE_INITIALIZATION
-#     error "Defect macro BOOST_NO_COMPLETE_VALUE_INITIALIZATION is defined."
-#  endif
+#  include "../test/boost_no_com_value_init.ipp"
+namespace test = boost_no_complete_value_initialization;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_CONSTEXPR
-#  ifdef BOOST_NO_CXX11_CONSTEXPR
-#     error "Defect macro BOOST_NO_CXX11_CONSTEXPR is defined."
-#  endif
+#  include "../test/boost_no_constexpr.ipp"
+namespace test = boost_no_cxx11_constexpr;
 #endif
 #ifdef TEST_BOOST_NO_CTYPE_FUNCTIONS
-#  ifdef BOOST_NO_CTYPE_FUNCTIONS
-#     error "Defect macro BOOST_NO_CTYPE_FUNCTIONS is defined."
-#  endif
+#  include "../test/boost_no_ctype_functions.ipp"
+namespace test = boost_no_ctype_functions;
 #endif
 #ifdef TEST_BOOST_NO_CV_SPECIALIZATIONS
-#  ifdef BOOST_NO_CV_SPECIALIZATIONS
-#     error "Defect macro BOOST_NO_CV_SPECIALIZATIONS is defined."
-#  endif
+#  include "../test/boost_no_cv_spec.ipp"
+namespace test = boost_no_cv_specializations;
 #endif
 #ifdef TEST_BOOST_NO_CV_VOID_SPECIALIZATIONS
-#  ifdef BOOST_NO_CV_VOID_SPECIALIZATIONS
-#     error "Defect macro BOOST_NO_CV_VOID_SPECIALIZATIONS is defined."
-#  endif
+#  include "../test/boost_no_cv_void_spec.ipp"
+namespace test = boost_no_cv_void_specializations;
 #endif
 #ifdef TEST_BOOST_NO_CWCHAR
-#  ifdef BOOST_NO_CWCHAR
-#     error "Defect macro BOOST_NO_CWCHAR is defined."
-#  endif
+#  include "../test/boost_no_cwchar.ipp"
+namespace test = boost_no_cwchar;
 #endif
 #ifdef TEST_BOOST_NO_CWCTYPE
-#  ifdef BOOST_NO_CWCTYPE
-#     error "Defect macro BOOST_NO_CWCTYPE is defined."
-#  endif
+#  include "../test/boost_no_cwctype.ipp"
+namespace test = boost_no_cwctype;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_ADDRESSOF
-#  ifdef BOOST_NO_CXX11_ADDRESSOF
-#     error "Defect macro BOOST_NO_CXX11_ADDRESSOF is defined."
-#  endif
+#  include "../test/boost_no_cxx11_addressof.ipp"
+namespace test = boost_no_cxx11_addressof;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_ALIGNAS
-#  ifdef BOOST_NO_CXX11_ALIGNAS
-#     error "Defect macro BOOST_NO_CXX11_ALIGNAS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_alignas.ipp"
+namespace test = boost_no_cxx11_alignas;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_ALLOCATOR
-#  ifdef BOOST_NO_CXX11_ALLOCATOR
-#     error "Defect macro BOOST_NO_CXX11_ALLOCATOR is defined."
-#  endif
+#  include "../test/boost_no_cxx11_allocator.ipp"
+namespace test = boost_no_cxx11_allocator;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_ATOMIC_SMART_PTR
-#  ifdef BOOST_NO_CXX11_ATOMIC_SMART_PTR
-#     error "Defect macro BOOST_NO_CXX11_ATOMIC_SMART_PTR is defined."
-#  endif
+#  include "../test/boost_no_cxx11_atomic_sp.ipp"
+namespace test = boost_no_cxx11_atomic_smart_ptr;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_FINAL
-#  ifdef BOOST_NO_CXX11_FINAL
-#     error "Defect macro BOOST_NO_CXX11_FINAL is defined."
-#  endif
+#  include "../test/boost_no_cxx11_final.ipp"
+namespace test = boost_no_cxx11_final;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_ARRAY
-#  ifdef BOOST_NO_CXX11_HDR_ARRAY
-#     error "Defect macro BOOST_NO_CXX11_HDR_ARRAY is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_array.ipp"
+namespace test = boost_no_cxx11_hdr_array;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_ATOMIC
-#  ifdef BOOST_NO_CXX11_HDR_ATOMIC
-#     error "Defect macro BOOST_NO_CXX11_HDR_ATOMIC is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_atomic.ipp"
+namespace test = boost_no_cxx11_hdr_atomic;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_CHRONO
-#  ifdef BOOST_NO_CXX11_HDR_CHRONO
-#     error "Defect macro BOOST_NO_CXX11_HDR_CHRONO is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_chrono.ipp"
+namespace test = boost_no_cxx11_hdr_chrono;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_CODECVT
-#  ifdef BOOST_NO_CXX11_HDR_CODECVT
-#     error "Defect macro BOOST_NO_CXX11_HDR_CODECVT is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_codecvt.ipp"
+namespace test = boost_no_cxx11_hdr_codecvt;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_CONDITION_VARIABLE
-#  ifdef BOOST_NO_CXX11_HDR_CONDITION_VARIABLE
-#     error "Defect macro BOOST_NO_CXX11_HDR_CONDITION_VARIABLE is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_condition_variable.ipp"
+namespace test = boost_no_cxx11_hdr_condition_variable;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_FORWARD_LIST
-#  ifdef BOOST_NO_CXX11_HDR_FORWARD_LIST
-#     error "Defect macro BOOST_NO_CXX11_HDR_FORWARD_LIST is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_forward_list.ipp"
+namespace test = boost_no_cxx11_hdr_forward_list;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_FUTURE
-#  ifdef BOOST_NO_CXX11_HDR_FUTURE
-#     error "Defect macro BOOST_NO_CXX11_HDR_FUTURE is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_future.ipp"
+namespace test = boost_no_cxx11_hdr_future;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_INITIALIZER_LIST
-#  ifdef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
-#     error "Defect macro BOOST_NO_CXX11_HDR_INITIALIZER_LIST is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_initializer_list.ipp"
+namespace test = boost_no_cxx11_hdr_initializer_list;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_MUTEX
-#  ifdef BOOST_NO_CXX11_HDR_MUTEX
-#     error "Defect macro BOOST_NO_CXX11_HDR_MUTEX is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_mutex.ipp"
+namespace test = boost_no_cxx11_hdr_mutex;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_RANDOM
-#  ifdef BOOST_NO_CXX11_HDR_RANDOM
-#     error "Defect macro BOOST_NO_CXX11_HDR_RANDOM is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_random.ipp"
+namespace test = boost_no_cxx11_hdr_random;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_RATIO
-#  ifdef BOOST_NO_CXX11_HDR_RATIO
-#     error "Defect macro BOOST_NO_CXX11_HDR_RATIO is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_ratio.ipp"
+namespace test = boost_no_cxx11_hdr_ratio;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_REGEX
-#  ifdef BOOST_NO_CXX11_HDR_REGEX
-#     error "Defect macro BOOST_NO_CXX11_HDR_REGEX is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_regex.ipp"
+namespace test = boost_no_cxx11_hdr_regex;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_SYSTEM_ERROR
-#  ifdef BOOST_NO_CXX11_HDR_SYSTEM_ERROR
-#     error "Defect macro BOOST_NO_CXX11_HDR_SYSTEM_ERROR is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_system_error.ipp"
+namespace test = boost_no_cxx11_hdr_system_error;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_THREAD
-#  ifdef BOOST_NO_CXX11_HDR_THREAD
-#     error "Defect macro BOOST_NO_CXX11_HDR_THREAD is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_thread.ipp"
+namespace test = boost_no_cxx11_hdr_thread;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_TUPLE
-#  ifdef BOOST_NO_CXX11_HDR_TUPLE
-#     error "Defect macro BOOST_NO_CXX11_HDR_TUPLE is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_tuple.ipp"
+namespace test = boost_no_cxx11_hdr_tuple;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_TYPE_TRAITS
-#  ifdef BOOST_NO_CXX11_HDR_TYPE_TRAITS
-#     error "Defect macro BOOST_NO_CXX11_HDR_TYPE_TRAITS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_type_traits.ipp"
+namespace test = boost_no_cxx11_hdr_type_traits;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_TYPEINDEX
-#  ifdef BOOST_NO_CXX11_HDR_TYPEINDEX
-#     error "Defect macro BOOST_NO_CXX11_HDR_TYPEINDEX is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_typeindex.ipp"
+namespace test = boost_no_cxx11_hdr_typeindex;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_UNORDERED_MAP
-#  ifdef BOOST_NO_CXX11_HDR_UNORDERED_MAP
-#     error "Defect macro BOOST_NO_CXX11_HDR_UNORDERED_MAP is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_unordered_map.ipp"
+namespace test = boost_no_cxx11_hdr_unordered_map;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_UNORDERED_SET
-#  ifdef BOOST_NO_CXX11_HDR_UNORDERED_SET
-#     error "Defect macro BOOST_NO_CXX11_HDR_UNORDERED_SET is defined."
-#  endif
+#  include "../test/boost_no_cxx11_hdr_unordered_set.ipp"
+namespace test = boost_no_cxx11_hdr_unordered_set;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_INLINE_NAMESPACES
-#  ifdef BOOST_NO_CXX11_INLINE_NAMESPACES
-#     error "Defect macro BOOST_NO_CXX11_INLINE_NAMESPACES is defined."
-#  endif
+#  include "../test/boost_no_cxx11_inline_namespaces.ipp"
+namespace test = boost_no_cxx11_inline_namespaces;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS
-#  ifdef BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS
-#     error "Defect macro BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_non_pub_def_fun.ipp"
+namespace test = boost_no_cxx11_non_public_defaulted_functions;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_NUMERIC_LIMITS
-#  ifdef BOOST_NO_CXX11_NUMERIC_LIMITS
-#     error "Defect macro BOOST_NO_CXX11_NUMERIC_LIMITS is defined."
-#  endif
-#endif
-#ifdef TEST_BOOST_NO_CXX11_POINTER_TRAITS
-#  ifdef BOOST_NO_CXX11_POINTER_TRAITS
-#     error "Defect macro BOOST_NO_CXX11_POINTER_TRAITS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_numeric_limits.ipp"
+namespace test = boost_no_cxx11_numeric_limits;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_REF_QUALIFIERS
-#  ifdef BOOST_NO_CXX11_REF_QUALIFIERS
-#     error "Defect macro BOOST_NO_CXX11_REF_QUALIFIERS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_ref_qualifiers.ipp"
+namespace test = boost_no_cxx11_ref_qualifiers;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_SFINAE_EXPR
-#  ifdef BOOST_NO_CXX11_SFINAE_EXPR
-#     error "Defect macro BOOST_NO_CXX11_SFINAE_EXPR is defined."
-#  endif
+#  include "../test/boost_no_cxx11_sfinae_expr.ipp"
+namespace test = boost_no_cxx11_sfinae_expr;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_SMART_PTR
-#  ifdef BOOST_NO_CXX11_SMART_PTR
-#     error "Defect macro BOOST_NO_CXX11_SMART_PTR is defined."
-#  endif
+#  include "../test/boost_no_cxx11_smart_ptr.ipp"
+namespace test = boost_no_cxx11_smart_ptr;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_STD_ALIGN
-#  ifdef BOOST_NO_CXX11_STD_ALIGN
-#     error "Defect macro BOOST_NO_CXX11_STD_ALIGN is defined."
-#  endif
+#  include "../test/boost_no_cxx11_std_align.ipp"
+namespace test = boost_no_cxx11_std_align;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_THREAD_LOCAL
-#  ifdef BOOST_NO_CXX11_THREAD_LOCAL
-#     error "Defect macro BOOST_NO_CXX11_THREAD_LOCAL is defined."
-#  endif
+#  include "../test/boost_no_cxx11_thread_local.ipp"
+namespace test = boost_no_cxx11_thread_local;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_TRAILING_RESULT_TYPES
-#  ifdef BOOST_NO_CXX11_TRAILING_RESULT_TYPES
-#     error "Defect macro BOOST_NO_CXX11_TRAILING_RESULT_TYPES is defined."
-#  endif
+#  include "../test/boost_no_cxx11_trailing_result_types.ipp"
+namespace test = boost_no_cxx11_trailing_result_types;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_USER_DEFINED_LITERALS
-#  ifdef BOOST_NO_CXX11_USER_DEFINED_LITERALS
-#     error "Defect macro BOOST_NO_CXX11_USER_DEFINED_LITERALS is defined."
-#  endif
+#  include "../test/boost_no_cxx11_user_lit.ipp"
+namespace test = boost_no_cxx11_user_defined_literals;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_BINARY_LITERALS
-#  ifdef BOOST_NO_CXX14_BINARY_LITERALS
-#     error "Defect macro BOOST_NO_CXX14_BINARY_LITERALS is defined."
-#  endif
+#  include "../test/boost_no_cxx14_binary_literals.ipp"
+namespace test = boost_no_cxx14_binary_literals;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_CONSTEXPR
-#  ifdef BOOST_NO_CXX14_CONSTEXPR
-#     error "Defect macro BOOST_NO_CXX14_CONSTEXPR is defined."
-#  endif
+#  include "../test/boost_no_cxx14_constexpr.ipp"
+namespace test = boost_no_cxx14_constexpr;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_DECLTYPE_AUTO
-#  ifdef BOOST_NO_CXX14_DECLTYPE_AUTO
-#     error "Defect macro BOOST_NO_CXX14_DECLTYPE_AUTO is defined."
-#  endif
+#  include "../test/boost_no_cxx14_decltype_auto.ipp"
+namespace test = boost_no_cxx14_decltype_auto;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_DIGIT_SEPARATORS
-#  ifdef BOOST_NO_CXX14_DIGIT_SEPARATORS
-#     error "Defect macro BOOST_NO_CXX14_DIGIT_SEPARATORS is defined."
-#  endif
+#  include "../test/boost_no_cxx14_digit_separator.ipp"
+namespace test = boost_no_cxx14_digit_separators;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_GENERIC_LAMBDAS
-#  ifdef BOOST_NO_CXX14_GENERIC_LAMBDAS
-#     error "Defect macro BOOST_NO_CXX14_GENERIC_LAMBDAS is defined."
-#  endif
+#  include "../test/boost_no_cxx14_generic_lambda.ipp"
+namespace test = boost_no_cxx14_generic_lambdas;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_HDR_SHARED_MUTEX
-#  ifdef BOOST_NO_CXX14_HDR_SHARED_MUTEX
-#     error "Defect macro BOOST_NO_CXX14_HDR_SHARED_MUTEX is defined."
-#  endif
+#  include "../test/boost_no_cxx14_hdr_shared_mutex.ipp"
+namespace test = boost_no_cxx14_hdr_shared_mutex;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES
-#  ifdef BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES
-#     error "Defect macro BOOST_NO_CXX14_INITIALIZED_LAMBDA_CAPTURES is defined."
-#  endif
+#  include "../test/boost_no_cxx14_lambda_capture.ipp"
+namespace test = boost_no_cxx14_initialized_lambda_captures;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_AGGREGATE_NSDMI
-#  ifdef BOOST_NO_CXX14_AGGREGATE_NSDMI
-#     error "Defect macro BOOST_NO_CXX14_AGGREGATE_NSDMI is defined."
-#  endif
+#  include "../test/boost_no_cxx14_member_init.ipp"
+namespace test = boost_no_cxx14_aggregate_nsdmi;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_RETURN_TYPE_DEDUCTION
-#  ifdef BOOST_NO_CXX14_RETURN_TYPE_DEDUCTION
-#     error "Defect macro BOOST_NO_CXX14_RETURN_TYPE_DEDUCTION is defined."
-#  endif
+#  include "../test/boost_no_cxx14_return_type_ded.ipp"
+namespace test = boost_no_cxx14_return_type_deduction;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_STD_EXCHANGE
-#  ifdef BOOST_NO_CXX14_STD_EXCHANGE
-#     error "Defect macro BOOST_NO_CXX14_STD_EXCHANGE is defined."
-#  endif
+#  include "../test/boost_no_cxx14_std_exchange.ipp"
+namespace test = boost_no_cxx14_std_exchange;
 #endif
 #ifdef TEST_BOOST_NO_CXX14_VARIABLE_TEMPLATES
-#  ifdef BOOST_NO_CXX14_VARIABLE_TEMPLATES
-#     error "Defect macro BOOST_NO_CXX14_VARIABLE_TEMPLATES is defined."
-#  endif
+#  include "../test/boost_no_cxx14_var_templ.ipp"
+namespace test = boost_no_cxx14_variable_templates;
 #endif
 #ifdef TEST_BOOST_NO_CXX17_STD_APPLY
-#  ifdef BOOST_NO_CXX17_STD_APPLY
-#     error "Defect macro BOOST_NO_CXX17_STD_APPLY is defined."
-#  endif
+#  include "../test/boost_no_cxx17_std_apply.ipp"
+namespace test = boost_no_cxx17_std_apply;
 #endif
 #ifdef TEST_BOOST_NO_CXX17_STD_INVOKE
-#  ifdef BOOST_NO_CXX17_STD_INVOKE
-#     error "Defect macro BOOST_NO_CXX17_STD_INVOKE is defined."
-#  endif
-#endif
-#ifdef TEST_BOOST_NO_CXX98_BINDERS
-#  ifdef BOOST_NO_CXX98_BINDERS
-#     error "Defect macro BOOST_NO_CXX98_BINDERS is defined."
-#  endif
-#endif
-#ifdef TEST_BOOST_NO_CXX98_FUNCTION_BASE
-#  ifdef BOOST_NO_CXX98_FUNCTION_BASE
-#     error "Defect macro BOOST_NO_CXX98_FUNCTION_BASE is defined."
-#  endif
-#endif
-#ifdef TEST_BOOST_NO_CXX98_RANDOM_SHUFFLE
-#  ifdef BOOST_NO_CXX98_RANDOM_SHUFFLE
-#     error "Defect macro BOOST_NO_CXX98_RANDOM_SHUFFLE is defined."
-#  endif
+#  include "../test/boost_no_cxx17_std_invoke.ipp"
+namespace test = boost_no_cxx17_std_invoke;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_HDR_FUNCTIONAL
-#  ifdef BOOST_NO_CXX11_HDR_FUNCTIONAL
-#     error "Defect macro BOOST_NO_CXX11_HDR_FUNCTIONAL is defined."
-#  endif
+#  include "../test/boost_no_cxx_hdr_functional.ipp"
+namespace test = boost_no_cxx11_hdr_functional;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_DECLTYPE
-#  ifdef BOOST_NO_CXX11_DECLTYPE
-#     error "Defect macro BOOST_NO_CXX11_DECLTYPE is defined."
-#  endif
+#  include "../test/boost_no_decltype.ipp"
+namespace test = boost_no_cxx11_decltype;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_DECLTYPE_N3276
-#  ifdef BOOST_NO_CXX11_DECLTYPE_N3276
-#     error "Defect macro BOOST_NO_CXX11_DECLTYPE_N3276 is defined."
-#  endif
+#  include "../test/boost_no_decltype_n3276.ipp"
+namespace test = boost_no_cxx11_decltype_n3276;
 #endif
 #ifdef TEST_BOOST_DEDUCED_TYPENAME
-#  ifdef BOOST_DEDUCED_TYPENAME
-#     error "Defect macro BOOST_DEDUCED_TYPENAME is defined."
-#  endif
+#  include "../test/boost_no_ded_typename.ipp"
+namespace test = boost_deduced_typename;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
-#  ifdef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
-#     error "Defect macro BOOST_NO_CXX11_DEFAULTED_FUNCTIONS is defined."
-#  endif
+#  include "../test/boost_no_defaulted_functions.ipp"
+namespace test = boost_no_cxx11_defaulted_functions;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_DELETED_FUNCTIONS
-#  ifdef BOOST_NO_CXX11_DELETED_FUNCTIONS
-#     error "Defect macro BOOST_NO_CXX11_DELETED_FUNCTIONS is defined."
-#  endif
+#  include "../test/boost_no_deleted_functions.ipp"
+namespace test = boost_no_cxx11_deleted_functions;
 #endif
 #ifdef TEST_BOOST_NO_DEPENDENT_NESTED_DERIVATIONS
-#  ifdef BOOST_NO_DEPENDENT_NESTED_DERIVATIONS
-#     error "Defect macro BOOST_NO_DEPENDENT_NESTED_DERIVATIONS is defined."
-#  endif
+#  include "../test/boost_no_dep_nested_class.ipp"
+namespace test = boost_no_dependent_nested_derivations;
 #endif
 #ifdef TEST_BOOST_NO_DEPENDENT_TYPES_IN_TEMPLATE_VALUE_PARAMETERS
-#  ifdef BOOST_NO_DEPENDENT_TYPES_IN_TEMPLATE_VALUE_PARAMETERS
-#     error "Defect macro BOOST_NO_DEPENDENT_TYPES_IN_TEMPLATE_VALUE_PARAMETERS is defined."
-#  endif
+#  include "../test/boost_no_dep_val_param.ipp"
+namespace test = boost_no_dependent_types_in_template_value_parameters;
 #endif
 #ifdef TEST_BOOST_NO_EXCEPTION_STD_NAMESPACE
-#  ifdef BOOST_NO_EXCEPTION_STD_NAMESPACE
-#     error "Defect macro BOOST_NO_EXCEPTION_STD_NAMESPACE is defined."
-#  endif
+#  include "../test/boost_no_excep_std.ipp"
+namespace test = boost_no_exception_std_namespace;
 #endif
 #ifdef TEST_BOOST_NO_EXCEPTIONS
-#  ifdef BOOST_NO_EXCEPTIONS
-#     error "Defect macro BOOST_NO_EXCEPTIONS is defined."
-#  endif
+#  include "../test/boost_no_exceptions.ipp"
+namespace test = boost_no_exceptions;
 #endif
 #ifdef TEST_BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS
-#  ifdef BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS
-#     error "Defect macro BOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS is defined."
-#  endif
+#  include "../test/boost_no_exp_func_tem_arg.ipp"
+namespace test = boost_no_explicit_function_template_arguments;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
-#  ifdef BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
-#     error "Defect macro BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS is defined."
-#  endif
+#  include "../test/boost_no_explicit_cvt_ops.ipp"
+namespace test = boost_no_cxx11_explicit_conversion_operators;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_EXTERN_TEMPLATE
-#  ifdef BOOST_NO_CXX11_EXTERN_TEMPLATE
-#     error "Defect macro BOOST_NO_CXX11_EXTERN_TEMPLATE is defined."
-#  endif
+#  include "../test/boost_no_extern_template.ipp"
+namespace test = boost_no_cxx11_extern_template;
 #endif
 #ifdef TEST_BOOST_NO_FENV_H
-#  ifdef BOOST_NO_FENV_H
-#     error "Defect macro BOOST_NO_FENV_H is defined."
-#  endif
+#  include "../test/boost_no_fenv_h.ipp"
+namespace test = boost_no_fenv_h;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_FIXED_LENGTH_VARIADIC_TEMPLATE_EXPANSION_PACKS
-#  ifdef BOOST_NO_CXX11_FIXED_LENGTH_VARIADIC_TEMPLATE_EXPANSION_PACKS
-#     error "Defect macro BOOST_NO_CXX11_FIXED_LENGTH_VARIADIC_TEMPLATE_EXPANSION_PACKS is defined."
-#  endif
+#  include "../test/boost_no_fixed_len_variadic_templates.ipp"
+namespace test = boost_no_cxx11_fixed_length_variadic_template_expansion_packs;
 #endif
 #ifdef TEST_BOOST_NO_FUNCTION_TEMPLATE_ORDERING
-#  ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
-#     error "Defect macro BOOST_NO_FUNCTION_TEMPLATE_ORDERING is defined."
-#  endif
+#  include "../test/boost_no_func_tmp_order.ipp"
+namespace test = boost_no_function_template_ordering;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS
-#  ifdef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS
-#     error "Defect macro BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS is defined."
-#  endif
+#  include "../test/boost_no_function_template_default_args.ipp"
+namespace test = boost_no_cxx11_function_template_default_args;
 #endif
 #ifdef TEST_BOOST_NO_FUNCTION_TYPE_SPECIALIZATIONS
-#  ifdef BOOST_NO_FUNCTION_TYPE_SPECIALIZATIONS
-#     error "Defect macro BOOST_NO_FUNCTION_TYPE_SPECIALIZATIONS is defined."
-#  endif
+#  include "../test/boost_no_function_type_spec.ipp"
+namespace test = boost_no_function_type_specializations;
 #endif
 #ifdef TEST_BOOST_NO_MS_INT64_NUMERIC_LIMITS
-#  ifdef BOOST_NO_MS_INT64_NUMERIC_LIMITS
-#     error "Defect macro BOOST_NO_MS_INT64_NUMERIC_LIMITS is defined."
-#  endif
+#  include "../test/boost_no_i64_limits.ipp"
+namespace test = boost_no_ms_int64_numeric_limits;
 #endif
 #ifdef TEST_BOOST_NO_INCLASS_MEMBER_INITIALIZATION
-#  ifdef BOOST_NO_INCLASS_MEMBER_INITIALIZATION
-#     error "Defect macro BOOST_NO_INCLASS_MEMBER_INITIALIZATION is defined."
-#  endif
+#  include "../test/boost_no_inline_memb_init.ipp"
+namespace test = boost_no_inclass_member_initialization;
 #endif
 #ifdef TEST_BOOST_NO_INTEGRAL_INT64_T
-#  ifdef BOOST_NO_INTEGRAL_INT64_T
-#     error "Defect macro BOOST_NO_INTEGRAL_INT64_T is defined."
-#  endif
+#  include "../test/boost_no_integral_int64_t.ipp"
+namespace test = boost_no_integral_int64_t;
 #endif
 #ifdef TEST_BOOST_NO_IOSFWD
-#  ifdef BOOST_NO_IOSFWD
-#     error "Defect macro BOOST_NO_IOSFWD is defined."
-#  endif
+#  include "../test/boost_no_iosfwd.ipp"
+namespace test = boost_no_iosfwd;
 #endif
 #ifdef TEST_BOOST_NO_IOSTREAM
-#  ifdef BOOST_NO_IOSTREAM
-#     error "Defect macro BOOST_NO_IOSTREAM is defined."
-#  endif
+#  include "../test/boost_no_iostream.ipp"
+namespace test = boost_no_iostream;
 #endif
 #ifdef TEST_BOOST_NO_IS_ABSTRACT
-#  ifdef BOOST_NO_IS_ABSTRACT
-#     error "Defect macro BOOST_NO_IS_ABSTRACT is defined."
-#  endif
+#  include "../test/boost_no_is_abstract.ipp"
+namespace test = boost_no_is_abstract;
 #endif
 #ifdef TEST_BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
-#  ifdef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
-#     error "Defect macro BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS is defined."
-#  endif
+#  include "../test/boost_no_iter_construct.ipp"
+namespace test = boost_no_templated_iterator_constructors;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_LAMBDAS
-#  ifdef BOOST_NO_CXX11_LAMBDAS
-#     error "Defect macro BOOST_NO_CXX11_LAMBDAS is defined."
-#  endif
+#  include "../test/boost_no_lambdas.ipp"
+namespace test = boost_no_cxx11_lambdas;
 #endif
 #ifdef TEST_BOOST_NO_LIMITS
-#  ifdef BOOST_NO_LIMITS
-#     error "Defect macro BOOST_NO_LIMITS is defined."
-#  endif
+#  include "../test/boost_no_limits.ipp"
+namespace test = boost_no_limits;
 #endif
 #ifdef TEST_BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
-#  ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
-#     error "Defect macro BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS is defined."
-#  endif
+#  include "../test/boost_no_limits_const_exp.ipp"
+namespace test = boost_no_limits_compile_time_constants;
 #endif
 #ifdef TEST_BOOST_NO_LONG_LONG_NUMERIC_LIMITS
-#  ifdef BOOST_NO_LONG_LONG_NUMERIC_LIMITS
-#     error "Defect macro BOOST_NO_LONG_LONG_NUMERIC_LIMITS is defined."
-#  endif
+#  include "../test/boost_no_ll_limits.ipp"
+namespace test = boost_no_long_long_numeric_limits;
 #endif
 #ifdef TEST_BOOST_NO_LONG_LONG
-#  ifdef BOOST_NO_LONG_LONG
-#     error "Defect macro BOOST_NO_LONG_LONG is defined."
-#  endif
+#  include "../test/boost_no_long_long.ipp"
+namespace test = boost_no_long_long;
 #endif
 #ifdef TEST_BOOST_NO_MEMBER_FUNCTION_SPECIALIZATIONS
-#  ifdef BOOST_NO_MEMBER_FUNCTION_SPECIALIZATIONS
-#     error "Defect macro BOOST_NO_MEMBER_FUNCTION_SPECIALIZATIONS is defined."
-#  endif
+#  include "../test/boost_no_mem_func_spec.ipp"
+namespace test = boost_no_member_function_specializations;
 #endif
 #ifdef TEST_BOOST_NO_MEMBER_TEMPLATE_KEYWORD
-#  ifdef BOOST_NO_MEMBER_TEMPLATE_KEYWORD
-#     error "Defect macro BOOST_NO_MEMBER_TEMPLATE_KEYWORD is defined."
-#  endif
+#  include "../test/boost_no_mem_tem_keyword.ipp"
+namespace test = boost_no_member_template_keyword;
 #endif
 #ifdef TEST_BOOST_NO_POINTER_TO_MEMBER_TEMPLATE_PARAMETERS
-#  ifdef BOOST_NO_POINTER_TO_MEMBER_TEMPLATE_PARAMETERS
-#     error "Defect macro BOOST_NO_POINTER_TO_MEMBER_TEMPLATE_PARAMETERS is defined."
-#  endif
+#  include "../test/boost_no_mem_tem_pnts.ipp"
+namespace test = boost_no_pointer_to_member_template_parameters;
 #endif
 #ifdef TEST_BOOST_NO_MEMBER_TEMPLATE_FRIENDS
-#  ifdef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
-#     error "Defect macro BOOST_NO_MEMBER_TEMPLATE_FRIENDS is defined."
-#  endif
+#  include "../test/boost_no_mem_templ_frnds.ipp"
+namespace test = boost_no_member_template_friends;
 #endif
 #ifdef TEST_BOOST_NO_MEMBER_TEMPLATES
-#  ifdef BOOST_NO_MEMBER_TEMPLATES
-#     error "Defect macro BOOST_NO_MEMBER_TEMPLATES is defined."
-#  endif
+#  include "../test/boost_no_mem_templates.ipp"
+namespace test = boost_no_member_templates;
 #endif
 #ifdef TEST_BOOST_NO_NESTED_FRIENDSHIP
-#  ifdef BOOST_NO_NESTED_FRIENDSHIP
-#     error "Defect macro BOOST_NO_NESTED_FRIENDSHIP is defined."
-#  endif
+#  include "../test/boost_no_nested_friendship.ipp"
+namespace test = boost_no_nested_friendship;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_NOEXCEPT
-#  ifdef BOOST_NO_CXX11_NOEXCEPT
-#     error "Defect macro BOOST_NO_CXX11_NOEXCEPT is defined."
-#  endif
+#  include "../test/boost_no_noexcept.ipp"
+namespace test = boost_no_cxx11_noexcept;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_NULLPTR
-#  ifdef BOOST_NO_CXX11_NULLPTR
-#     error "Defect macro BOOST_NO_CXX11_NULLPTR is defined."
-#  endif
+#  include "../test/boost_no_nullptr.ipp"
+namespace test = boost_no_cxx11_nullptr;
 #endif
 #ifdef TEST_BOOST_NO_OPERATORS_IN_NAMESPACE
-#  ifdef BOOST_NO_OPERATORS_IN_NAMESPACE
-#     error "Defect macro BOOST_NO_OPERATORS_IN_NAMESPACE is defined."
-#  endif
+#  include "../test/boost_no_ops_in_namespace.ipp"
+namespace test = boost_no_operators_in_namespace;
 #endif
 #ifdef TEST_BOOST_NO_PARTIAL_SPECIALIZATION_IMPLICIT_DEFAULT_ARGS
-#  ifdef BOOST_NO_PARTIAL_SPECIALIZATION_IMPLICIT_DEFAULT_ARGS
-#     error "Defect macro BOOST_NO_PARTIAL_SPECIALIZATION_IMPLICIT_DEFAULT_ARGS is defined."
-#  endif
+#  include "../test/boost_no_part_spec_def_args.ipp"
+namespace test = boost_no_partial_specialization_implicit_default_args;
 #endif
 #ifdef TEST_BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-#  ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-#     error "Defect macro BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION is defined."
-#  endif
+#  include "../test/boost_no_partial_spec.ipp"
+namespace test = boost_no_template_partial_specialization;
 #endif
 #ifdef TEST_BOOST_NO_PRIVATE_IN_AGGREGATE
-#  ifdef BOOST_NO_PRIVATE_IN_AGGREGATE
-#     error "Defect macro BOOST_NO_PRIVATE_IN_AGGREGATE is defined."
-#  endif
+#  include "../test/boost_no_priv_aggregate.ipp"
+namespace test = boost_no_private_in_aggregate;
 #endif
 #ifdef TEST_BOOST_NO_POINTER_TO_MEMBER_CONST
-#  ifdef BOOST_NO_POINTER_TO_MEMBER_CONST
-#     error "Defect macro BOOST_NO_POINTER_TO_MEMBER_CONST is defined."
-#  endif
+#  include "../test/boost_no_ptr_mem_const.ipp"
+namespace test = boost_no_pointer_to_member_const;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_RANGE_BASED_FOR
-#  ifdef BOOST_NO_CXX11_RANGE_BASED_FOR
-#     error "Defect macro BOOST_NO_CXX11_RANGE_BASED_FOR is defined."
-#  endif
+#  include "../test/boost_no_range_based_for.ipp"
+namespace test = boost_no_cxx11_range_based_for;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_RAW_LITERALS
-#  ifdef BOOST_NO_CXX11_RAW_LITERALS
-#     error "Defect macro BOOST_NO_CXX11_RAW_LITERALS is defined."
-#  endif
+#  include "../test/boost_no_raw_literals.ipp"
+namespace test = boost_no_cxx11_raw_literals;
 #endif
 #ifdef TEST_BOOST_NO_RESTRICT_REFERENCES
-#  ifdef BOOST_NO_RESTRICT_REFERENCES
-#     error "Defect macro BOOST_NO_RESTRICT_REFERENCES is defined."
-#  endif
+#  include "../test/boost_no_restrict_references.ipp"
+namespace test = boost_no_restrict_references;
 #endif
 #ifdef TEST_BOOST_NO_UNREACHABLE_RETURN_DETECTION
-#  ifdef BOOST_NO_UNREACHABLE_RETURN_DETECTION
-#     error "Defect macro BOOST_NO_UNREACHABLE_RETURN_DETECTION is defined."
-#  endif
+#  include "../test/boost_no_ret_det.ipp"
+namespace test = boost_no_unreachable_return_detection;
 #endif
 #ifdef TEST_BOOST_NO_RTTI
-#  ifdef BOOST_NO_RTTI
-#     error "Defect macro BOOST_NO_RTTI is defined."
-#  endif
+#  include "../test/boost_no_rtti.ipp"
+namespace test = boost_no_rtti;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_RVALUE_REFERENCES
-#  ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
-#     error "Defect macro BOOST_NO_CXX11_RVALUE_REFERENCES is defined."
-#  endif
+#  include "../test/boost_no_rvalue_references.ipp"
+namespace test = boost_no_cxx11_rvalue_references;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_SCOPED_ENUMS
-#  ifdef BOOST_NO_CXX11_SCOPED_ENUMS
-#     error "Defect macro BOOST_NO_CXX11_SCOPED_ENUMS is defined."
-#  endif
+#  include "../test/boost_no_scoped_enums.ipp"
+namespace test = boost_no_cxx11_scoped_enums;
 #endif
 #ifdef TEST_BOOST_NO_SFINAE
-#  ifdef BOOST_NO_SFINAE
-#     error "Defect macro BOOST_NO_SFINAE is defined."
-#  endif
+#  include "../test/boost_no_sfinae.ipp"
+namespace test = boost_no_sfinae;
 #endif
 #ifdef TEST_BOOST_NO_SFINAE_EXPR
-#  ifdef BOOST_NO_SFINAE_EXPR
-#     error "Defect macro BOOST_NO_SFINAE_EXPR is defined."
-#  endif
+#  include "../test/boost_no_sfinae_expr.ipp"
+namespace test = boost_no_sfinae_expr;
 #endif
 #ifdef TEST_BOOST_NO_STRINGSTREAM
-#  ifdef BOOST_NO_STRINGSTREAM
-#     error "Defect macro BOOST_NO_STRINGSTREAM is defined."
-#  endif
+#  include "../test/boost_no_sstream.ipp"
+namespace test = boost_no_stringstream;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_STATIC_ASSERT
-#  ifdef BOOST_NO_CXX11_STATIC_ASSERT
-#     error "Defect macro BOOST_NO_CXX11_STATIC_ASSERT is defined."
-#  endif
+#  include "../test/boost_no_static_assert.ipp"
+namespace test = boost_no_cxx11_static_assert;
 #endif
 #ifdef TEST_BOOST_NO_STD_ALLOCATOR
-#  ifdef BOOST_NO_STD_ALLOCATOR
-#     error "Defect macro BOOST_NO_STD_ALLOCATOR is defined."
-#  endif
+#  include "../test/boost_no_std_allocator.ipp"
+namespace test = boost_no_std_allocator;
 #endif
 #ifdef TEST_BOOST_NO_STD_DISTANCE
-#  ifdef BOOST_NO_STD_DISTANCE
-#     error "Defect macro BOOST_NO_STD_DISTANCE is defined."
-#  endif
+#  include "../test/boost_no_std_distance.ipp"
+namespace test = boost_no_std_distance;
 #endif
 #ifdef TEST_BOOST_NO_STD_ITERATOR_TRAITS
-#  ifdef BOOST_NO_STD_ITERATOR_TRAITS
-#     error "Defect macro BOOST_NO_STD_ITERATOR_TRAITS is defined."
-#  endif
+#  include "../test/boost_no_std_iter_traits.ipp"
+namespace test = boost_no_std_iterator_traits;
 #endif
 #ifdef TEST_BOOST_NO_STD_ITERATOR
-#  ifdef BOOST_NO_STD_ITERATOR
-#     error "Defect macro BOOST_NO_STD_ITERATOR is defined."
-#  endif
+#  include "../test/boost_no_std_iterator.ipp"
+namespace test = boost_no_std_iterator;
 #endif
 #ifdef TEST_BOOST_NO_STD_LOCALE
-#  ifdef BOOST_NO_STD_LOCALE
-#     error "Defect macro BOOST_NO_STD_LOCALE is defined."
-#  endif
+#  include "../test/boost_no_std_locale.ipp"
+namespace test = boost_no_std_locale;
 #endif
 #ifdef TEST_BOOST_NO_STD_MESSAGES
-#  ifdef BOOST_NO_STD_MESSAGES
-#     error "Defect macro BOOST_NO_STD_MESSAGES is defined."
-#  endif
+#  include "../test/boost_no_std_messages.ipp"
+namespace test = boost_no_std_messages;
 #endif
 #ifdef TEST_BOOST_NO_STD_MIN_MAX
-#  ifdef BOOST_NO_STD_MIN_MAX
-#     error "Defect macro BOOST_NO_STD_MIN_MAX is defined."
-#  endif
+#  include "../test/boost_no_std_min_max.ipp"
+namespace test = boost_no_std_min_max;
 #endif
 #ifdef TEST_BOOST_NO_STD_OUTPUT_ITERATOR_ASSIGN
-#  ifdef BOOST_NO_STD_OUTPUT_ITERATOR_ASSIGN
-#     error "Defect macro BOOST_NO_STD_OUTPUT_ITERATOR_ASSIGN is defined."
-#  endif
+#  include "../test/boost_no_std_oi_assign.ipp"
+namespace test = boost_no_std_output_iterator_assign;
 #endif
 #ifdef TEST_BOOST_NO_STD_TYPEINFO
-#  ifdef BOOST_NO_STD_TYPEINFO
-#     error "Defect macro BOOST_NO_STD_TYPEINFO is defined."
-#  endif
+#  include "../test/boost_no_std_typeinfo.ipp"
+namespace test = boost_no_std_typeinfo;
 #endif
 #ifdef TEST_BOOST_NO_STD_USE_FACET
-#  ifdef BOOST_NO_STD_USE_FACET
-#     error "Defect macro BOOST_NO_STD_USE_FACET is defined."
-#  endif
+#  include "../test/boost_no_std_use_facet.ipp"
+namespace test = boost_no_std_use_facet;
 #endif
 #ifdef TEST_BOOST_NO_STD_WSTREAMBUF
-#  ifdef BOOST_NO_STD_WSTREAMBUF
-#     error "Defect macro BOOST_NO_STD_WSTREAMBUF is defined."
-#  endif
+#  include "../test/boost_no_std_wstreambuf.ipp"
+namespace test = boost_no_std_wstreambuf;
 #endif
 #ifdef TEST_BOOST_NO_STD_WSTRING
-#  ifdef BOOST_NO_STD_WSTRING
-#     error "Defect macro BOOST_NO_STD_WSTRING is defined."
-#  endif
+#  include "../test/boost_no_std_wstring.ipp"
+namespace test = boost_no_std_wstring;
 #endif
 #ifdef TEST_BOOST_NO_STDC_NAMESPACE
-#  ifdef BOOST_NO_STDC_NAMESPACE
-#     error "Defect macro BOOST_NO_STDC_NAMESPACE is defined."
-#  endif
+#  include "../test/boost_no_stdc_namespace.ipp"
+namespace test = boost_no_stdc_namespace;
 #endif
 #ifdef TEST_BOOST_NO_SWPRINTF
-#  ifdef BOOST_NO_SWPRINTF
-#     error "Defect macro BOOST_NO_SWPRINTF is defined."
-#  endif
+#  include "../test/boost_no_swprintf.ipp"
+namespace test = boost_no_swprintf;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_LOCAL_CLASS_TEMPLATE_PARAMETERS
-#  ifdef BOOST_NO_CXX11_LOCAL_CLASS_TEMPLATE_PARAMETERS
-#     error "Defect macro BOOST_NO_CXX11_LOCAL_CLASS_TEMPLATE_PARAMETERS is defined."
-#  endif
+#  include "../test/boost_no_tem_local_classes.ipp"
+namespace test = boost_no_cxx11_local_class_template_parameters;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_TEMPLATE_ALIASES
-#  ifdef BOOST_NO_CXX11_TEMPLATE_ALIASES
-#     error "Defect macro BOOST_NO_CXX11_TEMPLATE_ALIASES is defined."
-#  endif
+#  include "../test/boost_no_template_aliases.ipp"
+namespace test = boost_no_cxx11_template_aliases;
 #endif
 #ifdef TEST_BOOST_NO_TEMPLATED_IOSTREAMS
-#  ifdef BOOST_NO_TEMPLATED_IOSTREAMS
-#     error "Defect macro BOOST_NO_TEMPLATED_IOSTREAMS is defined."
-#  endif
+#  include "../test/boost_no_template_streams.ipp"
+namespace test = boost_no_templated_iostreams;
 #endif
 #ifdef TEST_BOOST_NO_TEMPLATE_TEMPLATES
-#  ifdef BOOST_NO_TEMPLATE_TEMPLATES
-#     error "Defect macro BOOST_NO_TEMPLATE_TEMPLATES is defined."
-#  endif
+#  include "../test/boost_no_template_template.ipp"
+namespace test = boost_no_template_templates;
 #endif
 #ifdef TEST_BOOST_NO_TWO_PHASE_NAME_LOOKUP
-#  ifdef BOOST_NO_TWO_PHASE_NAME_LOOKUP
-#     error "Defect macro BOOST_NO_TWO_PHASE_NAME_LOOKUP is defined."
-#  endif
+#  include "../test/boost_no_two_phase_lookup.ipp"
+namespace test = boost_no_two_phase_name_lookup;
 #endif
 #ifdef TEST_BOOST_NO_TYPEID
-#  ifdef BOOST_NO_TYPEID
-#     error "Defect macro BOOST_NO_TYPEID is defined."
-#  endif
+#  include "../test/boost_no_typeid.ipp"
+namespace test = boost_no_typeid;
 #endif
 #ifdef TEST_BOOST_NO_TYPENAME_WITH_CTOR
-#  ifdef BOOST_NO_TYPENAME_WITH_CTOR
-#     error "Defect macro BOOST_NO_TYPENAME_WITH_CTOR is defined."
-#  endif
+#  include "../test/boost_no_typename_with_ctor.ipp"
+namespace test = boost_no_typename_with_ctor;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_UNICODE_LITERALS
-#  ifdef BOOST_NO_CXX11_UNICODE_LITERALS
-#     error "Defect macro BOOST_NO_CXX11_UNICODE_LITERALS is defined."
-#  endif
+#  include "../test/boost_no_unicode_literals.ipp"
+namespace test = boost_no_cxx11_unicode_literals;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX
-#  ifdef BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX
-#     error "Defect macro BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX is defined."
-#  endif
+#  include "../test/boost_no_unified_init.ipp"
+namespace test = boost_no_cxx11_unified_initialization_syntax;
 #endif
 #ifdef TEST_BOOST_FUNCTION_SCOPE_USING_DECLARATION_BREAKS_ADL
-#  ifdef BOOST_FUNCTION_SCOPE_USING_DECLARATION_BREAKS_ADL
-#     error "Defect macro BOOST_FUNCTION_SCOPE_USING_DECLARATION_BREAKS_ADL is defined."
-#  endif
+#  include "../test/boost_no_using_breaks_adl.ipp"
+namespace test = boost_function_scope_using_declaration_breaks_adl;
 #endif
 #ifdef TEST_BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE
-#  ifdef BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE
-#     error "Defect macro BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE is defined."
-#  endif
+#  include "../test/boost_no_using_decl_overld.ipp"
+namespace test = boost_no_using_declaration_overloads_from_typename_base;
 #endif
 #ifdef TEST_BOOST_NO_USING_TEMPLATE
-#  ifdef BOOST_NO_USING_TEMPLATE
-#     error "Defect macro BOOST_NO_USING_TEMPLATE is defined."
-#  endif
+#  include "../test/boost_no_using_template.ipp"
+namespace test = boost_no_using_template;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_VARIADIC_MACROS
-#  ifdef BOOST_NO_CXX11_VARIADIC_MACROS
-#     error "Defect macro BOOST_NO_CXX11_VARIADIC_MACROS is defined."
-#  endif
+#  include "../test/boost_no_variadic_macros.ipp"
+namespace test = boost_no_cxx11_variadic_macros;
 #endif
 #ifdef TEST_BOOST_NO_CXX11_VARIADIC_TEMPLATES
-#  ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
-#     error "Defect macro BOOST_NO_CXX11_VARIADIC_TEMPLATES is defined."
-#  endif
+#  include "../test/boost_no_variadic_templates.ipp"
+namespace test = boost_no_cxx11_variadic_templates;
 #endif
 #ifdef TEST_BOOST_NO_VOID_RETURNS
-#  ifdef BOOST_NO_VOID_RETURNS
-#     error "Defect macro BOOST_NO_VOID_RETURNS is defined."
-#  endif
+#  include "../test/boost_no_void_returns.ipp"
+namespace test = boost_no_void_returns;
 #endif
 #ifdef TEST_BOOST_NO_INTRINSIC_WCHAR_T
-#  ifdef BOOST_NO_INTRINSIC_WCHAR_T
-#     error "Defect macro BOOST_NO_INTRINSIC_WCHAR_T is defined."
-#  endif
+#  include "../test/boost_no_wchar_t.ipp"
+namespace test = boost_no_intrinsic_wchar_t;
 #endif
 
 int main( int, char *[] )
 {
-   return 0;
+   return test::test();
 }
 

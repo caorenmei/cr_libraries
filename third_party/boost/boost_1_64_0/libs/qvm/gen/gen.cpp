@@ -1,4 +1,4 @@
-//Copyright (c) 2008-2017 Emil Dotchevski and Reverge Studios, Inc.
+//Copyright (c) 2008-2016 Emil Dotchevski and Reverge Studios, Inc.
 
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -25,8 +25,6 @@
 #define TAB3 TAB TAB TAB
 #define TAB4 TAB TAB TAB TAB
 #define TAB5 TAB TAB TAB TAB TAB
-#define INCLUDE_MAT_ASSIGN "boost/qvm/gen/mat_assign%d.hpp"
-#define INCLUDE_VEC_ASSIGN "boost/qvm/gen/vec_assign%d.hpp"
 #define INCLUDE_STATIC_ASSERT "boost/qvm/static_assert.hpp"
 #define INCLUDE_MATH "boost/qvm/math.hpp"
 #define INCLUDE_THROW_EXCEPTION "boost/qvm/throw_exception.hpp"
@@ -115,7 +113,6 @@ namespace
         void
         require_include( std::string const & fn )
             {
-            assert(!strchr(fn.c_str(),'%'));
             includes_.insert(fn);
             };
 
@@ -146,7 +143,7 @@ namespace
             out->exceptions(std::ofstream::eofbit|std::ofstream::failbit|std::ofstream::badbit);
             std::string include_guard=get_include_guard();
             *out <<
-                "//Copyright (c) 2008-2017 Emil Dotchevski and Reverge Studios, Inc." NL
+                "//Copyright (c) 2008-2016 Emil Dotchevski and Reverge Studios, Inc." NL
                 NL
                 "//Distributed under the Boost Software License, Version 1.0. (See accompanying" NL
                 "//file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)" NL
@@ -214,7 +211,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_M);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream() <<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -233,7 +232,9 @@ namespace
         assert(n>0);
         assert(p>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_M);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -251,7 +252,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -269,7 +272,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -286,7 +291,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -303,6 +310,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_M_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -319,6 +329,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -335,6 +348,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_M_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -351,6 +367,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -367,6 +386,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_M_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -382,7 +404,10 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
         out.require_include(INCLUDE_DEDUCE_S);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -398,6 +423,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -414,7 +442,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_M);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -430,7 +460,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -446,6 +478,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class R,class A>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -463,7 +498,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_M);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -480,7 +517,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_M);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -496,7 +535,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -512,7 +553,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
         out.require_include(INCLUDE_DEDUCE_V);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -529,6 +572,9 @@ namespace
         assert(r>0);
         assert(c>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_M_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -544,6 +590,9 @@ namespace
         {
         assert(d>0);
         assert(!name.empty());
+        out.require_include(INCLUDE_INLINE);
+        out.require_include(INCLUDE_V_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.stream()<<
             TAB2 "template <class A,class  B>" NL
             TAB2 "BOOST_QVM_INLINE_OPERATIONS" NL
@@ -703,6 +752,7 @@ namespace
         {
         assert(d>0);
         header_ma_mb_same_size(out,d,d,"operator*=");
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -740,10 +790,7 @@ namespace
         assert(r>0);
         assert(c>0);
         header_vr_ma_vb_mult(out,r,c,"operator*");
-        out.require_include(INCLUDE_INLINE);
-        out.require_include(INCLUDE_V_TRAITS);
         out.require_include(INCLUDE_M_TRAITS);
-        out.require_include(INCLUDE_ENABLE_IF);
         out.require_include(INCLUDE_DEDUCE_V);
         std::ostream & g=out.stream();
         g<<
@@ -785,10 +832,7 @@ namespace
         assert(r>0);
         assert(c>0);
         header_vr_va_mb_mult(out,r,c,"operator*");
-        out.require_include(INCLUDE_INLINE);
-        out.require_include(INCLUDE_V_TRAITS);
         out.require_include(INCLUDE_M_TRAITS);
-        out.require_include(INCLUDE_ENABLE_IF);
         out.require_include(INCLUDE_DEDUCE_V);
         std::ostream & g=out.stream();
         g<<
@@ -850,6 +894,7 @@ namespace
     bool_eq_ma_mb( output_file & out, int r, int c, char const * suffix )
         {
         header_bool_ma_mb_same_size(out,r,c,"operator==");
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -870,6 +915,7 @@ namespace
     bool_eq_va_vb( output_file & out, int d, char const * suffix )
         {
         header_bool_va_vb_same_size(out,d,"operator==");
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -889,6 +935,7 @@ namespace
     bool_neq_ma_mb( output_file & out, int r, int c, char const * suffix )
         {
         header_bool_ma_mb_same_size(out,r,c,"operator!=");
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -909,6 +956,7 @@ namespace
     bool_neq_va_vb( output_file & out, int d, char const * suffix )
         {
         header_bool_va_vb_same_size(out,d,"operator!=");
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -955,6 +1003,7 @@ namespace
         {
         assert(!op.empty());
         header_ma_mb_same_size(out,r,c,fn);
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<TAB3 "{" NL;
         for( int i=0; i!=r; ++i )
@@ -972,6 +1021,7 @@ namespace
         {
         assert(!op.empty());
         header_va_vb_same_size(out,d,fn);
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<TAB3 "{" NL;
         for( int i=0; i!=d; ++i )
@@ -1119,6 +1169,7 @@ namespace
         {
         assert(!op.empty());
         header_ma_sb(out,r,c,fn);
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -1138,6 +1189,7 @@ namespace
         {
         assert(!op.empty());
         header_va_sb(out,d,fn);
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -1156,8 +1208,6 @@ namespace
         {
         header_ma_mb_same_size(out,r,c,"assign");
         out.require_include(INCLUDE_M_TRAITS);
-        out.require_include(INCLUDE_INLINE);
-        out.require_include(INCLUDE_ENABLE_IF);
         std::ostream & g=out.stream();
         g<<TAB3 "{" NL;
         for( int i=0; i!=r; ++i )
@@ -1175,8 +1225,6 @@ namespace
         {
         header_va_vb_same_size(out,d,"assign");
         out.require_include(INCLUDE_V_TRAITS);
-        out.require_include(INCLUDE_INLINE);
-        out.require_include(INCLUDE_ENABLE_IF);
         std::ostream & g=out.stream();
         g<<TAB3 "{" NL;
         for( int i=0; i!=d; ++i )
@@ -1196,6 +1244,9 @@ namespace
             out.require_include(INCLUDE_Q_TRAITS);
             out.require_include(INCLUDE_S_TRAITS);
             }
+        out.require_include(INCLUDE_M_TRAITS);
+        out.require_include(INCLUDE_ENABLE_IF);
+        out.require_include(INCLUDE_INLINE);
         std::ostream & g=out.stream();
         g<<
             TAB2 "template <class R,class A>" NL
@@ -1280,6 +1331,7 @@ namespace
     vr_convert_to_va( output_file & out, int d, char const * suffix )
         {
         header_vr_va_same_size(out,d,"convert_to");
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<TAB3 "{" NL<<
             TAB3 "R r;" NL
@@ -1353,6 +1405,7 @@ namespace
     determinant( output_file & out, int d, char const * suffix )
         {
         header_sr_ma(out,d,d,"determinant");
+        out.require_include(INCLUDE_M_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -1375,10 +1428,12 @@ namespace
     inverse_ma( output_file & out, int d, char const * suffix )
         {
         assert(d>1);
+        out.require_include(INCLUDE_ENABLE_IF);
         out.require_include(INCLUDE_DEDUCE_M);
         out.require_include(INCLUDE_ASSERT);
         out.require_include(INCLUDE_THROW_EXCEPTION);
         out.require_include(INCLUDE_ERROR);
+        out.require_include(INCLUDE_INLINE);
         std::ostream & g=out.stream();
         g<<
             TAB2 "template <class A,class B>" NL
@@ -1432,6 +1487,7 @@ namespace
         {
         header_sr_va(out,d,"mag_sqr");
         out.require_include(INCLUDE_MATH);
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -1459,6 +1515,7 @@ namespace
         {
         header_sr_va(out,d,"mag");
         out.require_include(INCLUDE_MATH);
+        out.require_include(INCLUDE_V_TRAITS);
         std::ostream & g=out.stream();
         g<<
             TAB3 "{" NL
@@ -1559,6 +1616,7 @@ namespace
         {
         header_sr_va_vb(out,d,"dot");
         out.require_include(INCLUDE_DEDUCE_S);
+        out.require_include(INCLUDE_V_TRAITS);
         out.require_include(INCLUDE_STATIC_ASSERT);
         std::ostream & g=out.stream();
         g<<
@@ -1763,11 +1821,6 @@ namespace
         for( int d=2; d!=5; ++d )
             {
             output_file f(opt);
-                {
-                char buf[1024];
-                sprintf(buf,INCLUDE_MAT_ASSIGN,d);
-                f.require_include(buf);
-                }
             mr_op_ma_mb_same_size(f,d,d,"operator+","+","mm");
             mr_op_ma_mb_same_size(f,d,1,"operator+","+","mm");
             mr_op_ma_mb_same_size(f,1,d,"operator+","+","mm");
@@ -1797,6 +1850,9 @@ namespace
             ma_op_ma_sb(f,d,d,"operator/=","/=","ms");
             ma_op_ma_sb(f,d,1,"operator/=","/=","ms");
             ma_op_ma_sb(f,1,d,"operator/=","/=","ms");
+            ma_assign_ma_mb(f,d,d,"mm");
+            ma_assign_ma_mb(f,d,1,"mm");
+            ma_assign_ma_mb(f,1,d,"mm");
             mr_convert_to_ma(f,d,d,"m");
             mr_convert_to_ma(f,d,1,"m");
             mr_convert_to_ma(f,1,d,"m");
@@ -1821,20 +1877,6 @@ namespace
         for( int d=2; d!=5; ++d )
             {
             output_file f(opt);
-            ma_assign_ma_mb(f,d,d,"mm");
-            ma_assign_ma_mb(f,d,1,"mm");
-            ma_assign_ma_mb(f,1,d,"mm");
-            f.dump("mat_assign"+to_string(d)+".hpp");
-            }
-
-        for( int d=2; d!=5; ++d )
-            {
-            output_file f(opt);
-                {
-                char buf[1024];
-                sprintf(buf,INCLUDE_VEC_ASSIGN,d);
-                f.require_include(buf);
-                }
             vr_op_va_vb_same_size(f,d,"operator+","+","vv");
             vr_op_va_vb_same_size(f,d,"operator-","-","vv");
             va_op_va_vb_same_size(f,d,"operator+=","+=","vv");
@@ -1844,6 +1886,7 @@ namespace
             va_op_va_sb(f,d,"operator*=","*=","vs");
             vr_op_va_sb(f,d,"operator/","/","vs");
             va_op_va_sb(f,d,"operator/=","/=","vs");
+            va_assign_va_vb(f,d,"vv");
             vr_convert_to_va(f,d,"v");
             bool_eq_va_vb(f,d,"vv");
             bool_neq_va_vb(f,d,"vv");
@@ -1853,13 +1896,6 @@ namespace
             normalize(f,d,"v");
             dot(f,d,"vv");
             f.dump("vec_operations"+to_string(d)+".hpp");
-            }
-
-        for( int d=2; d!=5; ++d )
-            {
-            output_file f(opt);
-            va_assign_va_vb(f,d,"vv");
-            f.dump("vec_assign"+to_string(d)+".hpp");
             }
 
         for( int d=2; d!=5; ++d )

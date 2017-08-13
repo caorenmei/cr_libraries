@@ -22,30 +22,20 @@
 
 namespace compute = boost::compute;
 
-static size_t wait_num = 0;
-
-struct waitable_object
+BOOST_AUTO_TEST_CASE(wait_for_fill)
 {
-    void wait()
-    {
-        wait_num++;
-    }
-};
+    compute::vector<int> vector(8192, context);
 
-BOOST_AUTO_TEST_CASE(wait_guard_test)
-{
-    waitable_object waitable;
-    
-    BOOST_CHECK(wait_num == 0);
+    compute::event fill_event =
+        compute::fill_async(vector.begin(), vector.end(), 9, queue).get_event();
+
+    BOOST_CHECK(fill_event.status() != CL_COMPLETE);
+
     {
-        compute::wait_guard<waitable_object> waitable_object_guard(waitable);
+        compute::wait_guard<compute::event> fill_guard(fill_event);
     }
-    BOOST_CHECK(wait_num == 1);
-    {
-        compute::wait_guard<waitable_object> waitable_object_guard1(waitable);
-        compute::wait_guard<waitable_object> waitable_object_guard2(waitable);
-    }
-    BOOST_CHECK(wait_num == 3);    
+
+    BOOST_CHECK(fill_event.status() == CL_COMPLETE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -42,8 +42,8 @@ namespace quickbook
             }
             
             void store(void* ptr, void (*del)(void* x)) {
-                ptr_ = ptr;
-                del_ = del;
+                ptr = ptr_;
+                del = del_;
             }
         private:
             scoped_void& operator=(scoped_void const&);

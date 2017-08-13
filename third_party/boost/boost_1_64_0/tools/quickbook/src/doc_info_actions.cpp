@@ -556,16 +556,9 @@ namespace quickbook
 
         // Close any open sections.
         if (!doc_type.empty() && state.document.section_level() > 1) {
-            if (state.strict_mode) {
-                detail::outerr(state.current_file->path)
-                    << "Missing [endsect] detected at end of file (strict mode)."
-                    << std::endl;
-                ++state.error_count;
-            } else {
-                detail::outwarn(state.current_file->path)
-                    << "Missing [endsect] detected at end of file."
-                    << std::endl;
-            }
+            detail::outwarn(state.current_file->path)
+                << "Missing [endsect] detected at end of file."
+                << std::endl;
 
             while(state.document.section_level() > 1) {
                 state.out << "</section>";

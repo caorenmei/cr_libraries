@@ -48,8 +48,7 @@ namespace quickbook
             ;
 
         local.cond_phrase =
-                ( !(qbk_ver(107u) >> "!") )     [state.values.entry(ph::arg1, ph::arg2)]
-            >>  blank
+                blank
             >>  macro_identifier                [state.values.entry(ph::arg1, ph::arg2)]
             >>  scoped_cond_phrase() [extended_phrase]
             ;

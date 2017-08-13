@@ -8,7 +8,7 @@
 
 #include <boost/config.hpp>
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 
 // We have to fall back on the handcrafted one
 #include <example_handcrafted.hpp>

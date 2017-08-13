@@ -27,7 +27,7 @@
 #include <iostream>
 #include <string>
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 
 int main()
 {
@@ -297,6 +297,7 @@ int main()
   
   cout
     << "TMP only parsers:" << endl
+    << P() << endl
     << P(aba) << endl
     << P(aaaaaaabbbbaaaa) << endl
     << endl
@@ -308,6 +309,7 @@ int main()
     << endl
 
     << "mixed parsers:" << endl
+    << P_MIXED() << endl
     << P_MIXED(aba) << endl
     << P_MIXED(aaaaaaabbbbaaaa) << endl
     << endl

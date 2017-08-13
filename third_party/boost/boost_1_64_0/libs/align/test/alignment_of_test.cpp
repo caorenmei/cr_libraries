@@ -72,10 +72,8 @@ struct offset_value {
 template<class T>
 void test_type()
 {
-    enum {
-        N = boost::alignment::alignment_of<T>::value
-    };
-    BOOST_TEST(offsetof(offset_value<T>, object) == N);
+    BOOST_TEST(offsetof(offset_value<T>, object) ==
+        boost::alignment::alignment_of<T>::value);
 }
 
 template<class T>

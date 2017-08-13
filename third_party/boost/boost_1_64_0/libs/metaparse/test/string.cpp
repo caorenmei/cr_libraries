@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_string)
     equal_to<metaparse::string<'H','e','l','l'>, pop_back<hello>::type>
   ));
 
-#if BOOST_METAPARSE_STD >= 2011
+#ifndef BOOST_NO_CONSTEXPR
   // BOOST_METAPARSE_STRING macro
   ///////////////////////
 

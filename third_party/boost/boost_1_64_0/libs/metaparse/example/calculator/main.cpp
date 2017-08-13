@@ -125,7 +125,7 @@ typedef build_parser<entire_input<expression> > calculator_parser;
 #endif
 #define _STR BOOST_METAPARSE_STRING
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 int main()
 {
   using std::cout;

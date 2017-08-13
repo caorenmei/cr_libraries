@@ -15,46 +15,45 @@ import toolset ;
 
 project boost/context/performance
     : requirements
-      <library>/boost/chrono//boost_chrono
       <library>/boost/context//boost_context
-      <library>/boost/program_options//boost_program_options
-      <toolset>gcc,<segmented-stacks>on:<cxxflags>-fsplit-stack
-      <toolset>gcc,<segmented-stacks>on:<cxxflags>-DBOOST_USE_SEGMENTED_STACKS
-      <toolset>clang,<segmented-stacks>on:<cxxflags>-fsplit-stack
-      <toolset>clang,<segmented-stacks>on:<cxxflags>-DBOOST_USE_SEGMENTED_STACKS
       <link>static
-      <optimization>speed
-      <threading>multi
-      <variant>release
+      <linkflags>"-lrt" 
+      <threading>single
     ;
 
 alias sources
-   : bind_processor_aix.cpp
+   : performance.cpp
+     bind_processor_aix.cpp
    : <target-os>aix
    ;
 
 alias sources
-   : bind_processor_freebsd.cpp
+   : performance.cpp
+     bind_processor_freebsd.cpp
    : <target-os>freebsd
    ;
 
 alias sources
-   : bind_processor_hpux.cpp
+   : performance.cpp
+     bind_processor_hpux.cpp
    : <target-os>hpux
    ;
 
 alias sources
-   : bind_processor_linux.cpp
+   : performance.cpp
+     bind_processor_linux.cpp
    : <target-os>linux
    ;
 
 alias sources
-   : bind_processor_solaris.cpp
+   : performance.cpp
+     bind_processor_solaris.cpp
    : <target-os>solaris
    ;
 
 alias sources
-   : bind_processor_windows.cpp
+   : performance.cpp
+     bind_processor_windows.cpp
    : <target-os>windows
    ;
 
@@ -62,5 +61,4 @@ explicit sources ;
 
 exe performance
    : sources
-     performance.cpp
    ;

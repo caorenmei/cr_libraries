@@ -54,7 +54,7 @@ typedef build_parser<entire_input<rational_grammar> > rational_parser;
 #define RATIONAL(s) \
   (::rational_parser::apply<BOOST_METAPARSE_STRING(s)>::type::run())
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 
 int main()
 {

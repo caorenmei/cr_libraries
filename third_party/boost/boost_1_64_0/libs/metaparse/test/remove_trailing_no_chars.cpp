@@ -3,10 +3,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/metaparse/config.hpp>
-#if BOOST_METAPARSE_STD >= 2011
-
-#include <boost/metaparse/v1/cpp11/impl/remove_trailing_no_chars.hpp>
+#include <boost/metaparse/v1/impl/remove_trailing_no_chars.hpp>
 #include <boost/metaparse/string.hpp>
 
 #include <boost/mpl/equal_to.hpp>
@@ -60,5 +57,4 @@ BOOST_METAPARSE_TEST_CASE(remove_trailing_no_chars)
   ));
 }
 
-#endif
 

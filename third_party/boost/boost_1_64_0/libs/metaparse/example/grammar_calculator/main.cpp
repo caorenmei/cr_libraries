@@ -5,7 +5,7 @@
 
 #include <boost/config.hpp>
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 #include <iostream>
 
 int main()

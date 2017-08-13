@@ -17,7 +17,7 @@ namespace boost_has_nl_types_h{
 int test()
 {
    nl_catd cat = catopen("foo", 0);
-   if(cat != (nl_catd)-1) catclose(cat);
+   if(cat >= 0) catclose(cat);
    return 0;
 }
 

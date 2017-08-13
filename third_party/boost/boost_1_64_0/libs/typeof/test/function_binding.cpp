@@ -7,16 +7,8 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/static_assert.hpp>
 
-int foo1(double);
-int foo2(...);
-int foo3(int, ...);
-typedef int(&FREF1)(double);
-typedef int(&FREF2)(...);
-typedef int(&FREF3)(int, ...);
-FREF1 fref1 = *foo1;
-FREF2 fref2 = *foo2;
-FREF3 fref3 = *foo3;
+int foo(double);
+typedef int(&FREF)(double);
+FREF fref = *foo;
 
-BOOST_STATIC_ASSERT((boost::is_same<BOOST_TYPEOF(fref1), int(double)>::value));
-BOOST_STATIC_ASSERT((boost::is_same<BOOST_TYPEOF(fref2), int(...)>::value));
-BOOST_STATIC_ASSERT((boost::is_same<BOOST_TYPEOF(fref3), int(int,...)>::value));
+BOOST_STATIC_ASSERT((boost::is_same<BOOST_TYPEOF(fref), int(double)>::value));

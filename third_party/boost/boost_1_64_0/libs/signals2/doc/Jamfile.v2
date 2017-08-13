@@ -36,11 +36,10 @@ make hello_world_def_code_snippet.xml
 
 ###############################################################################
 alias boostdoc
-    : signals.xml
+    : signals.xml hello_world_def_code_snippet.xml
     :
     :
-    : <implicit-dependency>hello_world_def_code_snippet.xml
-      <dependency>hello_world_def_code_snippet.xml ;
+    : <implicit-dependency>hello_world_def_code_snippet.xml ;
 explicit boostdoc ;
 alias boostrelease ;
 explicit boostrelease ;

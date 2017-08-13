@@ -201,13 +201,13 @@ void test_additive_wrap(T value)
 {
     {
         boost::atomic<T> a(value);
-        T n = a.fetch_add(1) + (T)1;
-        BOOST_TEST( a.load() == n );
+        T n = a.fetch_add(1) + 1;
+        BOOST_TEST( a.compare_exchange_strong(n, n) );
     }
     {
         boost::atomic<T> a(value);
-        T n = a.fetch_sub(1) - (T)1;
-        BOOST_TEST( a.load() == n );
+        T n = a.fetch_sub(1) - 1;
+        BOOST_TEST( a.compare_exchange_strong(n, n) );
     }
 }
 
@@ -282,11 +282,9 @@ void do_test_integral_api(boost::true_type)
     do_test_integral_api<T>(boost::false_type());
 
     test_additive_wrap<T>(0u);
-    BOOST_CONSTEXPR_OR_CONST T all_ones = ~(T)0u;
-    test_additive_wrap<T>(all_ones);
-    BOOST_CONSTEXPR_OR_CONST T max_signed_twos_compl = all_ones >> 1;
-    test_additive_wrap<T>(all_ones ^ max_signed_twos_compl);
-    test_additive_wrap<T>(max_signed_twos_compl);
+    test_additive_wrap<T>(~(T)0u);
+    test_additive_wrap<T>((~(T)0u) << (sizeof(T) * 8 - 1));
+    test_additive_wrap<T>(~((~(T)0u) << (sizeof(T) * 8 - 1)));
 }
 
 template<typename T>
@@ -307,6 +305,7 @@ void test_pointer_api(void)
     test_additive_operators<T*>(&values[1], 1);
 
     test_base_operators<void*>(&values[0], &values[1], &values[2]);
+    test_additive_operators_with_type<void*, int, char*>(&values[1], 1);
 
 #if defined(BOOST_HAS_INTPTR_T)
     boost::atomic<void *> ptr;

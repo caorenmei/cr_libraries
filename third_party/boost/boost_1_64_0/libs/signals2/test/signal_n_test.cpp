@@ -7,7 +7,6 @@
 
 // For more information, see http://www.boost.org
 
-#include <boost/bind.hpp>
 #include <boost/config.hpp>
 #include <boost/test/minimal.hpp>
 
@@ -142,7 +141,7 @@ test_one_arg()
   boost::signals2::signal1<int, int, max_or_default<int> > s1;
 
   s1.connect(std::negate<int>());
-  s1.connect(boost::bind(std::multiplies<int>(), 2, _1));
+  s1.connect(std::bind1st(std::multiplies<int>(), 2));
 
   BOOST_CHECK(s1(1) == 2);
   BOOST_CHECK(s1(-1) == 1);
@@ -161,8 +160,8 @@ test_signal_signal_connect()
   {
     signal_type s2;
     s1.connect(s2);
-    s2.connect(boost::bind(std::multiplies<int>(), 2, _1));
-    s2.connect(boost::bind(std::multiplies<int>(), -3, _1));
+    s2.connect(std::bind1st(std::multiplies<int>(), 2));
+    s2.connect(std::bind1st(std::multiplies<int>(), -3));
 
     BOOST_CHECK(s2(-3) == 9);
     BOOST_CHECK(s1(3) == 6);
@@ -174,8 +173,8 @@ test_signal_signal_connect()
   {
     signal_type s2;
     s1.connect(boost::cref(s2));
-    s2.connect(boost::bind(std::multiplies<int>(), 2, _1));
-    s2.connect(boost::bind(std::multiplies<int>(), -3, _1));
+    s2.connect(std::bind1st(std::multiplies<int>(), 2));
+    s2.connect(std::bind1st(std::multiplies<int>(), -3));
 
     BOOST_CHECK(s2(-3) == 9);
     BOOST_CHECK(s1(3) == 6);

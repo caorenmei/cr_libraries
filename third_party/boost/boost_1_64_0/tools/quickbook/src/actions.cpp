@@ -127,10 +127,6 @@ namespace quickbook
         return qbk_version_n >= lower && qbk_version_n < upper;
     }
 
-    bool quickbook_strict::is_strict_checking() const {
-        return state.strict_mode;
-    }
-
     void explicit_list_action(quickbook::state&, value);
     void header_action(quickbook::state&, value);
     void begin_section_action(quickbook::state&, value);
@@ -540,12 +536,10 @@ namespace quickbook
 
         if (saved_conditional)
         {
-            bool positive = values.consume().get_quickbook().empty();
             quickbook::string_view macro1 = values.consume().get_quickbook();
             std::string macro(macro1.begin(), macro1.end());
 
-            state.conditional =
-                (bool)find(state.macro, macro.c_str()) == positive;
+            state.conditional = find(state.macro, macro.c_str());
 
             if (!state.conditional) {
                 state.push_output();
@@ -1738,7 +1732,6 @@ namespace quickbook
         values.finish();
 
         std::string full_id = state.document.begin_section(
-            element_id,
             element_id.empty() ?
                 detail::make_identifier(content.get_quickbook()) :
                 validate_id(state, element_id),
@@ -1754,7 +1747,10 @@ namespace quickbook
 
         if (self_linked_headers && state.document.compatibility_version() >= 103)
         {
-            state.out << quickbook::detail::linkify(content.get_encoded(), full_id);
+            state.out << "<link linkend=\"" << full_id << "\">"
+                << content.get_encoded()
+                << "</link>"
+                ;
         }
         else
         {
@@ -1764,12 +1760,8 @@ namespace quickbook
         state.out << "</title>\n";
     }
 
-    void end_section_action(quickbook::state& state, value end_section_list, string_iterator first)
+    void end_section_action(quickbook::state& state, value end_section, string_iterator first)
     {
-        value_consumer values = end_section_list;
-        value element_id = values.optional_consume(general_tags::element_id);
-        values.finish();
-
         write_anchors(state, state.out);
 
         if (state.document.section_level() <= state.min_section_level)
@@ -1781,29 +1773,6 @@ namespace quickbook
             ++state.error_count;
             
             return;
-        }
-
-        if (!element_id.empty() && !(element_id == state.document.explicit_id()))
-        {
-            file_position const pos = state.current_file->position_of(first);
-            value section_element_id = state.document.explicit_id();
-
-            if (section_element_id.empty()) {
-                detail::outerr(state.current_file->path, pos.line)
-                    << "Endsect has unexpected id '"
-                    << element_id.get_quickbook()
-                    << "' in section with no explicit id, near column "
-                    << pos.column << ".\n";
-            } else {
-                detail::outerr(state.current_file->path, pos.line)
-                    << "Endsect has incorrect id '"
-                    << element_id.get_quickbook()
-                    << "', expected '"
-                    << state.document.explicit_id().get_quickbook()
-                    << "', near column "
-                    << pos.column << ".\n";
-            }
-            ++state.error_count;
         }
 
         state.out << "</section>";

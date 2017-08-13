@@ -1,5 +1,4 @@
-
-set(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+锘縮et(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(_CR_BOOST_SRC_FLODER "${_CR_PROJECT_ROOT}/third_party/boost/boost_1_64_0")
 
 include(common.cmake)
@@ -46,34 +45,18 @@ function(_build_boost buildMode)
         message(STATUS "MAKE_DIRECTORY ${_CR_BOOST_INSTALL_DIR}")
     endif()
     set(_CR_BOOST_STAGE_LIBS "${_CR_BOOST_INSTALL_DIR}/lib")
-    execute_process(COMMAND "${_CR_BOOST_B2_EXE}" --stagedir=${_CR_BOOST_INSTALL_DIR} --build-dir=${_CR_BOOST_BUILD_DIR} ${_CR_BOOST_VARIANT} link=static WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}")
+    execute_process(
+        COMMAND "${_CR_BOOST_B2_EXE}" --stagedir=${_CR_BOOST_INSTALL_DIR} --build-dir=${_CR_BOOST_BUILD_DIR} variant=${_CR_BOOST_VARIANT} link=static threading=multi runtime-link=static
+        WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}"
+    )
     # boost头文件目录
     set(_CR_BOOST_INCLUDE_DIR "${_CR_BOOST_INSTALL_DIR}/include")
     if(NOT EXISTS "${_CR_BOOST_INCLUDE_DIR}")
         file(MAKE_DIRECTORY "${_CR_BOOST_INCLUDE_DIR}")
         message(STATUS "MAKE_DIRECTORY ${_CR_BOOST_INCLUDE_DIR}")
     endif()
-    file(GLOB _CR_BOOST_INCLUDES "${_CR_BOOST_SRC_FLODER}/libs/*")
-    foreach(libDir ${_CR_BOOST_INCLUDES})
-        if(IS_DIRECTORY "${libDir}")
-            if("${libDir}" STREQUAL "${_CR_BOOST_SRC_FLODER}/libs/numeric")
-                file(COPY "${libDir}/conversion/include/" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
-                message(STATUS "COPY ${libDir}/conversion/include/ DESTINATION ${_CR_BOOST_INCLUDE_DIR}/")
-                file(COPY "${libDir}/interval/include/" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
-                message(STATUS "COPY ${libDir}/interval/include/ DESTINATION ${_CR_BOOST_INCLUDE_DIR}/")
-                file(COPY "${libDir}/odeint/include/" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
-                message(STATUS "COPY ${libDir}/odeint/include/ DESTINATION ${_CR_BOOST_INCLUDE_DIR}/")
-                file(COPY "${libDir}/ublas/include/" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
-                message(STATUS "COPY ${libDir}/ublas/include/ DESTINATION ${_CR_BOOST_INCLUDE_DIR}/")
-            else()
-                file(COPY "${libDir}/include/" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
-                message(STATUS "COPY ${libDir}/include/ DESTINATION ${_CR_BOOST_INCLUDE_DIR}/")
-            endif()
-        endif()
-    endforeach()
+    file(COPY "${_CR_BOOST_SRC_FLODER}/boost" DESTINATION "${_CR_BOOST_INCLUDE_DIR}/")
 endfunction()
 
 _build_boost("Debug")
 _build_boost("Release")
-
-

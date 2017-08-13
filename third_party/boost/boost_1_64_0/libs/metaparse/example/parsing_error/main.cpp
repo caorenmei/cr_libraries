@@ -30,7 +30,7 @@ typedef sequence<repeated<lit_c<'a'> >, lit_c<'b'> > s;
 
 typedef build_parser<s> test_parser;
 
-#if BOOST_METAPARSE_STD < 2011
+#ifdef BOOST_NO_CXX11_CONSTEXPR
 
 typedef boost::metaparse::string<'a','a','a','c'> invalid_input;
 

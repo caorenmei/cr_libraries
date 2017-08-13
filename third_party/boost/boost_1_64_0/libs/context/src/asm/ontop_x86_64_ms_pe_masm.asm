@@ -90,7 +90,6 @@ ontop_fcontext PROC BOOST_CONTEXT_EXPORT FRAME
     ; prepare stack
     lea rsp, [rsp-0118h]
 
-IFNDEF BOOST_USE_TSX
     ; save XMM storage
     movaps  [rsp], xmm6
     movaps  [rsp+010h], xmm7
@@ -106,12 +105,11 @@ IFNDEF BOOST_USE_TSX
     stmxcsr  [rsp+0a0h]
     ; save x87 control-word
     fnstcw  [rsp+0a4h]
-ENDIF
 
     ; load NT_TIB
     mov  r10,  gs:[030h]
     ; save fiber local storage
-    mov  rax, [r10+020h]
+    mov  rax, [r10+018h]
     mov  [rsp+0b0h], rax
     ; save current deallocation stack
     mov  rax, [r10+01478h]
@@ -140,7 +138,6 @@ ENDIF
     ; restore RSP (pointing to context-data) from RDX
     mov  rsp, rdx
 
-IFNDEF BOOST_USE_TSX
     ; restore XMM storage
     movaps  xmm6, [rsp]
     movaps  xmm7, [rsp+010h]
@@ -156,13 +153,12 @@ IFNDEF BOOST_USE_TSX
     ldmxcsr  [rsp+0a0h]
     ; save x87 control-word
     fldcw   [rsp+0a4h]
-ENDIF
 
     ; load NT_TIB
     mov  r10,  gs:[030h]
     ; restore fiber local storage
     mov  rax, [rsp+0b0h]
-    mov  [r10+020h], rax
+    mov  [r10+018h], rax
     ; restore current deallocation stack
     mov  rax, [rsp+0b8h]
     mov  [r10+01478h], rax
