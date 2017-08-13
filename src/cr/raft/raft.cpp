@@ -8,6 +8,7 @@
 #include "exception.h"
 #include "follower.h"
 #include "leader.h"
+#include "raft_msg.pb.h"
 #include "raft_state.h"
 
 namespace cr

@@ -5,6 +5,7 @@
 #include <cr/common/assert.h>
 
 #include "raft.h"
+#include "raft_msg.pb.h"
 
 namespace cr
 {

@@ -3,13 +3,16 @@
 
 #include <utility>
 
-#include "raft_msg.pb.h"
 #include "raft_state.h"
 
 namespace cr
 {
     namespace raft
     {
+        namespace pb
+        {
+            class RequestVoteReq;
+        }
 
         class Follower : public RaftState
         {
