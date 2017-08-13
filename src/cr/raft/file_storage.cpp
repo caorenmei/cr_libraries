@@ -89,12 +89,17 @@ namespace cr
             RocksdbStorage(std::shared_ptr<rocksdb::DB> db, std::shared_ptr<rocksdb::ColumnFamilyHandle> column, bool sync)
                 : db_(db),
                 column_(column),
-                sync_(sync)
+                sync_(sync),
+                lastLogIndex_(0),
+                lastLogTerm_(0)
             {
                 std::string lastLogIndexTermValue;
                 auto status = db->Get(rocksdb::ReadOptions(), column.get(), rocksdb::Slice(getLastLogIndexTermKey()), &lastLogIndexTermValue);
                 CR_ASSERT_E(cr::raft::IOException, status.ok() || status.IsNotFound())(status.ok())(status.IsNotFound());
-                std::tie(lastLogIndex_, lastLogTerm_) = !lastLogIndexTermValue.empty() ? parseLastLogIndexTermValue(lastLogIndexTermValue ) : std::make_pair(0, 0);
+                if (!lastLogIndexTermValue.empty())
+                {
+                    std::tie(lastLogIndex_, lastLogTerm_) = parseLastLogIndexTermValue(lastLogIndexTermValue);
+                }
             }
 
             ~RocksdbStorage()
