@@ -4,7 +4,7 @@
 #include <boost/asio/buffer.hpp>
 #include <google/protobuf/message.h>
 
-#include <cr/network/byte_buffer.h>
+#include "byte_buffer.h"
 
 namespace cr
 {

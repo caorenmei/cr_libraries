@@ -1,8 +1,8 @@
 ﻿#ifndef CR_COMMON_THROW_H_
 #define CR_COMMON_THROW_H_
 
-#include <cr/common/error.h>
-#include <cr/common/exception.h>
+#include "error.h"
+#include "exception.h"
 
 /**
  * 该宏用于抛出cr::Error, cr::Exception及其子类，并自动设置行号与源文件.

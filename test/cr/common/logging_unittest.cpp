@@ -10,7 +10,7 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <cr/log/logging.h>
+#include <cr/common/logging.h>
 
 BOOST_AUTO_TEST_SUITE(logging)
 

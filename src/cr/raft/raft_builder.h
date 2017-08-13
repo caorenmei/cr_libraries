@@ -8,7 +8,7 @@
 
 #include <boost/optional.hpp>
 
-#include <cr/raft/storage.h>
+#include "storage.h"
 
 namespace cr
 {

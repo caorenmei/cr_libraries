@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <cr/raft/storage.h>
+#include "storage.h"
 
 namespace cr
 {

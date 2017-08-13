@@ -7,10 +7,12 @@ set(cr_common_SRCS
     assert_builder.h
     assert_error.h
     scope_guard.h
+    scope_guard.cpp
     error.h
     exception.h
     exception.cpp
     function.h
+    logging.h
     streams.h
     streams_empty.h
     streams_enumerators.h
@@ -30,6 +32,7 @@ set(cr_common_HEADERS
     error.h
     exception.h
     function.h
+    logging.h
     streams.h
     streams_empty.h
     streams_enumerators.h

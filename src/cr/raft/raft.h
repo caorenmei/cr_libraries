@@ -8,8 +8,8 @@
 
 #include <boost/optional.hpp>
 
-#include <cr/raft/storage.h>
-#include <cr/raft/raft_builder.h>
+#include "storage.h"
+#include "raft_builder.h"
 
 namespace cr
 {

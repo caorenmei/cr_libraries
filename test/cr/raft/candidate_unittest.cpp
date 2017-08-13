@@ -7,7 +7,6 @@
 
 #include <cr/common/streams.h>
 #include <cr/raft/exception.h>
-#include <cr/raft/follower.h>
 #include <cr/raft/mem_storage.h>
 #include <cr/raft/raft.h>
 #include <cr/raft/raft_msg.pb.h>

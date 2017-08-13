@@ -1,12 +1,13 @@
-﻿#include <cr/raft/candidate.h>
+﻿#include "candidate.h"
 
 #include <limits>
 #include <random>
 #include <tuple>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft.h>
-#include <cr/raft/raft_msg.pb.h>
+
+#include "raft.h"
+#include "raft_msg.pb.h"
 
 namespace cr
 {

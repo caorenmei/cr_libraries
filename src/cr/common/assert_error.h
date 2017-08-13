@@ -1,14 +1,14 @@
-#ifndef CR_COMMON_ASSERT_ERROR_H_
+ï»¿#ifndef CR_COMMON_ASSERT_ERROR_H_
 #define CR_COMMON_ASSERT_ERROR_H_
 
 #include <string>
 
-#include <cr/common/error.h>
+#include "error.h"
 
 namespace cr
 {
 
-    /** ¶ÏÑÔ´íÎó */
+    /** æ–­è¨€é”™è¯¯ */
     class AssertError : public Error
     {
     public:

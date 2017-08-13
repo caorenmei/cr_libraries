@@ -7,16 +7,16 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 find_package(Rocksdb REQUIRED)
 include_directories(${ROCKSDB_INCLUDE_DIRS})
 
-set(cr_raft_example_safety_test_SRCS
+set(cr_raft_safety_test_SRCS
     safety_test.cpp
 )
   
-add_executable(cr_raft_example_safety_test ${cr_raft_example_safety_test_SRCS})
-install(TARGETS cr_raft_example_safety_test DESTINATION bin)
+add_executable(cr_raft_safety_test ${cr_raft_safety_test_SRCS})
+install(TARGETS cr_raft_safety_test DESTINATION bin)
 if (WIN32)
     find_library(WIN_RPCRT_LIBRARY Rpcrt4)
 endif()
-target_link_libraries(cr_raft_example_safety_test 
+target_link_libraries(cr_raft_safety_test 
     cr_raft
     cr_common
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

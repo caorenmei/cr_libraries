@@ -1,7 +1,7 @@
 ﻿#ifndef CR_COMMON_ERROR_H_
 #define CR_COMMON_ERROR_H_
 
-#include <cr/common/exception.h>
+#include "exception.h"
 
 namespace cr
 {

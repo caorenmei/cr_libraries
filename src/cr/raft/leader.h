@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include <cr/raft/raft_state.h>
+#include "raft_state.h"
 
 namespace cr
 {

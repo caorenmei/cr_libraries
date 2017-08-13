@@ -1,8 +1,8 @@
 ﻿#ifndef CR_COMMON_ASSERT_H_
 #define CR_COMMON_ASSERT_H_
 
-#include <cr/common/assert_builder.h>
-#include <cr/common/assert_error.h>
+#include "assert_builder.h"
+#include "assert_error.h"
 
 
 #define CR_ASSERT_IMPL_A(x) CR_ASSERT_IMPL_OP(x, B)

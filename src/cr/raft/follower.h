@@ -3,8 +3,8 @@
 
 #include <utility>
 
-#include <cr/raft/raft_state.h>
-#include <cr/raft/raft_msg.pb.h>
+#include "raft_msg.pb.h"
+#include "raft_state.h"
 
 namespace cr
 {

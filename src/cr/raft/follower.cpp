@@ -1,10 +1,10 @@
-﻿#include <cr/raft/follower.h>
+﻿#include "follower.h"
 
 #include <tuple>
 
 #include <cr/common/assert.h>
-#include <cr/raft/raft.h>
-#include <cr/raft/raft_msg.pb.h>
+
+#include "raft.h"
 
 namespace cr
 {

@@ -6,7 +6,7 @@
 
 #include <boost/optional.hpp>
 
-#include <cr/common/streams_enumerators.h>
+#include "streams_enumerators.h"
 
 namespace cr
 {

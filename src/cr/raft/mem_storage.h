@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <cr/raft/storage.h>
+#include "storage.h"
 
 namespace cr
 {

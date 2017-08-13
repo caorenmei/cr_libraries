@@ -19,31 +19,17 @@ namespace cr
          *
          * @param rollback 回滚函数.
          */
-        explicit ScopeGuard(std::function<void()> rollback)
-            : rollback_(std::move(rollback)),
-            dismissed_(false)
-        {}
+        explicit ScopeGuard(std::function<void()> rollback);
 
         /**
          * Move constructor.
          *
          * @param [in,out] other The other.
          */
-        ScopeGuard(ScopeGuard&& other)
-            : rollback_(std::move(other.rollback_)),
-            dismissed_(other.dismissed_)
-        {
-            other.dismissed_ = true;
-        }
+        ScopeGuard(ScopeGuard&& other);
 
         /** Destructor. */
-        ~ScopeGuard()
-        {
-            if (!dismissed_)
-            {
-                rollback_();
-            }
-        }
+        ~ScopeGuard();
 
         ScopeGuard(const ScopeGuard&) = delete;
         ScopeGuard& operator=(const ScopeGuard&&) = delete;
@@ -54,17 +40,10 @@ namespace cr
          *
          * @param [in,out]  other   The other.
          */
-        void swap(ScopeGuard& other)
-        {
-            std::swap(rollback_, other.rollback_);
-            std::swap(dismissed_, other.dismissed_);
-        }
+        void swap(ScopeGuard& other);
 
         /** 解除自动回滚. */
-        void dismiss()
-        {
-            dismissed_ = true;
-        }
+        void dismiss();
 
     private:
 

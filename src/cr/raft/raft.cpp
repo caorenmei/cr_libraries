@@ -1,13 +1,14 @@
-﻿#include <cr/raft/raft.h>
+﻿#include "raft.h"
 
 #include <algorithm>
 
 #include <cr/common/assert.h>
-#include <cr/raft/candidate.h>
-#include <cr/raft/exception.h>
-#include <cr/raft/follower.h>
-#include <cr/raft/leader.h>
-#include <cr/raft/raft_state.h>
+
+#include "candidate.h"
+#include "exception.h"
+#include "follower.h"
+#include "leader.h"
+#include "raft_state.h"
 
 namespace cr
 {

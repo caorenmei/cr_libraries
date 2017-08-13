@@ -1,10 +1,11 @@
-#include <cr/raft/mem_storage.h>
+#include "mem_storage.h"
 
 #include <algorithm>
 
 #include <cr/common/assert.h>
-#include <cr/raft/exception.h>
-#include <cr/raft/raft_msg.pb.h>
+
+#include "exception.h"
+#include "raft_msg.pb.h"
 
 namespace cr
 {

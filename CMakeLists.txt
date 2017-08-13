@@ -36,5 +36,5 @@ option(Boost_USE_STATIC_LIBS "Use static libs" ON)
 
 # 子文件
 add_subdirectory(src)
-add_subdirectory(examples)
-add_subdirectory(tests)
+add_subdirectory(example)
+add_subdirectory(test)

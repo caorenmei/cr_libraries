@@ -1,4 +1,4 @@
-#include <cr/raft/file_storage.h>
+#include "file_storage.h"
 
 #include <array>
 #include <map>
@@ -13,8 +13,9 @@
 
 #include <cr/common/assert.h>
 #include <cr/common/throw.h>
-#include <cr/raft/exception.h>
-#include <cr/raft/raft_msg.pb.h>
+
+#include "exception.h"
+#include "raft_msg.pb.h"
 
 namespace cr
 {
