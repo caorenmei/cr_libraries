@@ -29,15 +29,12 @@ function(_build_lua buildMode)
         message(STATUS "MAKE_DIRECTORY ${_CR_LUA_INSTALL_DIR}")
     endif()
     execute_process(
-        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_LUA_INSTALL_DIR} -B "${_CR_LUA_BUILD_DIR}" "${_CR_LUA_SRC}"
+        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_LUA_INSTALL_DIR} -Dlua_MSVC_STATIC_RUNTIME=ON -B "${_CR_LUA_BUILD_DIR}" "${_CR_LUA_SRC}"
             WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
     )
     # 编译 & 安装
-    execute_process(
-        COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
-        COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
-    )
+    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}")
 endfunction()
 
-_build_lua("Release")
 _build_lua("Debug")
+_build_lua("Release")

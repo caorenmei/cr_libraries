@@ -29,13 +29,13 @@ function(_build_protobuf buildMode)
         message(STATUS "MAKE_DIRECTORY ${_CR_PROTOBUF_INSTALL_DIR}")
     endif()
     execute_process(
-        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} ${protobuf_MSVC_STATIC_RUNTIME} -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_WITH_ZLIB=OFF -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${_CR_PROTOBUF_INSTALL_DIR} -B ${_CR_PROTOBUF_BUILD_DIR} ${_CR_PROTOBUF_ROOT} 
-            WORKING_DIRECTORY "${_CR_PROTOBUF_BUILD_DIR}"
+        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_WITH_ZLIB=OFF -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${_CR_PROTOBUF_INSTALL_DIR} -B ${_CR_PROTOBUF_BUILD_DIR} ${_CR_PROTOBUF_ROOT} 
+        WORKING_DIRECTORY "${_CR_PROTOBUF_BUILD_DIR}"
     )
     # 编译 & 安装
     execute_process(COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_PROTOBUF_BUILD_DIR}")
 	execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_PROTOBUF_BUILD_DIR}")
 endfunction()
 
-_build_protobuf("Release")
 _build_protobuf("Debug")
+_build_protobuf("Release")

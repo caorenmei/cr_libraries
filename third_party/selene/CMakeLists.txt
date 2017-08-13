@@ -14,6 +14,18 @@ if (LUA_DIR)
     set(CMAKE_LIBRARY_PATH "${LUA_DIR}/lib ${CMAKE_LIBRARY_PATH}")
 endif()
 
+if (MSVC AND selene_MSVC_STATIC_RUNTIME)
+    foreach(flag_var
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+        CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
+        if(${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+        endif(${flag_var} MATCHES "/MD")
+    endforeach(flag_var)
+endif (MSVC AND selene_MSVC_STATIC_RUNTIME)
+
 find_package(Lua REQUIRED)
 if(NOT LUA_INCLUDE_DIR)
     message(SEND_ERROR "LUA_INCLUDE_DIR is required if no PkgConfig is available!")
@@ -47,4 +59,4 @@ install(TARGETS test_runner DESTINATION bin)
 target_link_libraries(test_runner ${LUA_LIBRARIES})
 add_test(selene_test test_runner)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)

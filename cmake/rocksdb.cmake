@@ -31,7 +31,7 @@ function(_build_rocksdb buildMode)
         message(STATUS "MAKE_DIRECTORY ${_CR_ROCKSDB_INSTALL_DIR}")
     endif()
     execute_process(
-        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_ROCKSDB_INSTALL_DIR} -DFAIL_ON_WARNINGS=OFF -B "${_CR_ROCKSDB_BUILD_DIR}" "${_CR_ROCKSDB_SRC}"
+        COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_ROCKSDB_INSTALL_DIR} -DFAIL_ON_WARNINGS=OFF -DWITH_MD_LIBRARY=OFF -B "${_CR_ROCKSDB_BUILD_DIR}" "${_CR_ROCKSDB_SRC}"
             WORKING_DIRECTORY "${_CR_ROCKSDB_BUILD_DIR}"
     )
     # 编译 & 安装
@@ -40,5 +40,5 @@ function(_build_rocksdb buildMode)
     file(COPY "${_CR_ROCKSDB_SRC}/include/" DESTINATION "${_CR_ROCKSDB_INSTALL_DIR}/include/")
 endfunction()
 
-_build_rocksdb("Release")
 _build_rocksdb("Debug")
+_build_rocksdb("Release")

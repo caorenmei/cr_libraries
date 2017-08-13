@@ -30,15 +30,12 @@ function(_build_cpp_netlib buildMode)
     endif()
     _cr_install_path(ENV{BOOST_ROOT} "boost" ${buildMode})
     execute_process(
-        COMMAND cmake -G "${_CR_MAKEFILE}" -DCPP-NETLIB_BUILD_TESTS=OFF -DCPP-NETLIB_BUILD_EXAMPLES=OFF -DCPP-NETLIB_ENABLE_HTTPS=OFF -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_CPP_NETLIB_INSTALL_DIR} -B "${_CR_CPP_NETLIB_BUILD_DIR}" "${_CR_CPP_NETLIB_SRC}"
+        COMMAND cmake -G "${_CR_MAKEFILE}" -DCPP-NETLIB_BUILD_TESTS=OFF -DCPP-NETLIB_BUILD_EXAMPLES=OFF -DCPP-NETLIB_ENABLE_HTTPS=OFF -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_CPP_NETLIB_INSTALL_DIR} -Dcppnetlib_MSVC_STATIC_RUNTIME=ON -B "${_CR_CPP_NETLIB_BUILD_DIR}" "${_CR_CPP_NETLIB_SRC}"
             WORKING_DIRECTORY "${_CR_CPP_NETLIB_BUILD_DIR}"
     )
     # 编译 & 安装
-    execute_process(
-        COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_CPP_NETLIB_BUILD_DIR}"
-        COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_CPP_NETLIB_BUILD_DIR}"
-    )
+    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_CPP_NETLIB_BUILD_DIR}")
 endfunction()
 
-_build_cpp_netlib("Release")
 _build_cpp_netlib("Debug")
+_build_cpp_netlib("Release")
