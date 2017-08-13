@@ -1,0 +1,11 @@
+﻿syntax = "proto3";
+
+message AccumulateReq
+{
+    repeated uint32 arguments = 1;
+}
+
+message AccumulateResp
+{
+    uint32 result = 1;
+}

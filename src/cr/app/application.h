@@ -63,9 +63,9 @@ namespace cr
                 startService(const std::string& threadGroup, Args&&... args)
             {
                 namespace holders = std::placeholders;
-                auto factory = [](Application& context, boost::asio::io_service& ioService, std::uint32_t id, Args&&... args)
+                auto factory = [](Application& context, boost::asio::io_service& ioService, std::uint32_t id, auto&&... args)
                 {
-                    return std::make_shared<DerivedService>(context, ioService, id, std::forward<Args>(args)...);
+                    return std::make_shared<DerivedService>(context, ioService, id, std::forward<decltype(args)>(args)...);
                 }; 
                 return startService(threadGroup, std::bind(factory, holders::_1, holders::_2, holders::_3, std::forward<Args>(args)...));
             }
