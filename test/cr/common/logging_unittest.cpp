@@ -20,6 +20,7 @@ struct LogSinkFixture
     using LogFrontend = boost::log::sinks::synchronous_sink<LogBackend>;
 
     LogSinkFixture()
+        : logger("Test")
     {
         auto backend = boost::make_shared<LogBackend>();
         backend->auto_flush(true);
@@ -27,9 +28,9 @@ struct LogSinkFixture
         auto sink = boost::make_shared<LogFrontend>(backend);
         sink->set_formatter(
             boost::log::expressions::stream
-            << "[" << boost::log::expressions::attr<const char*>("File") << ":" << boost::log::expressions::attr<int>("Line") << "]"
+            << "[" << boost::log::expressions::attr<std::string>("File") << ":" << boost::log::expressions::attr<int>("Line") << "]"
             << "\t<" << boost::log::expressions::attr<cr::log::SeverityLevel>("Severity") << ">"
-            << "\t<" << boost::log::expressions::attr<const char*>("Tag") << ">"
+            << "\t<" << boost::log::expressions::attr<std::string>("Tag") << ">"
             << "\t" << boost::log::expressions::message
         );
         this->sink = sink;
@@ -51,7 +52,7 @@ BOOST_FIXTURE_TEST_CASE(attributes, LogSinkFixture)
     CRLOG_DEBUG(logger, "cr.common") << "hello";
     std::string logText = sstrm.str();
     BOOST_CHECK_NE(logText.find("logging_unittest.cpp"), std::string::npos);
-    BOOST_CHECK_NE(logText.find("51"), std::string::npos);
+    BOOST_CHECK_NE(logText.find("52"), std::string::npos);
     BOOST_CHECK_NE(logText.find("DEBUG"), std::string::npos);
     BOOST_CHECK_NE(logText.find("cr.common"), std::string::npos);
     BOOST_CHECK_NE(logText.find("hello"), std::string::npos);

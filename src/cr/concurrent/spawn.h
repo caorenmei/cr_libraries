@@ -61,6 +61,6 @@ namespace cr
     }
 }
 
-#include <cr/concurrent/spawn_coro.h>
+#include "spawn_coro.h"
 
 #endif

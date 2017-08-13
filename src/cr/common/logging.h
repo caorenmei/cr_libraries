@@ -1,39 +1,37 @@
-﻿#ifndef CR_LOG_LOGGING_H_
-#define CR_LOG_LOGGING_H_
+﻿#ifndef COMMON_LOGGING_H_
+#define COMMON_LOGGING_H_
 
+#include <cctype>
 #include <cstddef>
+#include <algorithm>
+#include <array>
 #include <iosfwd>
 #include <iterator>
 
 #include <boost/log/attributes.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
 
 namespace cr
 {
     namespace log
     {
-        /** 日志级别 */
+        // 日志级别
         enum class SeverityLevel : std::size_t
         {
-            /** 追踪 */
+            // 追踪
             TRACE_LEVEL,
-            /** 调试 */
+            // 调试
             DEBUG_LEVEL,
-            /** 信息 */
+            // 信息
             INFO_LEVEL,
-            /** 警告 */
+            // 警告
             WARN_LEVEL,
-            /** 错误 */
+            // 错误
             ERROR_LEVEL,
         };
 
-        /**
-         * 输出日志级别
-         * @param strm 格式化流
-         * @param level 日志级别
-         * @return 格式化流
-         */
+        // 输出日志级别
         template<typename CharT, typename TraitsT>
         inline std::basic_ostream<CharT, TraitsT >& operator<<(std::basic_ostream<CharT, TraitsT>& strm, SeverityLevel level)
         {
@@ -57,30 +55,46 @@ namespace cr
             return strm;
         }
 
-        /** 日志类型 */
-        template <template<typename> class SeverityLogger>
-        class BasicLogger : public SeverityLogger<SeverityLevel>
+        // 输出日志级别
+        template<typename CharT, typename TraitsT>
+        inline std::basic_istream<CharT, TraitsT >& operator>>(std::basic_istream<CharT, TraitsT>& strm, SeverityLevel& level)
+        {
+            level = SeverityLevel::TRACE_LEVEL;
+            // 转换输入为大写
+            std::basic_string<CharT, TraitsT> levelString;
+            strm >> levelString;
+            std::transform(levelString.begin(), levelString.end(), levelString.begin(), [](auto ch)
+            {
+                return std::toupper(ch);
+            });
+            // 匹配
+            const std::array<std::string, 5> levels = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" };
+            auto iter = std::find_if(levels.begin(), levels.end(), [&](const std::string& s)
+            {
+                return std::equal(s.begin(), s.end(), levelString.begin(), levelString.end());
+            });
+            if (iter != levels.end())
+            {
+                level = static_cast<SeverityLevel>(std::distance(levels.begin(), iter));
+            }
+            return strm;
+        }
+
+        // 日志类型
+        class Logger : public boost::log::sources::severity_channel_logger_mt<SeverityLevel, std::string>
         {
         public:
 
-            /**
-             * 构造函数
-             * @param level 默认日志级别
-             */
-            explicit BasicLogger(SeverityLevel level = SeverityLevel::TRACE_LEVEL)
-                : SeverityLogger<SeverityLevel>(level)
+            // @param level 默认日志级别
+            explicit Logger(const std::string& channel)
+                : severity_channel_logger_mt(boost::log::keywords::channel = channel)
             {
-                this->add_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
+                this->add_attribute("File", boost::log::attributes::mutable_constant<std::string>(""));
                 this->add_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
-                this->add_attribute("Tag", boost::log::attributes::mutable_constant<const char*>(""));
+                this->add_attribute("Tag", boost::log::attributes::mutable_constant<std::string>(""));
             }
 
-            /**
-             * 设置属性值
-             * @param name 属性名
-             * @param value 属性值
-             * @return 属性值
-             */
+            // 设置属性值
             template <typename ValueType>
             ValueType setAttrValue(const char* name, ValueType value)
             {
@@ -89,62 +103,34 @@ namespace cr
                 return attr.get();
             }
         };
-
-        /** 非线程安全的日志 */
-        using Logger = BasicLogger<boost::log::sources::severity_logger>;
-
-        /** 线程安全的日志 */
-        using ThreadSafeLogger = BasicLogger<boost::log::sources::severity_logger_mt>;
     }
 }
 
-/**
- * 日志宏 
- * @param logger 日志对象
- * @aram level 日志级别
- * @param tag Tag
- */
-#define CRLOG_SEV(logger, level, tag) \
+// 日志宏 
+#define CRLOG_SEV_IMPL(logger, level, file, line, tag) \
     BOOST_LOG_STREAM_WITH_PARAMS((logger),\
-        (logger.setAttrValue("File", static_cast<const char*>(__FILE__))) \
-        (logger.setAttrValue("Line", static_cast<int>(__LINE__))) \
-        (logger.setAttrValue("Tag", static_cast<const char*>(tag))) \
+        (logger.setAttrValue("File", static_cast<std::string>(file))) \
+        (logger.setAttrValue("Line", static_cast<int>(line))) \
+        (logger.setAttrValue("Tag", static_cast<std::string>(tag))) \
         (boost::log::keywords::severity = (level)) \
     )
 
-/**
- * 追踪级别日志 
- * @param logger 日志对象
- * @param tag Tag
- */
+// 日志宏 
+#define CRLOG_SEV(logger, level, tag) CRLOG_SEV_IMPL(logger, level, __FILE__, __LINE__, tag)
+
+// 追踪级别日志 
 #define CRLOG_TRACE(logger, tag) CRLOG_SEV(logger, cr::log::SeverityLevel::TRACE_LEVEL, tag)
 
-/**
- * 调试级别日志 
- * @param logger 日志对象
- * @param tag Tag
- */
+// 调试级别日志 
 #define CRLOG_DEBUG(logger, tag) CRLOG_SEV(logger, cr::log::SeverityLevel::DEBUG_LEVEL, tag)
 
-/**
- * 信息级别日志 
- * @param logger 日志对象
- * @param tag Tag
- */
+// 信息级别日志 
 #define CRLOG_INFO(logger, tag) CRLOG_SEV(logger, cr::log::SeverityLevel::INFO_LEVEL, tag)
 
-/**
- * 警告级别日志 
- * @param logger 日志对象
- * @param tag Tag
- */
+// 警告级别日志 
 #define CRLOG_WARN(logger, tag) CRLOG_SEV(logger, cr::log::SeverityLevel::WARN_LEVEL, tag)
 
-/**
- * 错误级别日志 
- * @param logger 日志对象
- * @param tag Tag
- */
+// 错误级别日志 
 #define CRLOG_ERROR(logger, tag) CRLOG_SEV(logger, cr::log::SeverityLevel::ERROR_LEVEL, tag)
 
 #endif
