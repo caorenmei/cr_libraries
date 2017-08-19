@@ -39,11 +39,18 @@ BOOST_AUTO_TEST_CASE(pushAndPop)
     cr::concurrent::spawn(ioService1, [&](cr::concurrent::Coroutine coro)
     {
         boost::system::error_code error;
+        std::vector<int> elements;
         while (!error)
         {
-            std::vector<int> elements;
             pipe1.pop(elements, cr::concurrent::coro::async(coro, error));
             pipe0.push(elements.begin(), elements.end());
+            elements.clear();
+        }
+        if (error.value() == boost::asio::error::interrupted && !pipe1.empty())
+        {
+            pipe1.pop(elements, cr::concurrent::coro::async(coro, error));
+            pipe0.push(elements.begin(), elements.end());
+            elements.clear();
         }
     });
 
