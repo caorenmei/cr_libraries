@@ -130,18 +130,19 @@ namespace cr
                 boost::asio::detail::async_result_init<PopHandler, Signature> init(std::forward<PopHandler>(handler));
                 {
                     std::lock_guard<Mutex> locker(mutex_);
-                    if (!elements_.empty())
-                    {
-                        std::move(elements_.begin(), elements_.end(), std::back_inserter(elements));
-                        ioService_.post(std::bind(std::move(init.handler), boost::system::error_code(), elements_.size()));
-                        elements_.clear();
-                    }
-                    else if (interrupt_)
+                    
+                    if (interrupt_)
                     {
                         namespace asio_error = boost::asio::error;
                         auto errorCode = asio_error::make_error_code(asio_error::interrupted);
                         ioService_.post(std::bind(std::move(init.handler), errorCode, 0));
                         interrupt_ = false;
+                    }
+                    else if (!elements_.empty())
+                    {
+                        std::move(elements_.begin(), elements_.end(), std::back_inserter(elements));
+                        ioService_.post(std::bind(std::move(init.handler), boost::system::error_code(), elements_.size()));
+                        elements_.clear();
                     }
                     else
                     {
