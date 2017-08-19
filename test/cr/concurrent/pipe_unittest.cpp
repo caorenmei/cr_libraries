@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(pushAndPop)
         pipe1.push(elements.begin(), elements.end());
         pipe0.pop(elements0, cr::concurrent::coro::async(coro, error));
 
-        pipe1.cancel();
+        pipe1.interrupt();
     });
 
     cr::concurrent::spawn(ioService1, [&](cr::concurrent::Coroutine coro)

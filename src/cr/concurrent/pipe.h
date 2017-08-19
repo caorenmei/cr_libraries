@@ -27,7 +27,8 @@ namespace cr
              * @param ioService io service
              */
             explicit Pipe(boost::asio::io_service& ioService)
-                : ioService_(ioService)
+                : ioService_(ioService),
+                interrupt_(false)
             {}
 
             /** 析构函数 */
@@ -51,7 +52,7 @@ namespace cr
                     auto handler = std::move(handlers_.front());
                     handlers_.pop_front();
                     handler.first->push_back(std::move(element));
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code()));
+                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), 1));
                     if (handlers_.empty())
                     {
                         work_.reset();
@@ -63,7 +64,10 @@ namespace cr
                 }
             }
 
-            // 添加元素
+            /**
+             * 添加元素
+             * @param args... 构造元素参数
+             */
             template <typename...  Args>
             void emplace(Args&&... args)
             {
@@ -73,7 +77,7 @@ namespace cr
                     auto handler = std::move(handlers_.front());
                     handlers_.pop_front();
                     handler.first->emplace_back(std::forward<Args>(args)...);
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code()));
+                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), 1));
                     if (handlers_.empty())
                     {
                         work_.reset();
@@ -85,7 +89,11 @@ namespace cr
                 }
             }
 
-            // 一次添加多个元素
+            /**
+             * 一次添加多个元素
+             * @param first 起始迭代器
+             * @param last 终止迭代器
+             */
             template <typename ForwardIterator>
             void push(ForwardIterator first, ForwardIterator last)
             {
@@ -94,8 +102,10 @@ namespace cr
                 {
                     auto handler = std::move(handlers_.front());
                     handlers_.pop_front();
+                    std::size_t originCount = handler.first->size();
                     handler.first->insert(handler.first->end(), first, last);
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code()));
+                    std::size_t pushCount = handler.first->size() - originCount;
+                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), pushCount));
                     if (handlers_.empty())
                     {
                         work_.reset();
@@ -116,21 +126,22 @@ namespace cr
             template <typename PopHandler>
             auto pop(std::vector<T>& elements, PopHandler&& handler)
             {
-                using Signature = void(const boost::system::error_code&);
+                using Signature = void(const boost::system::error_code&, std::size_t);
                 boost::asio::detail::async_result_init<PopHandler, Signature> init(std::forward<PopHandler>(handler));
                 {
                     std::lock_guard<Mutex> locker(mutex_);
-                    if (interrupt_)
+                    if (!elements_.empty())
+                    {
+                        std::move(elements_.begin(), elements_.end(), std::back_inserter(elements));
+                        ioService_.post(std::bind(std::move(init.handler), boost::system::error_code(), elements_.size()));
+                        elements_.clear();
+                    }
+                    else if (interrupt_)
                     {
                         namespace asio_error = boost::asio::error;
                         auto errorCode = asio_error::make_error_code(asio_error::interrupted);
-                        ioService_.post(std::bind(std::move(init.handler), errorCode));
-                    }
-                    else if (!elements_.empty())
-                    {
-                        std::move(elements_.begin(), elements_.end(), std::back_inserter(elements));
-                        ioService_.post(std::bind(std::move(init.handler), boost::system::error_code()));
-                        elements_.clear();
+                        ioService_.post(std::bind(std::move(init.handler), errorCode, 0));
+                        interrupt_ = false;
                     }
                     else
                     {
@@ -156,7 +167,7 @@ namespace cr
                 {
                     namespace asio_error = boost::asio::error;
                     auto errorCode = asio_error::make_error_code(asio_error::operation_aborted);
-                    ioService_.post(std::bind(std::move(handler.second), errorCode));
+                    ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
                 }
                 work_.reset();
                 handlers_.clear();
@@ -184,7 +195,7 @@ namespace cr
                 {
                     namespace asio_error = boost::asio::error;
                     auto errorCode = asio_error::make_error_code(asio_error::interrupted);
-                    ioService_.post(std::bind(std::move(handler.second), errorCode));
+                    ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
                 }
                 work_.reset();
                 handlers_.clear();
@@ -229,7 +240,7 @@ namespace cr
             // 消息
             std::deque<T> elements_;
             // 处理器
-            using HandlerType = std::function<void(const boost::system::error_code&)>;
+            using HandlerType = std::function<void(const boost::system::error_code&, std::size_t)>;
             std::deque<std::pair<std::vector<T>*, HandlerType>> handlers_;
             // 中断
             bool interrupt_;
