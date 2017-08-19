@@ -129,12 +129,10 @@ namespace cr
                 using Signature = void(const boost::system::error_code&, std::size_t);
                 boost::asio::detail::async_result_init<PopHandler, Signature> init(std::forward<PopHandler>(handler));
                 {
-                    std::lock_guard<Mutex> locker(mutex_);
-                    
+                    std::lock_guard<Mutex> locker(mutex_);         
                     if (interrupt_)
                     {
-                        namespace asio_error = boost::asio::error;
-                        auto errorCode = asio_error::make_error_code(asio_error::interrupted);
+                        auto errorCode = boost::asio::error::make_error_code(boost::asio::error::interrupted);
                         ioService_.post(std::bind(std::move(init.handler), errorCode, 0));
                         interrupt_ = false;
                     }
@@ -166,8 +164,7 @@ namespace cr
                 std::size_t handlerCount = handlers_.size();
                 for (auto& handler : handlers_)
                 {
-                    namespace asio_error = boost::asio::error;
-                    auto errorCode = asio_error::make_error_code(asio_error::operation_aborted);
+                    auto errorCode = boost::asio::error::make_error_code(boost::asio::error::operation_aborted);
                     ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
                 }
                 work_.reset();
@@ -194,8 +191,7 @@ namespace cr
                 std::size_t handlerCount = handlers_.size();
                 for (auto& handler : handlers_)
                 {
-                    namespace asio_error = boost::asio::error;
-                    auto errorCode = asio_error::make_error_code(asio_error::interrupted);
+                    auto errorCode = boost::asio::error::make_error_code(boost::asio::error::interrupted);
                     ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
                 }
                 work_.reset();
