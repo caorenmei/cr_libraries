@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <thread>
+#include <vector>
 
 #include <boost/asio/io_service.hpp>
 
@@ -21,7 +22,7 @@ namespace cr
             /**
              * 构造函数
              */
-            Thread();
+            explicit Thread(std::size_t threadNum = 1);
 
             /**
              * 构造函数, 不会创建线程
@@ -61,7 +62,7 @@ namespace cr
             // io service
             std::shared_ptr<boost::asio::io_service> ioService_;
             // 实际线程
-            std::shared_ptr<std::thread> thread_;
+            std::vector<std::shared_ptr<std::thread>> threads_;
         };
     }
 }

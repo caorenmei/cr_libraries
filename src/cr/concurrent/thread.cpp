@@ -5,14 +5,17 @@ namespace cr
     namespace concurrent
     {
 
-        Thread::Thread()
+        Thread::Thread(std::size_t threadNum/* = 1*/)
         {
             ioService_ = std::make_shared<boost::asio::io_service>();
-            thread_ = std::make_shared<std::thread>([this]
+            for (std::size_t i = 0; i != threadNum; ++i)
             {
-                boost::asio::io_service::work work(*ioService_);
-                ioService_->run();
-            });
+                threads_.push_back(std::make_shared<std::thread>([this]
+                {
+                    boost::asio::io_service::work work(*ioService_);
+                    ioService_->run();
+                }));
+            }
         }
 
         Thread::Thread(std::shared_ptr<boost::asio::io_service> ioService)
@@ -34,7 +37,7 @@ namespace cr
 
         void Thread::stop()
         {
-            if (thread_)
+            if (!threads_.empty())
             {
                 ioService_->stop();
             }
@@ -42,9 +45,9 @@ namespace cr
 
         void Thread::join()
         {
-            if (thread_)
+            for (auto& thread : threads_)
             {
-                thread_->join();
+                thread->join();
             }
         }
     }
