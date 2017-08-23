@@ -5,6 +5,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(cr_concurrent_unittest_SRCS
     pipe_unittest.cpp
     spawn_unittest.cpp
+    thread_unittest.cpp
     unittest_main.cpp
 )
   

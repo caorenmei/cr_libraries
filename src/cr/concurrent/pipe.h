@@ -44,23 +44,23 @@ namespace cr
              * 添加一个元素
              * @param element 元素
              */
-            void push(T element)
+            template <typename U>
+            void push(U&& element)
             {
                 std::lock_guard<Mutex> locker(mutex_);
+                elements_.emplace_back(std::forward<U>(element));
                 if (!handlers_.empty())
                 {
-                    auto handler = std::move(handlers_.front());
+                    ioService_.post([handler = std::move(handlers_.front()), elements = std::move(elements_)]() mutable
+                    {
+                        std::move(elements.begin(), elements.end(), std::back_inserter(*handler.first));
+                        handler.second(boost::system::error_code(), elements.size());
+                    });
                     handlers_.pop_front();
-                    handler.first->push_back(std::move(element));
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), 1));
                     if (handlers_.empty())
                     {
                         work_.reset();
                     }
-                }
-                else
-                {
-                    elements_.emplace_back(std::move(element));
                 }
             }
 
@@ -72,20 +72,19 @@ namespace cr
             void emplace(Args&&... args)
             {
                 std::lock_guard<Mutex> locker(mutex_);
+                elements_.emplace_back(std::forward<Args>(args)...);
                 if (!handlers_.empty())
                 {
-                    auto handler = std::move(handlers_.front());
+                    ioService_.post([handler = std::move(handlers_.front()), elements = std::move(elements_)]() mutable
+                    {
+                        std::move(elements.begin(), elements.end(), std::back_inserter(*handler.first));
+                        handler.second(boost::system::error_code(), elements.size());
+                    });
                     handlers_.pop_front();
-                    handler.first->emplace_back(std::forward<Args>(args)...);
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), 1));
                     if (handlers_.empty())
                     {
                         work_.reset();
                     }
-                }
-                else
-                {
-                    elements_.emplace_back(std::forward<Args>(args)...);
                 }
             }
 
@@ -98,22 +97,19 @@ namespace cr
             void push(ForwardIterator first, ForwardIterator last)
             {
                 std::lock_guard<Mutex> locker(mutex_);
+                std::copy(first, last, std::back_inserter(elements_));
                 if (!handlers_.empty())
                 {
-                    auto handler = std::move(handlers_.front());
+                    ioService_.post([handler = std::move(handlers_.front()), elements = std::move(elements_)]() mutable
+                    {
+                        std::move(elements.begin(), elements.end(), std::back_inserter(*handler.first));
+                        handler.second(boost::system::error_code(), elements.size());
+                    });
                     handlers_.pop_front();
-                    std::size_t originCount = handler.first->size();
-                    handler.first->insert(handler.first->end(), first, last);
-                    std::size_t pushCount = handler.first->size() - originCount;
-                    ioService_.post(std::bind(std::move(handler.second), boost::system::error_code(), pushCount));
                     if (handlers_.empty())
                     {
                         work_.reset();
                     }
-                }
-                else
-                {
-                    elements_.insert(elements_.end(), first, last);
                 }
             }
 
@@ -129,18 +125,25 @@ namespace cr
                 using Signature = void(const boost::system::error_code&, std::size_t);
                 boost::asio::detail::async_result_init<PopHandler, Signature> init(std::forward<PopHandler>(handler));
                 {
-                    std::lock_guard<Mutex> locker(mutex_);         
+                    std::lock_guard<Mutex> locker(mutex_);
+                    handlers_.emplace_back(&elements, std::move(init.handler));
                     if (interrupt_)
                     {
-                        auto errorCode = boost::asio::error::make_error_code(boost::asio::error::interrupted);
-                        ioService_.post(std::bind(std::move(init.handler), errorCode, 0));
+                        ioService_.post([handler = std::move(handlers_.front())]
+                        {
+                            handler.second(boost::asio::error::make_error_code(boost::asio::error::operation_aborted), 0);
+                        });
+                        handlers_.pop_front();
                         interrupt_ = false;
                     }
                     else if (!elements_.empty())
                     {
-                        std::move(elements_.begin(), elements_.end(), std::back_inserter(elements));
-                        ioService_.post(std::bind(std::move(init.handler), boost::system::error_code(), elements_.size()));
-                        elements_.clear();
+                        ioService_.post([handler = std::move(handlers_.front()), elements = std::move(elements_)]() mutable
+                        {
+                            std::move(elements.begin(), elements.end(), std::back_inserter(*handler.first));
+                            handler.second(boost::system::error_code(), elements.size());
+                        });
+                        handlers_.pop_front();
                     }
                     else
                     {
@@ -148,7 +151,6 @@ namespace cr
                         {
                             work_ = std::make_unique<boost::asio::io_service::work>(ioService_);
                         }
-                        handlers_.emplace_back(&elements, std::move(init.handler));
                     }
                 }
                 return init.result.get();
@@ -164,21 +166,14 @@ namespace cr
                 std::size_t handlerCount = handlers_.size();
                 for (auto& handler : handlers_)
                 {
-                    auto errorCode = boost::asio::error::make_error_code(boost::asio::error::operation_aborted);
-                    ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
+                    ioService_.post([handler = std::move(handler.second)]
+                    {
+                        handler(boost::asio::error::make_error_code(boost::asio::error::operation_aborted), 0);
+                    });
                 }
                 work_.reset();
                 handlers_.clear();
                 return handlerCount;
-            }
-
-            /**
-             * 清空元素
-             */
-            void clear()
-            {
-                std::lock_guard<Mutex> locker(mutex_);
-                elements_.clear();
             }
 
             /**
@@ -191,8 +186,10 @@ namespace cr
                 std::size_t handlerCount = handlers_.size();
                 for (auto& handler : handlers_)
                 {
-                    auto errorCode = boost::asio::error::make_error_code(boost::asio::error::interrupted);
-                    ioService_.post(std::bind(std::move(handler.second), errorCode, 0));
+                    ioService_.post([handler = std::move(handler.second)]
+                    {
+                        handler(boost::asio::error::make_error_code(boost::asio::error::operation_aborted), 0);
+                    });
                 }
                 work_.reset();
                 handlers_.clear();
@@ -201,6 +198,15 @@ namespace cr
                     interrupt_ = true;
                 }
                 return handlerCount;
+            }
+
+            /**
+             * 清空元素
+             */
+            void clear()
+            {
+                std::lock_guard<Mutex> locker(mutex_);
+                elements_.clear();
             }
 
             /**
