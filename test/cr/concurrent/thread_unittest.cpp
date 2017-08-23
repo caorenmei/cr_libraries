@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(Thread)
     BOOST_CHECK_EQUAL(value0, 1);
 
     cr::concurrent::Thread t1;
-    std::atomic<int> value1 = 0;
+    std::atomic<int> value1(0);
     t1.post([&]
     {
         value1 = 1;
