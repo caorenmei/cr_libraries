@@ -266,7 +266,7 @@ namespace cr
             workThreadEntry.second.erase(serviceId);
             if (workThreadEntry.second.empty())
             {
-                workThreadEntry.first.post([this, self, thread = workThreadEntry.first]
+                workThreadEntry.first.post([this, self, thread = workThreadEntry.first] () mutable
                 {
                     backgroundThread_.post([thread = std::move(thread)]() mutable
                     {
