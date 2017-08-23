@@ -16,15 +16,10 @@ protected:
 
     virtual void onStart() override;
 
-    virtual void onMessageReceived(std::uint32_t sourceId, std::uint32_t sourceServiceId, std::uint64_t session, std::shared_ptr<cr::app::Message> message) override;
+    virtual void onMessageReceived(std::uint32_t serverId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message) override;
 
 private:
 
-    void getNames(const std::string& name);
-
-    void getServices(const std::string& name, std::uint32_t hostId);
-
-    bool watch = true;
     std::atomic<std::uint32_t>& result;
 };
 

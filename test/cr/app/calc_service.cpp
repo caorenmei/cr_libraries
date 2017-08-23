@@ -12,14 +12,13 @@ void CalcService::onStart()
     getApplicationContext().getCluster()->registerService(".CalcService", getId());
 }
 
-void CalcService::onMessageReceived(std::uint32_t sourceId, std::uint32_t sourceServiceId, std::uint64_t session, std::shared_ptr<cr::app::Message> message)
+void CalcService::onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
 {
-    if (message->GetDescriptor() == AccumulateReq::descriptor())
+    if (message->GetDescriptor() == proto::UInt32::descriptor())
     {
-        auto request = std::static_pointer_cast<AccumulateReq>(message);
-        auto result = std::accumulate(request->arguments().begin(), request->arguments().end(), 0);
-        auto response = std::make_shared<AccumulateResp>();
-        response->set_result(result);
-        sendMessage(sourceId, sourceServiceId, session, response);
+        auto request = std::static_pointer_cast<proto::UInt32>(message);
+        auto response = std::make_shared<proto::UInt32>();
+        response->set_value(request->value() * request->value());
+        sendMessage(serviceId, session, std::move(response));
     }
 }

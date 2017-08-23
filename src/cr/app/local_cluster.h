@@ -8,8 +8,6 @@
 
 #include <boost/asio/io_service.hpp>
 
-#include <cr/common/logging.h>
-
 #include "cluster.h"
 
 namespace cr
@@ -43,18 +41,16 @@ namespace cr
             // 注册消息分发器
             virtual void setMessageDispatcher(
                 std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-                    std::uint64_t, std::shared_ptr<Message>)> dispatcher) override;
+                    std::uint64_t, std::shared_ptr<google::protobuf::Message>)> dispatcher) override;
 
             // 分发消息
             virtual void dispatchMessage(std::uint32_t sourceId, std::uint32_t fromServieId,
                 std::uint32_t destId, std::uint32_t destServiceId, 
-                std::uint64_t session, std::shared_ptr<Message> message) override;
+                std::uint64_t session, std::shared_ptr<google::protobuf::Message> message) override;
 
         private:
 
             boost::asio::io_service& ioService_;
-            // 日志
-            cr::log::Logger logger_;
             // 自己的Id
             std::uint32_t myId_;
             // 服务列表
@@ -62,7 +58,7 @@ namespace cr
             std::map<std::uint32_t, std::string> nameServiceIds_;
             // 消息分发器
             std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-                std::uint64_t, std::shared_ptr<Message>)> dispatcher_;
+                std::uint64_t, std::shared_ptr<google::protobuf::Message>)> dispatcher_;
             // 服务监视器
             std::map<std::string, std::vector<std::function<void()>>> nameWatchers_;
             // 服务监视器

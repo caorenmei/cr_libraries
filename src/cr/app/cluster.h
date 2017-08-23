@@ -37,12 +37,12 @@ namespace cr
 
             // 注册消息分发器, arg0: 来源Id, arg1: 来源服务Id, arg2: 目的Id, arg3: 目的服务Id, arg4: session, arg5: 消息
             virtual void setMessageDispatcher(
-                std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint64_t, std::shared_ptr<Message>) > dispatcher) = 0;
+                std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>) > dispatcher) = 0;
 
             // 分发消息
             virtual void dispatchMessage(std::uint32_t sourceId, std::uint32_t fromServieId,
                 std::uint32_t destId, std::uint32_t destServiceId,
-                std::uint64_t session, std::shared_ptr<Message> message) = 0;
+                std::uint64_t session, std::shared_ptr<google::protobuf::Message> message) = 0;
         };
     }
 }

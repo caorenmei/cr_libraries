@@ -1,15 +1,11 @@
 ﻿#ifndef COMMON_APP_MESSAGE_
 #define COMMON_APP_MESSAGE_
 
-#include <string>
-
-#include <google/protobuf/message.h>
-
-namespace cr
+namespace google
 {
-    namespace app
+    namespace protobuf
     {
-        using Message = google::protobuf::Message;
+        class Message;
     }
 }
 

@@ -9,7 +9,6 @@ namespace cr
 
         LocalCluster::LocalCluster(boost::asio::io_service& ioService)
             : ioService_(ioService),
-            logger_("LocalCluster"),
             myId_(1)
         {}
 
@@ -107,14 +106,14 @@ namespace cr
         }
 
         void LocalCluster::setMessageDispatcher(
-            std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint64_t, std::shared_ptr<Message>) > dispatcher)
+            std::function<void(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>) > dispatcher)
         {
             dispatcher_ = std::move(dispatcher);
         }
 
         void LocalCluster::dispatchMessage(std::uint32_t sourceId, std::uint32_t fromServieId, 
             std::uint32_t destId, std::uint32_t destServiceId, 
-            std::uint64_t session, std::shared_ptr<Message> message)
+            std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
         {
             CR_ASSERT(dispatcher_ != nullptr);
             if (destId == myId_)

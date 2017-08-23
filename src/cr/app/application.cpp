@@ -1,11 +1,10 @@
 ﻿#include "application.h"
 
 #include <algorithm>
-#include <functional>
-#include <thread>
+#include <atomic>
+#include <mutex>
 
 #include <boost/core/null_deleter.hpp>
-#include <boost/functional/hash.hpp>
 
 #include <cr/common/assert.h>
 
@@ -16,80 +15,30 @@ namespace cr
 {
     namespace app
     {
-        // 线程
-        struct ThreadHolder
-        {
-            std::shared_ptr<std::thread> thread;
-            std::shared_ptr<boost::asio::io_service> ioService;
 
-            void run()
-            {
-                boost::asio::io_service::work work(*ioService);
-                ioService->run();
-                thread.reset();
-            }
-        };
-
-        class LockGuards
-        {
-        public:
-
-            explicit LockGuards(std::vector<std::unique_ptr<std::mutex>>& mutexs)
-                : mutexs_(mutexs)
-            {
-                std::for_each(mutexs_.begin(), mutexs_.end(), [](std::unique_ptr<std::mutex>& mutex)
-                {
-                    mutex->lock();
-                });
-            }
-
-            ~LockGuards()
-            {
-                std::for_each(mutexs_.rbegin(), mutexs_.rend(), [](std::unique_ptr<std::mutex>& mutex)
-                {
-                    mutex->unlock();
-                });
-            }
-
-            LockGuards(const LockGuards&) = delete;
-            LockGuards& operator=(const LockGuards&) = delete;
-
-        private:
-            std::vector<std::unique_ptr<std::mutex>>& mutexs_;
-        };
-
-        // 分段锁的个数
-        constexpr std::size_t gMutexSlotNum = 16;
-
-        // 槽索引
-        template <typename Key>
-        std::size_t calSlotIndex(const Key& key)
-        {
-            return boost::hash<Key>()(key) % gMutexSlotNum;
-        }
-
-        Application::Application(boost::asio::io_service& ioService, std::string name)
+        Application::Application(boost::asio::io_service& ioService)
             : ioService_(&ioService, boost::null_deleter()),
-            logger_(name),
             cluster_(std::make_shared<LocalCluster>(*ioService_)),
-            nextServiceId_(0),
-            services_(gMutexSlotNum)
+            nextId_(1),
+            services_(16),
+            backgroundThread_(),
+            mutexs_(services_.size())
         {
-            std::string mainThreadGroup = "Main";
-            threads_.insert(std::make_pair(mainThreadGroup, std::make_pair(ioService_, 1)));
-            // 初始化锁
-            for (auto&& services : services_)
-            {
-                mutexs_.push_back(std::make_unique<std::mutex>());
-            }
-            // 集群的消息分发器
-            cluster_->setMessageDispatcher(std::bind(&Application::dispatchMessage, this, 
-                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, 
-                std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+            auto iter = workThreads_.emplace(std::make_pair("Main", std::make_pair(
+                cr::concurrent::Thread(ioService_), std::set<std::uint32_t>())));
+            iter.first->second.second.insert(0);
         }
 
         Application::~Application()
-        {}
+        {
+            for (auto& workThread : workThreads_)
+            {
+                workThread.second.first.stop();
+                workThread.second.first.join();
+            }
+            backgroundThread_.stop();
+            backgroundThread_.join();
+        }
 
         boost::asio::io_service& Application::getIoService()
         {
@@ -97,130 +46,32 @@ namespace cr
         }
 
         void Application::onStart()
-        {
-            CR_ASSERT(work_ == nullptr);
-            work_ = std::make_unique<boost::asio::io_service::work>(*ioService_);
-        }
+        {}
 
         void Application::onStop()
-        {
-            LockGuards locker(mutexs_);
-            CR_ASSERT(work_ != nullptr);
-            // 停止所有服务
-            std::for_each(serviceIds_.rbegin(), serviceIds_.rend(), [this](auto serviceId)
-            {
-                this->stopServiceNoGuard(serviceId);
-            });
-            work_.reset();
-        }
+        {}
 
         void Application::onServiceStart(std::shared_ptr<Service> service)
-        {
-            {
-                auto slotIndex = calSlotIndex(service->getId());
-                LockGuards locker(mutexs_);
-                auto serviceIter = services_[slotIndex].find(service->getId());
-                CR_ASSERT(serviceIter == services_[slotIndex].end())(service->getName())(service->getId());
-                // 保存服务
-                services_[slotIndex].insert(std::make_pair(service->getId(), service));
-                serviceIds_.push_back(service->getId());
-                serviceNames_[service->getName()].insert(service->getId());
-            }
-            service->onStart();
-        }
+        {}
 
         void Application::onServiceStop(std::shared_ptr<Service> service)
-        {
-            service->onStop();
-            {
-                auto slotIndex = calSlotIndex(service->getId());
-                LockGuards locker(mutexs_);
-                auto serviceIter = services_[slotIndex].find(service->getId());
-                CR_ASSERT(serviceIter != services_[slotIndex].end())(service->getName())(service->getId());
-                // 退役服务列表
-                stopServiceIds_.erase(service->getId());
-                // 服务 id
-                auto serviceIdIter = std::find(serviceIds_.begin(), serviceIds_.end(), service->getId());
-                CR_ASSERT(serviceIdIter != serviceIds_.end())(service->getId());
-                serviceIds_.erase(serviceIdIter);
-                // 服务名字
-                auto serviceNameIter = serviceNames_.find(service->getName());
-                CR_ASSERT(serviceNameIter != serviceNames_.end())(service->getName());
-                serviceNameIter->second.erase(service->getId());
-                if (serviceNameIter->second.empty())
-                {
-                    serviceNames_.erase(serviceNameIter);
-                }
-                // 服务
-                services_[slotIndex].erase(service->getId());
-                // 线程组
-                auto threadGroupIter = threadGroups_.find(service->getId());
-                CR_ASSERT(threadGroupIter != threadGroups_.end())(service->getId());
-                auto threadGroup = threadGroupIter->second;
-                threadGroups_.erase(threadGroupIter);
-                // 线程
-                auto threadIter = threads_.find(threadGroup);
-                CR_ASSERT(threadIter != threads_.end())(threadGroup);
-                auto thread = threadIter->second.first;
-                // 减少引用计数
-                if (--threadIter->second.second == 0)
-                {
-                    thread->stop();
-                    threads_.erase(threadIter);
-                }
-            } 
-        }
-
-        std::future<std::uint32_t> Application::startService(const std::string& threadGroup, 
-            std::function<std::shared_ptr<Service>(Application&, boost::asio::io_service&, std::uint32_t)> factory)
-        {
-            auto result = std::make_shared<std::promise<std::uint32_t>>();
-            ioService_->post([this, self = shared_from_this(), threadGroup, factory, result]
-            {
-                std::uint32_t serviceId = 0;
-                std::shared_ptr<boost::asio::io_service> thread;
-                {
-                    LockGuards locker(mutexs_);
-                    CR_ASSERT(this->work_ != nullptr);
-                    serviceId = nextServiceId_++;
-                    // 创建线程
-                    threadGroups_.insert(std::make_pair(serviceId, threadGroup));
-                    auto threadIter = threads_.find(threadGroup);
-                    if (threadIter == threads_.end())
-                    {
-                        auto ioService = std::make_shared<boost::asio::io_service>();
-                        auto threadHolder = std::make_shared<ThreadHolder>();
-                        threadHolder->ioService = ioService;
-                        threadHolder->thread = std::make_shared<std::thread>(std::bind(&ThreadHolder::run, threadHolder));
-                        threadHolder->thread->detach();
-                        threadIter = threads_.insert(std::make_pair(threadGroup, std::make_pair(ioService, 0))).first;
-                    }
-                    ++threadIter->second.second;
-                    thread = threadIter->second.first;
-                }
-                // 在线程创建服务
-                thread->dispatch([this, self, thread, serviceId, factory, result]
-                {
-                    auto service = factory(*this, *thread, serviceId);
-                    this->onServiceStart(service);
-                    result->set_value(serviceId);
-                });
-            });
-            return result->get_future();
-        }
+        {}
 
         void Application::stopService(std::uint32_t serviceId)
         {
-            LockGuards locker(mutexs_);
-            stopServiceNoGuard(serviceId);
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            stopServiceNoGuard(serviceId, [this](std::shared_ptr<Service> service)
+            {
+                this->onServiceStop(service);
+            });
         }
 
         std::shared_ptr<Service> Application::getService(std::uint32_t serviceId) const
         {
-            auto slotIndex = calSlotIndex(serviceId);
-            std::lock_guard<std::mutex> locker(*mutexs_[slotIndex]);
-            auto serviceIter = services_[slotIndex].find(serviceId);
-            if (serviceIter != services_[slotIndex].end())
+            auto slot = serviceId % services_.size();
+            std::lock_guard<std::mutex> locker(mutexs_.slot(slot));
+            auto serviceIter = services_[slot].find(serviceId);
+            if (serviceIter != services_[slot].end())
             {
                 return serviceIter->second;
             }
@@ -229,27 +80,15 @@ namespace cr
 
         std::vector<std::uint32_t> Application::getServiceIds() const
         {
-            LockGuards locker(mutexs_);
-            return { serviceIds_.begin(), serviceIds_.end() };
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            return getServiceIdsNoGuard();
         }
 
-        std::vector<std::string> Application::getServiceNames() const
+        std::vector<std::uint32_t> Application::getServiceIds(const std::string& name) const
         {
-            std::vector<std::string> serviceNames;
-            LockGuards locker(mutexs_);
-            serviceNames.reserve(serviceNames_.size());
-            for (const auto& serviceName : serviceNames_)
-            {
-                serviceNames.push_back(serviceName.first);
-            }
-            return serviceNames;
-        }
-
-        std::vector<std::uint32_t> Application::findServiceIds(const std::string& name) const
-        {
-            LockGuards locker(mutexs_);
-            auto serviceNameIter = serviceNames_.find(name);
-            if (serviceNameIter != serviceNames_.end())
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            auto serviceNameIter = names.find(name);
+            if (serviceNameIter != names.end())
             {
                 auto serviceIds = serviceNameIter->second;
                 return { serviceIds.begin(), serviceIds.end() };
@@ -259,6 +98,7 @@ namespace cr
 
         void Application::setCluster(std::shared_ptr<Cluster> cluster)
         {
+            CR_ASSERT(cluster != nullptr);
             cluster_ = std::move(cluster);
         }
 
@@ -267,71 +107,174 @@ namespace cr
             return cluster_;
         }
 
+        void Application::sendMessage(std::uint32_t fromServiceId, std::uint32_t toServiceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
+        {
+            auto service = getService(toServiceId);
+            if (service != nullptr)
+            {
+                service->onPushMessage(fromServiceId, session, std::move(message));
+            }
+        }
+
+        void Application::sendMessage(std::uint32_t serviceId, std::shared_ptr<google::protobuf::Message> message)
+        {
+            sendMessage(0, serviceId, 0, std::move(message));
+        }
+
+        void Application::runInBackground(std::function<void()> handler)
+        {
+            backgroundThread_.post(std::move(handler));
+        }
+
         void Application::start()
         {
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            CR_ASSERT(work_ == nullptr);
             ioService_->post([this, self = shared_from_this()]
             {
-                this->onStart();
+                onStart();
             });
+            work_ = std::make_unique<boost::asio::io_service::work>(*ioService_);
         }
 
         void Application::stop()
         {
-            ioService_->post([this, self = shared_from_this()]
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            CR_ASSERT(work_ != nullptr);
+            std::vector<std::uint32_t> serviceIds = getServiceIdsNoGuard();
+            auto self = shared_from_this();
+            // 所有服务销毁，调用onStop
+            auto count = std::make_shared<std::atomic<std::size_t>>(serviceIds.size() + 1);
+            auto countDown = [this, self, count]
             {
-                this->onStop();
+                if (--*count == 0)
+                {
+                    ioService_->post([this, self]
+                    {
+                        bool handle = false;
+                        {
+                            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+                            if (work_ != nullptr)
+                            {
+                                handle = true;
+                                work_.reset();
+                            } 
+                        }
+                        if (handle)
+                        {
+                            onStop();
+                        }
+                    });
+                }
+            };
+            //停止所有服务
+            for (auto serviceId : serviceIds)
+            {
+                stopServiceNoGuard(serviceId, [this, self, countDown](std::shared_ptr<Service> service)
+                {
+                    onServiceStop(service);
+                    countDown();
+                });
+            }
+            countDown();
+        }
+
+        std::future<std::uint32_t> Application::startService(std::string group, std::string name, ServiceBuilder builder)
+        {
+            std::uint32_t serviceId;
+            std::shared_ptr<boost::asio::io_service> workIoService;
+            {
+                std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+                // 服务 id
+                serviceId = nextId_++;
+                // 线程组
+                workGroups_.insert(std::make_pair(serviceId, group));
+                // 工作线程
+                auto workThreadIter = workThreads_.find(group);
+                if (workThreadIter == workThreads_.end())
+                {
+                    std::tie(workThreadIter, std::ignore) = workThreads_.emplace(std::make_pair(group, 
+                        std::make_pair(cr::concurrent::Thread(), std::set<std::uint32_t>())));
+                }
+                workThreadIter->second.second.insert(serviceId);
+                workIoService = workThreadIter->second.first.getIoService();
+            }
+            // 在工作线程构造
+            auto promise = std::make_shared<std::promise<std::uint32_t>>();
+            workIoService->dispatch([this, self = shared_from_this(), serviceId, workIoService, promise, builder, name]
+            {
+                auto service = builder(*this, *workIoService, serviceId, name);
+                // 保存服务
+                {
+                    auto slot = serviceId % this->services_.size();
+                    std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+                    this->services_[slot].insert(std::make_pair(serviceId, service));
+                    this->names[name].insert(serviceId);
+                }
+                // 启动服务
+                service->onStart();
+                this->onServiceStart(service);
+                promise->set_value(serviceId);
             });
+            return promise->get_future();
         }
 
-        void Application::dispatchMessage(std::uint32_t sourceId, std::uint32_t sourceServiceId,
-            std::uint32_t destId, std::uint32_t destServiceId,
-            std::uint64_t session, std::shared_ptr<Message> message)
+        void Application::stopServiceNoGuard(std::uint32_t serviceId, std::function<void(std::shared_ptr<Service>)> handler)
         {
-            CR_ASSERT(cluster_ != nullptr && destId == 0)(destId);
-            auto slotIndex = calSlotIndex(destServiceId);
-            std::lock_guard<std::mutex> locker(*mutexs_[slotIndex]);
-            auto serviceIter = services_[slotIndex].find(destServiceId);
-            if (serviceIter != services_[slotIndex].end())
-            {
-                serviceIter->second->onServiceMessage(sourceId, sourceServiceId, session, std::move(message));
-            }
-            else
-            {
-                CRLOG_WARN(logger_, "dispatchMessage") << "Can't Find Service:"
-                    << " SourceId=" << sourceId  
-                    << " SourceServiceId=" << sourceServiceId
-                    << " DestServiceId=" << destServiceId;
-            }
-        }
-
-        void Application::stopServiceNoGuard(std::uint32_t serviceId)
-        {
-            // 服务
-            auto slotIndex = calSlotIndex(serviceId);
-            auto serviceIter = services_[slotIndex].find(serviceId);
-            if (serviceIter == services_[slotIndex].end())
-            {
-                CRLOG_WARN(logger_, "stopServiec") << "Can't Find Service With: Id=" << serviceId;
-                return;
-            }
+            auto slot = serviceId % services_.size();
+            // service
+            auto serviceIter = services_[slot].find(serviceId);
+            CR_ASSERT(serviceIter != services_[slot].end())(serviceId);
             auto service = serviceIter->second;
-            if (!stopServiceIds_.insert(serviceId).second)
+            auto name = service->getName();
+            services_[slot].erase(serviceIter);
+            // 名字
+            auto nameIter = names.find(name);
+            CR_ASSERT(nameIter != names.end())(name);
+            nameIter->second.erase(serviceId);
+            if (nameIter->second.empty())
             {
-                CRLOG_WARN(logger_, "stopServiec") << "Repeated Call stopService() With: Id=" << serviceId;
-                return;
+                names.erase(nameIter);
             }
-            // 线程
-            auto threadGroupIter = threadGroups_.find(serviceId);
-            CR_ASSERT(threadGroupIter != threadGroups_.end())(serviceId);
-            auto threadGroup = threadGroupIter->second;
-            auto threadIter = threads_.find(threadGroup);
-            CR_ASSERT(threadIter != threads_.end())(threadGroup);
-            auto thread = threadIter->second.first;
-            // 在服务所在线程调用stop
-            thread->post([this, self = shared_from_this(), service, thread]
+            // group 
+            auto groupIter = workGroups_.find(serviceId);
+            CR_ASSERT(groupIter != workGroups_.end())(serviceId);
+            std::string group = groupIter->second;
+            workGroups_.erase(groupIter);
+            // work thread
+            auto workThreadIter = workThreads_.find(group);
+            CR_ASSERT(workThreadIter != workThreads_.end())(group);
+            auto& workThreadEntry = workThreadIter->second;
+            // 回调onStop
+            workThreadEntry.first.post([this, self = shared_from_this(), handler = std::move(handler), service = std::move(service)]
             {
-                this->onServiceStop(std::move(service));
+                handler(service);
+                service->onStop();
             });
+            // 移除服务Id
+            workThreadEntry.second.erase(serviceId);
+            if (workThreadEntry.second.empty())
+            {
+                backgroundThread_.post([thread = std::move(workThreadEntry.first)]() mutable
+                {
+                    thread.stop();
+                    thread.join();
+                });
+                workThreads_.erase(workThreadIter);
+            }
+        }
+
+        std::vector<std::uint32_t> Application::getServiceIdsNoGuard() const
+        {
+            std::vector<std::uint32_t> serviceIds;
+            for (std::size_t i = 0; i != services_.size(); ++i)
+            {
+                for (auto& entry : services_[i])
+                {
+                    serviceIds.push_back(entry.first);
+                }
+            }
+            return serviceIds;
         }
     }
 }

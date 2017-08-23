@@ -1,6 +1,8 @@
-#include "service.h"
+﻿#include "service.h"
 
 #include <functional>
+
+#include <cr/common/assert.h>
 
 #include "application.h"
 
@@ -8,7 +10,8 @@ namespace cr
 {
     namespace app
     {
-        Service::Service(Application& context, boost::asio::io_service& ioService, std::uint32_t id, const std::string& name)
+
+        Service::Service(Application& context, boost::asio::io_service& ioService, std::uint32_t id, std::string name)
             : context_(context),
             ioService_(ioService),
             id_(id),
@@ -41,32 +44,30 @@ namespace cr
 
         void Service::onStart()
         {
-            messageQueue_.pop(popMessages_, std::bind(&Service::onPopMessage, shared_from_this(), std::placeholders::_1));
+            popMessage();
         }
 
         void Service::onStop()
         {
-            messageQueue_.cancel();
+            messageQueue_.interrupt();
         }
 
-        void Service::sendMessage(std::uint32_t destId, std::uint32_t destServiceId,
-            std::uint64_t session, std::shared_ptr<Message> message)
+        void Service::sendMessage(std::uint32_t serverId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
         {
-            const auto& cluster = context_.getCluster();
-            CR_ASSERT(cluster != nullptr);
-            cluster->dispatchMessage(0, id_, destId, destServiceId, session, std::move(message));
+            context_.sendMessage(id_, serverId, session, std::move(message));
         }
 
-        void Service::sendMessage(std::uint32_t destServiceId, std::uint64_t session, std::shared_ptr<Message> message)
+        void Service::onPushMessage(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
         {
-            const auto& cluster = context_.getCluster();
-            CR_ASSERT(cluster != nullptr);
-            cluster->dispatchMessage(0, id_, 0, destServiceId, session, std::move(message));
+            messageQueue_.emplace(serviceId, session, std::move(message));
         }
 
-        void Service::onServiceMessage(std::uint32_t sourceId, std::uint32_t sourceServiceId, std::uint64_t session, std::shared_ptr<Message> message)
+        void Service::popMessage()
         {
-            messageQueue_.push(std::make_tuple(sourceId, sourceServiceId, session, std::move(message)));
+            messageQueue_.pop(popMessages_, [this, self = shared_from_this()](const boost::system::error_code& error, std::size_t)
+            {
+                onPopMessage(error);
+            });
         }
 
         void Service::onPopMessage(const boost::system::error_code& error)
@@ -75,10 +76,10 @@ namespace cr
             {
                 for (auto& message : popMessages_)
                 {
-                    onMessageReceived(std::get<0>(message), std::get<1>(message), std::get<2>(message), std::move(std::get<3>(message)));
+                    onMessageReceived(std::get<0>(message), std::get<1>(message), std::move(std::get<2>(message)));
                 }
                 popMessages_.clear();
-                messageQueue_.pop(popMessages_, std::bind(&Service::onPopMessage, shared_from_this(), std::placeholders::_1));
+                popMessage();
             }
         }
     }

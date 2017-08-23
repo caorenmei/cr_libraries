@@ -12,7 +12,6 @@ set(cr_common_SRCS
     exception.h
     exception.cpp
     function.h
-    lock_guards.h
     logging.h
     streams.h
     streams_empty.h

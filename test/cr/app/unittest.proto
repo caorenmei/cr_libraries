@@ -1,11 +1,8 @@
 ﻿syntax = "proto3";
 
-message AccumulateReq
-{
-    repeated uint32 arguments = 1;
-}
+package proto;
 
-message AccumulateResp
+message UInt32
 {
-    uint32 result = 1;
+    uint32 value = 1;
 }

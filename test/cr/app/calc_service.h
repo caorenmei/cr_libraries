@@ -13,7 +13,7 @@ protected:
 
     virtual void onStart() override;
 
-    virtual void onMessageReceived(std::uint32_t sourceId, std::uint32_t sourceServiceId, std::uint64_t session, std::shared_ptr<cr::app::Message> message) override;
+    virtual void onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message) override;
 };
 
 #endif // !CR_APP_CALC_SERVICE_H_

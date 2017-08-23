@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(CalcApplication)
 {
 
     boost::asio::io_service ioService;
-    auto app = std::make_shared<cr::app::Application>(ioService, "Hello");
+    auto app = std::make_shared<cr::app::Application>(ioService);
     app->start();
 
     std::atomic<std::uint32_t> result(0);
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(CalcApplication)
     
     ioService.run();
 
-    BOOST_CHECK_EQUAL(result, 45);
+    BOOST_CHECK_EQUAL(result, 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
