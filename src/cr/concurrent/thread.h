@@ -41,6 +41,12 @@ namespace cr
             const std::shared_ptr<boost::asio::io_service>& getIoService() const;
 
             /**
+             * 获取线程数
+             * @param 线程数
+             */
+            std::size_t getThreadNum() const;
+
+            /**
              * 提交一个任务到线程
              * @param handler 任务
              */

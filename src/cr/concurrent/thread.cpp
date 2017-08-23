@@ -31,6 +31,11 @@ namespace cr
             return ioService_;
         }
 
+        std::size_t Thread::getThreadNum() const
+        {
+            return threads_.size();
+        }
+
         void Thread::post(std::function<void()> handler)
         {
             ioService_->post(std::move(handler));

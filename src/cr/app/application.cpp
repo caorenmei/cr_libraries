@@ -31,12 +31,22 @@ namespace cr
 
         Application::~Application()
         {
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
             for (auto& workThread : workThreads_)
             {
-                workThread.second.first.stop();
-                workThread.second.first.join();
+                if (workThread.second.first.getThreadNum() != 0)
+                {
+                    workThread.second.first.post([&workThread]
+                    {
+                        workThread.second.first.stop();
+                    });
+                    workThread.second.first.join();
+                }
             }
-            backgroundThread_.stop();
+            backgroundThread_.post([this]
+            {
+                backgroundThread_.stop();
+            });
             backgroundThread_.join();
         }
 
