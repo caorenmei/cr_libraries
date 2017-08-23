@@ -246,7 +246,8 @@ namespace cr
             CR_ASSERT(workThreadIter != workThreads_.end())(group);
             auto& workThreadEntry = workThreadIter->second;
             // 回调onStop
-            workThreadEntry.first.post([this, self = shared_from_this(), handler = std::move(handler), service = std::move(service)]
+            auto self = shared_from_this();
+            workThreadEntry.first.post([this, self, handler = std::move(handler), service = std::move(service)]
             {
                 handler(service);
                 service->onStop();
@@ -255,10 +256,13 @@ namespace cr
             workThreadEntry.second.erase(serviceId);
             if (workThreadEntry.second.empty())
             {
-                backgroundThread_.post([thread = std::move(workThreadEntry.first)]() mutable
+                workThreadEntry.first.post([this, self, thread = std::move(workThreadEntry.first)]
                 {
-                    thread.stop();
-                    thread.join();
+                    backgroundThread_.post([thread = thread]() mutable
+                    {
+                        thread.stop();
+                        thread.join();
+                    });
                 });
                 workThreads_.erase(workThreadIter);
             }
