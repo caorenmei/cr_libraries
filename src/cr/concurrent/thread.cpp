@@ -7,15 +7,16 @@ namespace cr
 
         Thread::Thread(std::size_t threadNum/* = 1*/)
         {
-            ioService_ = std::make_shared<boost::asio::io_service>();
-            for (std::size_t i = 0; i != threadNum; ++i)
+            auto ioService = std::make_shared<boost::asio::io_service>();
+            auto work = std::make_shared<boost::asio::io_service::work>(*ioService);
+            for (std::size_t i = 0; i < threadNum; ++i)
             {
-                threads_.push_back(std::make_shared<std::thread>([this]
+                threads_.push_back(std::make_shared<std::thread>([ioService, work]
                 {
-                    boost::asio::io_service::work work(*ioService_);
-                    ioService_->run();
+                    ioService->run();
                 }));
             }
+            ioService_ = std::move(ioService);
         }
 
         Thread::Thread(std::shared_ptr<boost::asio::io_service> ioService)
