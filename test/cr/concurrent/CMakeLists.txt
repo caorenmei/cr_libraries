@@ -12,8 +12,8 @@ set(cr_concurrent_unittest_SRCS
 add_executable(cr_concurrent_unittest ${cr_concurrent_unittest_SRCS})
 install(TARGETS cr_concurrent_unittest DESTINATION bin)
 target_link_libraries(cr_concurrent_unittest
-    cr_common
     cr_concurrent
+    cr_common
     ${Boost_COROUTINE_LIBRARY} 
     ${Boost_CONTEXT_LIBRARY}
     ${Boost_CHRONO_LIBRARY}
