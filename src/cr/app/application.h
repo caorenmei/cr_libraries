@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include <cr/concurrent/multi_mutex.h>
 #include <cr/concurrent/thread.h>
@@ -144,12 +145,6 @@ namespace cr
             void sendMessage(std::uint32_t serviceId, std::shared_ptr<google::protobuf::Message> message);
 
             /**
-             * 在后台线程运行一个任务
-             * @param handler 任务
-             */
-            void runInBackground(std::function<void()> handler);
-
-            /**
              * 开始运行
              */
             void start();
@@ -166,12 +161,27 @@ namespace cr
             std::future<std::uint32_t> startService(std::string group, std::string name, ServiceBuilder builder);
 
             // 停止一个服务
-            void stopServiceNoGuard(std::uint32_t serviceId, std::function<void(std::shared_ptr<Service>)> handler);
+            void stopServiceNoGuard(std::uint32_t serviceId);
+
+            // 获取一个服务
+            std::shared_ptr<Service> getServiceNoGuard(std::uint32_t serviceId) const;
 
             // 获取服务Id列表
             std::vector<std::uint32_t> getServiceIdsNoGuard() const;
 
+            // 运行资源回收定时器
+            void startCollectionTimer();
+
+            // 资源回收处理器
+            void onCollectionTimerHandler();
+
+            // 回收线程
+            void collectionThread(std::shared_ptr<cr::concurrent::Thread> thread);
+
             friend Service;
+            // 状态
+            enum State { NORMAL, RUNNING, STOPED, };
+            State state_;
             // boost io_service
             std::shared_ptr<boost::asio::io_service> ioService_;
             std::unique_ptr<boost::asio::io_service::work> work_;
@@ -183,10 +193,12 @@ namespace cr
             std::vector<std::map<std::uint32_t, std::shared_ptr<Service>>> services_;
             std::map<std::string, std::set<std::uint32_t>> names;
             // 工作线程组
-            std::map<std::string, std::pair<cr::concurrent::Thread, std::set<std::uint32_t>>> workThreads_;
+            std::map<std::string, std::pair<std::shared_ptr<cr::concurrent::Thread>, std::set<std::uint32_t>>> workThreads_;
             std::map<std::uint32_t, std::string> workGroups_;
             // background thread
-            cr::concurrent::Thread backgroundThread_;
+            cr::concurrent::Thread collectionThread_;
+            // 资源回收定时器
+            boost::asio::steady_timer collectionTimer_;
             // 锁
             mutable cr::concurrent::MultiMutex<std::mutex> mutexs_;
         };

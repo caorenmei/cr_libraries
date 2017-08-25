@@ -64,9 +64,14 @@ namespace cr
 
         void Service::popMessage()
         {
-            messageQueue_.pop(popMessages_, [this, self = shared_from_this()](const boost::system::error_code& error, std::size_t)
+            std::weak_ptr<void> self = shared_from_this();
+            messageQueue_.pop(popMessages_, [this, self](const boost::system::error_code& error, std::size_t)
             {
-                onPopMessage(error);
+                auto p = self.lock();
+                if (p)
+                {
+                    onPopMessage(error);
+                }
             });
         }
 

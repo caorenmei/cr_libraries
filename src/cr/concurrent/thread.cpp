@@ -8,11 +8,11 @@ namespace cr
         Thread::Thread(std::size_t threadNum/* = 1*/)
         {
             auto ioService = std::make_shared<boost::asio::io_service>();
-            auto work = std::make_shared<boost::asio::io_service::work>(*ioService);
             for (std::size_t i = 0; i < threadNum; ++i)
             {
-                threads_.push_back(std::make_shared<std::thread>([ioService, work]
+                threads_.push_back(std::make_unique<std::thread>([ioService]
                 {
+                    boost::asio::io_service::work work(*ioService);
                     ioService->run();
                 }));
             }
@@ -46,6 +46,14 @@ namespace cr
             if (!threads_.empty())
             {
                 ioService_->stop();
+            }
+        }
+
+        void Thread::detach()
+        {
+            for (auto& thread : threads_)
+            {
+                thread->detach();
             }
         }
 

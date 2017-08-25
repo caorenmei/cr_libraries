@@ -35,6 +35,9 @@ namespace cr
              */
             ~Thread();
 
+            Thread(const Thread&) = delete;
+            Thread& operator=(const Thread&) = delete;
+
             /**
              * 获取线程关联的io service
              */
@@ -59,6 +62,11 @@ namespace cr
             void stop();
 
             /**
+             * 分离线程
+             */
+            void detach();
+
+            /**
              * 合并线程
              */
             void join();
@@ -68,7 +76,7 @@ namespace cr
             // io service
             std::shared_ptr<boost::asio::io_service> ioService_;
             // 实际线程
-            std::vector<std::shared_ptr<std::thread>> threads_;
+            std::vector<std::unique_ptr<std::thread>> threads_;
         };
     }
 }
