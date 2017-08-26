@@ -27,4 +27,20 @@ BOOST_AUTO_TEST_CASE(CalcApplication)
     BOOST_CHECK_EQUAL(result, 100);
 }
 
+BOOST_AUTO_TEST_CASE(CalcCluster)
+{
+
+    boost::asio::io_service ioService;
+    auto app = std::make_shared<cr::app::Application>(ioService);
+    app->start();
+
+    std::atomic<std::uint32_t> result(0);
+    app->startService<ClusterCalcService>("Thread1", "CalcService");
+    app->startService<ClusterReqService>("Thread2", "ReqService", std::ref(result));
+
+    ioService.run();
+
+    BOOST_CHECK_EQUAL(result, 100);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

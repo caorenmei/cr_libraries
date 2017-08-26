@@ -18,58 +18,62 @@ namespace cr
 
         std::shared_ptr<ClusterProxy> LocalClusterImpl::connect(boost::asio::io_service& ioService, std::string name, std::string data)
         {
-            std::weak_ptr<void> self = shared_from_this();
-            std::uint32_t id = nextId_++;
+            std::uint32_t fromId = nextId_++;
             auto proxy = std::make_shared<ClusterProxyImpl>(ioService_, ioService, name);
-            proxy->setClusterDisconnectHander(ioService_.wrap([this, self, id]
+            // 设置回调
+            std::weak_ptr<void> self = shared_from_this();
+            proxy->setClusterDisconnectHander(ioService_.wrap([this, self, fromId]
             {
                 auto p = self.lock();
                 if (p)
                 {
-                    onProxyDisconnect(id);
+                    onProxyDisconnect(fromId);
                 }
             }));
-            proxy->setClusterWatchHander(ioService_.wrap([this, self, id](std::string name)
+            proxy->setClusterWatchHander(ioService_.wrap([this, self, fromId](std::string name)
             {
                 auto p = self.lock();
                 if (p)
                 {
-                    onProxyWatch(id, std::move(name));
+                    onProxyWatch(fromId, std::move(name));
                 }
             }));
-            proxy->setClusterUnWatchHander(ioService_.wrap([this, self, id](std::string name)
+            proxy->setClusterUnWatchHander(ioService_.wrap([this, self, fromId](std::string name)
             {
                 auto p = self.lock();
                 if (p)
                 {
-                    onProxyUnWatch(id, std::move(name));
+                    onProxyUnWatch(fromId, std::move(name));
                 }
             }));
-            proxy->setClusterDataUpdateHander(ioService_.wrap([this, self, id](std::string data)
+            proxy->setClusterDataUpdateHander(ioService_.wrap([this, self, fromId](std::string data)
             {
                 auto p = self.lock();
                 if (p)
                 {
-                    onProxyDataUpdate(id, std::move(data));
+                    onProxyDataUpdate(fromId, std::move(data));
                 }
             }));
-            proxy->setClusterMessageHander([this, self, id](std::uint32_t toId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
+            // 回调连接建立
+            ioService_.post([this, self = shared_from_this(), fromId, proxy, name = std::move(name), data = std::move(data)]
             {
-                auto p = self.lock();
-                if (p)
-                {
-                    onProxyMessage(id, toId, session, std::move(message));
-                }
-            });
-            ioService_.post([this, self = shared_from_this(), id, proxy, name = std::move(name), data = std::move(data)]
-            {
-                onProxyConnect(id, proxy, std::move(name), std::move(data));
+                onProxyConnect(fromId, proxy, std::move(name), std::move(data));
             });
             return proxy;
         }
 
         void LocalClusterImpl::onProxyConnect(std::uint32_t fromId, std::shared_ptr<ClusterProxyImpl> proxy, std::string name, std::string data)
         {
+            std::weak_ptr<void> self = shared_from_this();
+            // 设置回调
+            proxy->setClusterMessageHander([this, self, fromId](std::uint32_t toId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
+            {
+                auto p = self.lock();
+                if (p)
+                {
+                    onProxyMessage(fromId, toId, session, std::move(message));
+                }
+            });
             // 保存数据
             nameIds_[name].insert(fromId);
             idNames_.insert(std::make_pair(fromId, name));
@@ -95,10 +99,6 @@ namespace cr
             auto name = nameIter->second;
             idNames_.erase(nameIter);
             nameIds_[name].erase(fromId);
-            // proxy
-            auto proxyIter = proxies_.find(fromId);
-            assert(proxyIter != proxies_.end());
-            proxies_.erase(proxyIter);
             // data
             auto dataIter = datas_.find(fromId);
             assert(dataIter != datas_.end());
@@ -116,6 +116,11 @@ namespace cr
                 assert(proxyIter != proxies_.end());
                 proxyIter->second->onClusterWatchEvent(ClusterProxy::REMOVE, name, fromId, "");
             }
+            // proxy
+            auto proxyIter = proxies_.find(fromId);
+            assert(proxyIter != proxies_.end());
+            proxyIter->second->setClusterMessageHander(nullptr);
+            proxies_.erase(proxyIter);
         }
 
         void LocalClusterImpl::onProxyMessage(std::uint32_t fromId, std::uint32_t toId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)

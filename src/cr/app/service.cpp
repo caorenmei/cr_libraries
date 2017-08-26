@@ -57,6 +57,9 @@ namespace cr
             messageQueue_.interrupt();
         }
 
+        void Service::onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
+        {}
+
         void Service::sendMessage(std::uint32_t serverId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
         {
             context_.sendMessage(id_, serverId, session, std::move(message));

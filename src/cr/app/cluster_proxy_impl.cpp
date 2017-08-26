@@ -38,12 +38,23 @@ namespace cr
                     clusterDisconnectHandler_();
                 }
                 state_ = DISCONNECTED;
+                clusterDisconnectHandler_ = nullptr;
+                clusterWatchHander_ = nullptr;
+                clusterUnWatchHander_ = nullptr;
+                clusterDataHandler_ = nullptr;
+                // clusterMessageHandler_ = nullptr;
+                proxyConnectHandler_ = nullptr;
+                proxyWatchHandlers_.clear();
+                proxyMessageHandler_ = nullptr;
             }
         }
 
         void ClusterProxyImpl::onConnect(std::function<void(std::uint32_t)> handler)
         {
-            proxyConnectHandler_ = std::move(handler);
+            if (state_ != DISCONNECTED)
+            {
+                proxyConnectHandler_ = std::move(handler);
+            }
         }
 
         void ClusterProxyImpl::watch(std::string name, std::function<void(Event, std::string, std::uint32_t, std::string)> handler)
@@ -73,7 +84,10 @@ namespace cr
 
         void ClusterProxyImpl::onMessageReceived(std::function<void(std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>)> handler)
         {
-            proxyMessageHandler_ = std::move(handler);
+            if (state_ != DISCONNECTED)
+            {
+                proxyMessageHandler_ = std::move(handler);
+            }
         }
 
         void ClusterProxyImpl::sendMessage(std::uint32_t id, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)
@@ -99,50 +113,41 @@ namespace cr
 
         void ClusterProxyImpl::onClusterWatchEvent(Event event, std::string name, std::uint32_t fromId, std::string data)
         {
-            proxyIoService_.post([this, self = shared_from_this(), event, name, fromId, data = std::move(data)]() mutable
-            {
-                onProxyWatchEvent(event, name, fromId, std::move(data));
-            });
+            onProxyWatchEvent(event, name, fromId, std::move(data));
         }
 
         void ClusterProxyImpl::setClusterDisconnectHander(std::function<void()> handler)
         {
-            proxyIoService_.dispatch([this, self = shared_from_this(), handler = std::move(handler)]() mutable
-            {
-                onSetClusterDisconnectHander(std::move(handler));
-            });
+            onSetClusterDisconnectHander(std::move(handler));
         }
 
         void ClusterProxyImpl::setClusterWatchHander(std::function<void(std::string)> handler)
         {
-            proxyIoService_.dispatch([this, self = shared_from_this(), handler = std::move(handler)]() mutable
+            if (state_ != DISCONNECTED)
             {
                 clusterWatchHander_ = std::move(handler);
-            });
+            }
         }
 
         void ClusterProxyImpl::setClusterUnWatchHander(std::function<void(std::string)> handler)
         {
-            proxyIoService_.dispatch([this, self = shared_from_this(), handler = std::move(handler)]() mutable
+            if (state_ != DISCONNECTED)
             {
                 clusterUnWatchHander_ = std::move(handler);
-            });
+            }
         }
 
         void ClusterProxyImpl::setClusterDataUpdateHander(std::function<void(std::string)> handler)
         {
-            proxyIoService_.dispatch([this, self = shared_from_this(), handler = std::move(handler)]() mutable
+            if (state_ != DISCONNECTED)
             {
                 clusterDataHandler_ = std::move(handler);
-            });
+            }
         }
 
         void ClusterProxyImpl::setClusterMessageHander(std::function<void(std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>)> handler)
         {
-            proxyIoService_.dispatch([this, self = shared_from_this(), handler = std::move(handler)]() mutable
-            {
-                clusterMessageHandler_ = std::move(handler);
-            });
+            clusterMessageHandler_ = std::move(handler);
         }
 
         void ClusterProxyImpl::onProxyConnect(std::uint32_t id)
@@ -150,12 +155,12 @@ namespace cr
             id_ = id;
             if (state_ == NORMAL)
             {
+                state_ = CONNECTED;
                 // 连接状态
                 if (proxyConnectHandler_)
                 {
                     proxyConnectHandler_(id_);
                 }
-                state_ = CONNECTED;
                 // 开始消息队列
                 popClusterMessage();
                 popProxyMessage();
@@ -168,6 +173,7 @@ namespace cr
             if (state_ == DISCONNECTED)
             {
                 clusterDisconnectHandler_();
+                clusterDisconnectHandler_ = nullptr;
             }
         }
 
@@ -199,7 +205,10 @@ namespace cr
         {
             for (auto&& message : popClusterMessages_)
             {
-                clusterMessageHandler_(std::get<0>(message), std::get<1>(message), std::move(std::get<2>(message)));
+                if (clusterMessageHandler_ != nullptr)
+                {
+                    clusterMessageHandler_(std::get<0>(message), std::get<1>(message), std::move(std::get<2>(message)));
+                }
             }
             popClusterMessages_.clear();
         }
@@ -220,7 +229,10 @@ namespace cr
         {
             for (auto&& message : popProxyMessages_)
             {
-                proxyMessageHandler_(std::get<0>(message), std::get<1>(message), std::move(std::get<2>(message)));
+                if (proxyMessageHandler_ != nullptr)
+                {
+                    proxyMessageHandler_(std::get<0>(message), std::get<1>(message), std::move(std::get<2>(message)));
+                }
             }
             popProxyMessages_.clear();
         }

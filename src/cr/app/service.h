@@ -88,7 +88,7 @@ namespace cr
              * @param session 会话Id
              * @param message 消息
              */
-            virtual void onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message) = 0;
+            virtual void onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message);
 
             /**
              * 发送一个本地消息

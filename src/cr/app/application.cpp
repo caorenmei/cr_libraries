@@ -19,8 +19,8 @@ namespace cr
         Application::Application(boost::asio::io_service& ioService)
             : state_(NORMAL),
             ioService_(&ioService, boost::null_deleter()),
-            clusterThread_(),
-            cluster_(),
+            clusterThread_(std::make_shared<cr::concurrent::Thread>()),
+            cluster_(std::make_shared<LocalClusterImpl>(*clusterThread_->getIoService())),
             nextId_(1),
             services_(16),
             collectionThread_(),
@@ -31,14 +31,10 @@ namespace cr
             auto iter = workThreads_.emplace(std::make_pair("Main", std::make_pair(
                 std::make_shared<cr::concurrent::Thread>(ioService_), std::set<std::uint32_t>())));
             iter.first->second.second.insert(0);
-            // 集群服务
-            cluster_ = std::make_shared<LocalClusterImpl>(*clusterThread_.getIoService());
         }
 
         Application::~Application()
         {
-            clusterThread_.stop();
-            clusterThread_.join();
             collectionThread_.stop();
             collectionThread_.join();
         }
@@ -105,6 +101,10 @@ namespace cr
             {
                 CR_ASSERT(cluster != nullptr);
                 cluster_ = std::move(cluster);
+                if (clusterThread_ != nullptr)
+                {
+                    collectionThread(std::move(clusterThread_));
+                }
             }
         }
 
@@ -162,6 +162,11 @@ namespace cr
                     collectionThread(std::move(workThread.second.first));
                 }
                 workThreads_.clear();
+                // 回收本地集群服务线程
+                if (clusterThread_ != nullptr)
+                {
+                    collectionThread(clusterThread_);
+                }
                 // 停止后台线程
                 collectionThread_.post([this, self]
                 {
