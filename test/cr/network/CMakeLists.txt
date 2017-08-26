@@ -1,3 +1,4 @@
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Boost REQUIRED system unit_test_framework)
 include_directories(${Boost_INCLUDE_DIRS})
