@@ -14,7 +14,7 @@ namespace cr
     namespace app
     {
         /** 本地集群代理 */
-        class ClusterProxyImpl : std::enable_shared_from_this<ClusterProxyImpl>, public ClusterProxy
+        class ClusterProxyImpl : public std::enable_shared_from_this<ClusterProxyImpl>, public ClusterProxy
         {
         public:
 
