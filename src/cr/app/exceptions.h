@@ -1,5 +1,5 @@
-﻿#ifndef COMMON_APP_EXCEPTIONS_H_
-#define COMMON_APP_EXCEPTIONS_H_
+﻿#ifndef CR_APP_EXCEPTIONS_H_
+#define CR_APP_EXCEPTIONS_H_
 
 #include <cr/common/exception.h>
 

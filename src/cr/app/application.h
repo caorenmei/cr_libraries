@@ -1,5 +1,5 @@
-﻿#ifndef COMMON_APP_APPLICATION_H_
-#define COMMON_APP_APPLICATION_H_
+﻿#ifndef CR_APP_APPLICATION_H_
+#define CR_APP_APPLICATION_H_
 
 #include <cstdint>
 #include <functional>
@@ -186,6 +186,7 @@ namespace cr
             std::shared_ptr<boost::asio::io_service> ioService_;
             std::unique_ptr<boost::asio::io_service::work> work_;
             // 集群服务
+            cr::concurrent::Thread clusterThread_;
             std::shared_ptr<Cluster> cluster_;
             // 递增的服务Id
             std::uint32_t nextId_;

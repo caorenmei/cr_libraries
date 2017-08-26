@@ -8,7 +8,7 @@
 
 #include <cr/common/assert.h>
 
-#include "local_cluster.h"
+#include "local_cluster_impl.h"
 #include "service.h"
 
 namespace cr
@@ -19,20 +19,27 @@ namespace cr
         Application::Application(boost::asio::io_service& ioService)
             : state_(NORMAL),
             ioService_(&ioService, boost::null_deleter()),
-            cluster_(std::make_shared<LocalCluster>(*ioService_)),
+            clusterThread_(),
+            cluster_(),
             nextId_(1),
             services_(16),
             collectionThread_(),
             collectionTimer_(ioService),
             mutexs_(services_.size())
         {
+            // 主线程
             auto iter = workThreads_.emplace(std::make_pair("Main", std::make_pair(
                 std::make_shared<cr::concurrent::Thread>(ioService_), std::set<std::uint32_t>())));
             iter.first->second.second.insert(0);
+            // 集群服务
+            cluster_ = std::make_shared<LocalClusterImpl>(*clusterThread_.getIoService());
         }
 
         Application::~Application()
         {
+            clusterThread_.stop();
+            clusterThread_.join();
+            collectionThread_.stop();
             collectionThread_.join();
         }
 
@@ -93,8 +100,12 @@ namespace cr
 
         void Application::setCluster(std::shared_ptr<Cluster> cluster)
         {
-            CR_ASSERT(cluster != nullptr);
-            cluster_ = std::move(cluster);
+            std::lock_guard<cr::concurrent::MultiMutex<std::mutex>> locker(mutexs_);
+            if (state_ == NORMAL)
+            {
+                CR_ASSERT(cluster != nullptr);
+                cluster_ = std::move(cluster);
+            }
         }
 
         const std::shared_ptr<Cluster>& Application::getCluster() const
@@ -154,7 +165,6 @@ namespace cr
                 // 停止后台线程
                 collectionThread_.post([this, self]
                 {
-                    collectionThread_.stop();
                     ioService_->post([this, self] 
                     {
                         onStop();

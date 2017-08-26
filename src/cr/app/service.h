@@ -1,5 +1,5 @@
-﻿#ifndef COMMON_SERVICE_H_
-#define COMMON_SERVICE_H_
+﻿#ifndef CR_SERVICE_H_
+#define CR_SERVICE_H_
 
 #include <cstdint>
 #include <memory>
@@ -10,6 +10,7 @@
 
 #include <cr/concurrent/pipe.h>
 
+#include "cluster.h"
 #include "message.h"
 
 namespace cr
@@ -44,6 +45,12 @@ namespace cr
              * @return app
              */
             Application& getApplicationContext();
+
+            /**
+             * 获取集群服务
+             * @return 集群服务
+             */
+            const std::shared_ptr<Cluster> getCluster() const;
 
             /**
              * asio io_service
@@ -112,9 +119,9 @@ namespace cr
             // 名字
             std::string name_;
             // 消息队列
-            using Message = std::tuple<std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>>;
-            cr::concurrent::Pipe<Message, std::mutex> messageQueue_;
-            std::vector<Message> popMessages_;
+            using QueueMessage = std::tuple<std::uint32_t, std::uint64_t, std::shared_ptr<google::protobuf::Message>>;
+            cr::concurrent::Pipe<QueueMessage, std::mutex> messageQueue_;
+            std::vector<QueueMessage> popMessages_;
         };
     }
 }

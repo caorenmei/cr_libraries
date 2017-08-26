@@ -1,5 +1,5 @@
-﻿#ifndef COMMON_APP_MESSAGE_
-#define COMMON_APP_MESSAGE_
+﻿#ifndef CR_APP_MESSAGE_
+#define CR_APP_MESSAGE_
 
 namespace google
 {

@@ -8,9 +8,11 @@ set(cr_app_SRCS
     application.h
     application.cpp
     cluster.h
+    cluster_proxy_impl.h
+    cluster_proxy_impl.cpp
     exceptions.h
-    local_cluster.h
-    local_cluster.cpp
+    local_cluster_impl.h
+    local_cluster_impl.cpp
     message.h
     service.h
     service.cpp

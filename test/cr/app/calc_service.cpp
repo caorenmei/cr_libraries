@@ -9,7 +9,6 @@
 void CalcService::onStart()
 {
     cr::app::Service::onStart();
-    getApplicationContext().getCluster()->registerService(".CalcService", getId());
 }
 
 void CalcService::onMessageReceived(std::uint32_t serviceId, std::uint64_t session, std::shared_ptr<google::protobuf::Message> message)

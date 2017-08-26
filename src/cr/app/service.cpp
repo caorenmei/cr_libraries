@@ -27,6 +27,11 @@ namespace cr
             return context_;
         }
 
+        const std::shared_ptr<Cluster> Service::getCluster() const
+        {
+            return context_.getCluster();
+        }
+
         boost::asio::io_service& Service::getIoService()
         {
             return ioService_;
