@@ -34,7 +34,7 @@ auto makeEntry(std::uint64_t term, std::string value)
 BOOST_FIXTURE_TEST_CASE(append, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_THROW(storage->append(0, { makeEntry(1, "0") }), cr::raft::ArgumentException);
@@ -43,7 +43,7 @@ BOOST_FIXTURE_TEST_CASE(append, LogStoragePath)
         BOOST_CHECK_NO_THROW(storage->append(2, { makeEntry(1, "2") }));
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         auto getEntries = storage->getEntries(1, 2, std::numeric_limits<std::uint64_t>::max());
@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE(append, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(remove, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_THROW(storage->remove(0), cr::raft::ArgumentException);
@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE(remove, LogStoragePath)
         BOOST_CHECK_NO_THROW(storage->remove(3));
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastIndex(), 2);
@@ -78,7 +78,7 @@ BOOST_FIXTURE_TEST_CASE(remove, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(getEntries, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_THROW(storage->getEntries(0, 0, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
@@ -91,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE(getEntries, LogStoragePath)
         BOOST_CHECK_THROW(storage->getEntries(1, 2, std::numeric_limits<std::uint64_t>::max()), cr::raft::ArgumentException);
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_REQUIRE_NO_THROW(storage->getEntries(1, 1, std::numeric_limits<std::uint64_t>::max()));
@@ -102,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE(getEntries, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(getTermByIndex, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_THROW(storage->getTermByIndex(0), cr::raft::ArgumentException);
@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(getTermByIndex, LogStoragePath)
         BOOST_CHECK_EQUAL(storage->getTermByIndex(3), 4);
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getTermByIndex(2), 2);
@@ -127,7 +127,7 @@ BOOST_FIXTURE_TEST_CASE(getTermByIndex, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(getLastIndex, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastIndex(), 0);
@@ -140,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(getLastIndex, LogStoragePath)
         BOOST_CHECK_EQUAL(storage->getLastIndex(), 3);
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastIndex(), 3);
@@ -150,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE(getLastIndex, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(getLastTerm, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 0);
@@ -163,7 +163,7 @@ BOOST_FIXTURE_TEST_CASE(getLastTerm, LogStoragePath)
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 4);
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 4);
@@ -173,7 +173,7 @@ BOOST_FIXTURE_TEST_CASE(getLastTerm, LogStoragePath)
 BOOST_FIXTURE_TEST_CASE(instance, LogStoragePath)
 {
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(1);
 
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 0);
@@ -186,7 +186,7 @@ BOOST_FIXTURE_TEST_CASE(instance, LogStoragePath)
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 4);
     }
     {
-        cr::raft::FileStorage fileStorage("test_log_path");
+        cr::raft::FileStorage fileStorage("test_log_path", false);
         auto storage = fileStorage.getStorage(2);
 
         BOOST_CHECK_EQUAL(storage->getLastTerm(), 0);

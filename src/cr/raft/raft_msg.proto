@@ -59,32 +59,22 @@ message RequestVoteResp
 // raft 消息
 message RaftMsg
 {
-    // 消息类型
-    enum MsgType
-    {
-        // 附加日志请求
-        APPEND_ENTRIES_REQ = 0;
-        //  附加日志回复
-        APPEND_ENTRIES_RESP = 1;
-        // 请求投票
-        REQUEST_VOTE_REQ = 2;
-        // 请求投票回复
-        REQUEST_VOTE_RESP = 3;
-    }
     // 源节点Id
     uint64 from_node_id = 1;
     // 目标节点 Id
     uint64 dest_node_id = 2;
     // 实例 Id
     uint64 instance_id = 3;
-    // 消息类型
-    MsgType msg_type = 4;
-    // 附加日志
-    AppendEntriesReq append_entries_req = 5;
-    // 附加日志回复
-    AppendEntriesResp append_entries_resp = 6;
-    // 请求投票
-    RequestVoteReq request_vote_req = 7;
-    // 请求投票回复
-    RequestVoteResp request_vote_resp = 8;
+    // 消息体
+    oneof body
+    {
+        // 附加日志
+        AppendEntriesReq append_entries_req = 4;
+        // 附加日志回复
+        AppendEntriesResp append_entries_resp = 5;
+        // 请求投票
+        RequestVoteReq request_vote_req = 6;
+        // 请求投票回复
+        RequestVoteResp request_vote_resp = 7;
+    }
 }

@@ -89,7 +89,6 @@ namespace cr
                 auto raftMsg = std::make_shared<pb::RaftMsg>();
                 raftMsg->set_from_node_id(raft.getNodeId());
                 raftMsg->set_dest_node_id(buddyNodeId);
-                raftMsg->set_msg_type(pb::RaftMsg::REQUEST_VOTE_REQ);
 
                 auto& request = *(raftMsg->mutable_request_vote_req());
                 request.set_candidate_term(currentTerm);
@@ -106,13 +105,16 @@ namespace cr
             {
                 auto message = std::move(raft.getMessageQueue().front());
                 raft.getMessageQueue().pop_front();
-                switch (message->msg_type())
+                if (message->has_append_entries_req())
                 {
-                case pb::RaftMsg::APPEND_ENTRIES_REQ:
                     return onAppendEntriesReqHandler(nowTime, std::move(message), outMessages);
-                case pb::RaftMsg::REQUEST_VOTE_REQ:
+                }
+                else if (message->has_request_vote_req())
+                {
                     return onRequestVoteReqHandler(nowTime, std::move(message), outMessages);
-                case pb::RaftMsg::REQUEST_VOTE_RESP:
+                }
+                else if (message->has_request_vote_resp())
+                {
                     return onRequestVoteRespHandler(nowTime, std::move(message), outMessages);
                 }
             }

@@ -83,7 +83,6 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(destNodeId);
                 raftMsg->set_from_node_id(fromNodeId);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
                 auto& request = *(raftMsg->mutable_request_vote_req());
                 request.set_last_log_index(lastLogIndex);
@@ -101,7 +100,6 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(destNodeId);
                 raftMsg->set_from_node_id(fromNodeId);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
                 auto& request = *(raftMsg->mutable_append_entries_req());
                 request.set_leader_term(leaderTerm);
@@ -124,7 +122,7 @@ namespace cr
                 {
                     return 1;
                 }
-                if (messages[0]->msg_type() != pb::RaftMsg::REQUEST_VOTE_RESP || !messages[0]->has_request_vote_resp())
+                if (!messages[0]->has_request_vote_resp())
                 {
                     return 2;
                 }
@@ -158,7 +156,7 @@ namespace cr
                 {
                     return 2;
                 }
-                if (messages[0]->msg_type() != pb::RaftMsg::APPEND_ENTRIES_RESP || !messages[0]->has_append_entries_resp())
+                if (!messages[0]->has_append_entries_resp())
                 {
                     return 3;
                 }

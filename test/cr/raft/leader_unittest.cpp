@@ -67,7 +67,6 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(destNodeId);
                 raftMsg->set_from_node_id(fromNodeId);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_REQ);
 
                 auto& request = *(raftMsg->mutable_request_vote_req());
                 request.set_last_log_index(lastLogIndex);
@@ -85,7 +84,6 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(destNodeId);
                 raftMsg->set_from_node_id(fromNodeId);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_REQ);
 
                 auto& request = *(raftMsg->mutable_append_entries_req());
                 request.set_leader_term(leaderTerm);
@@ -106,7 +104,6 @@ namespace cr
                 auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                 raftMsg->set_dest_node_id(raft->getNodeId());
                 raftMsg->set_from_node_id(fromNode);
-                raftMsg->set_msg_type(cr::raft::pb::RaftMsg::APPEND_ENTRIES_RESP);
 
                 auto& request = *(raftMsg->mutable_append_entries_resp());
                 request.set_follower_term(followerTerm);
@@ -128,7 +125,6 @@ namespace cr
                     auto raftMsg = std::make_shared<cr::raft::pb::RaftMsg>();
                     raftMsg->set_from_node_id(nodeId);
                     raftMsg->set_dest_node_id(1);
-                    raftMsg->set_msg_type(cr::raft::pb::RaftMsg::REQUEST_VOTE_RESP);
 
                     auto& request = *(raftMsg->mutable_request_vote_resp());
                     request.set_follower_term(raft->getCurrentTerm());
@@ -153,7 +149,7 @@ namespace cr
                     {
                         return 2;
                     }
-                    if (message->msg_type() != pb::RaftMsg::APPEND_ENTRIES_REQ || !message->has_append_entries_req())
+                    if (!message->has_append_entries_req())
                     {
                         return 3;
                     }

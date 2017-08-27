@@ -144,24 +144,6 @@ namespace cr
             CR_ASSERT_E(ArgumentException, raftMsg != nullptr);
             CR_ASSERT_E(ArgumentException, raftMsg->dest_node_id() == nodeId_)(raftMsg->dest_node_id())(nodeId_);
             CR_ASSERT_E(ArgumentException, isBuddyNodeId(raftMsg->from_node_id()))(raftMsg->from_node_id());
-            switch (raftMsg->msg_type())
-            {
-            case pb::RaftMsg::APPEND_ENTRIES_REQ:
-                CR_ASSERT_E(ArgumentException, raftMsg->has_append_entries_req())(raftMsg->msg_type());
-                break;
-            case pb::RaftMsg::APPEND_ENTRIES_RESP:
-                CR_ASSERT_E(ArgumentException, raftMsg->has_append_entries_resp())(raftMsg->msg_type());
-                break;
-            case pb::RaftMsg::REQUEST_VOTE_REQ:
-                CR_ASSERT_E(ArgumentException, raftMsg->has_request_vote_req())(raftMsg->msg_type());
-                break;
-            case pb::RaftMsg::REQUEST_VOTE_RESP:
-                CR_ASSERT_E(ArgumentException, raftMsg->has_request_vote_resp())(raftMsg->msg_type());
-                break;
-            default:
-                CR_ASSERT_E(ArgumentException, !"Faield Msg Type!!")(raftMsg->msg_type());
-                break;
-            }
             messages_.push_back(std::move(raftMsg));
         }
 
