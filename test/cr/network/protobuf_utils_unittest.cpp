@@ -9,15 +9,6 @@
 
 BOOST_AUTO_TEST_SUITE(protobuf_utils)
 
-BOOST_AUTO_TEST_CASE(getProtobufMessageFromName)
-{
-    cr::unittest::HelloWorld helloWorld;
-    auto message = cr::network::getProtobufMessageFromName(helloWorld.GetTypeName());
-    BOOST_REQUIRE_NE(message, nullptr);
-    CR_SCOPE_EXIT([&] { delete message; });
-    BOOST_CHECK(typeid(*message) == typeid(helloWorld));
-}
-
 BOOST_AUTO_TEST_CASE(parseAndSerializeProtobufMessage)
 {
     cr::unittest::HelloWorld helloWorld0;
@@ -28,7 +19,7 @@ BOOST_AUTO_TEST_CASE(parseAndSerializeProtobufMessage)
     BOOST_CHECK(cr::network::serializeProtobufMessage(helloWorld0, buffer0));
 
     cr::unittest::HelloWorld helloWorld1;
-    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0));
+    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0.data()));
     BOOST_CHECK_EQUAL(helloWorld0.hello(), helloWorld1.hello());
     BOOST_CHECK_EQUAL(helloWorld0.world(), helloWorld1.world());
 
@@ -45,7 +36,7 @@ BOOST_AUTO_TEST_CASE(parseAndSerializeProtobufMessage)
     buffer0.consume(97);
 
     BOOST_CHECK(cr::network::serializeProtobufMessage(helloWorld0, buffer0));
-    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0));
+    BOOST_CHECK(cr::network::parseProtobufMessage(helloWorld1, buffer0.data()));
     BOOST_CHECK_EQUAL(helloWorld0.hello(), helloWorld1.hello());
     BOOST_CHECK_EQUAL(helloWorld0.world(), helloWorld1.world());
 }

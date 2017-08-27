@@ -48,26 +48,6 @@ namespace cr
             google::protobuf::int64 byteCount_;
         };
 
-        google::protobuf::Message* getProtobufMessageFromName(const std::string& typeName)
-        {
-            google::protobuf::Message* message = nullptr;
-            auto descriptor = google::protobuf::DescriptorPool::generated_pool()->FindMessageTypeByName(typeName);
-            if (descriptor != nullptr)
-            {
-                auto prototype = google::protobuf::MessageFactory::generated_factory()->GetPrototype(descriptor);
-                if (prototype != nullptr)
-                {
-                    return prototype->New();
-                }
-            }
-            return nullptr;
-        }
-
-        bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer& b)
-        {
-            return parseProtobufMessage(message, b.data());
-        }
-
         bool parseProtobufMessage(google::protobuf::Message& message, const ByteBuffer::ConstBuffers& b)
         {
             ByteBufferInputStream stream(b);

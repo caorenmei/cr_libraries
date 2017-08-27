@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cr.unittest;
+
+message HelloWorld
+{
+    string hello = 1;
+    string world = 2;
+}
