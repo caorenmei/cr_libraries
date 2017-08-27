@@ -7,7 +7,7 @@
 
 #include "unittest.pb.h"
 
-BOOST_AUTO_TEST_SUITE(protobuf_utils)
+BOOST_AUTO_TEST_SUITE(reflect)
 
 BOOST_AUTO_TEST_CASE(getMessageFromName)
 {

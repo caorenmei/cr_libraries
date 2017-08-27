@@ -1,5 +1,5 @@
-﻿#ifndef CR_NETWORK_PROTOBUF_UTILS_H_
-#define CR_NETWORK_PROTOBUF_UTILS_H_
+﻿#ifndef CR_PROTOBUF_REFLECT_H_
+#define CR_PROTOBUF_REFLECT_H_
 
 #include <google/protobuf/message.h>
 

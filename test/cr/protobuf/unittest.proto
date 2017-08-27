@@ -1,8 +1,15 @@
 syntax = "proto3";
 package cr.unittest;
 
+import "google/protobuf/any.proto";
+
 message HelloWorld
 {
     string hello = 1;
     string world = 2;
+}
+
+message Any
+{
+    google.protobuf.Any value = 1;
 }
