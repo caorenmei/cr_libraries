@@ -1,5 +1,5 @@
-﻿#ifndef COMMON_LOGGING_H_
-#define COMMON_LOGGING_H_
+﻿#ifndef CR_COMMON_LOGGING_H_
+#define CR_COMMON_LOGGING_H_
 
 #include <cctype>
 #include <cstddef>
