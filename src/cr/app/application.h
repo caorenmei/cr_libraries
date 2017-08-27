@@ -186,7 +186,6 @@ namespace cr
             std::shared_ptr<boost::asio::io_service> ioService_;
             std::unique_ptr<boost::asio::io_service::work> work_;
             // 集群服务
-            std::shared_ptr<cr::concurrent::Thread> clusterThread_;
             std::shared_ptr<Cluster> cluster_;
             // 递增的服务Id
             std::uint32_t nextId_;
