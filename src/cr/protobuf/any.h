@@ -2,7 +2,6 @@
 #define CR_PROTOBUF_ANY_H_
 
 #include <google/protobuf/message.h>
-#include <google/protobuf/any.pb.h>
 
 namespace cr
 {
@@ -13,7 +12,7 @@ namespace cr
          * @param message any 消息
          * @return 消息名字
          */
-        std::string getAnyTypeName(const google::protobuf::Any& message);
+        std::string getAnyTypeName(const std::string& typeName);
 
     }
 }

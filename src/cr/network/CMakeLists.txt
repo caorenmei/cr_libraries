@@ -8,13 +8,16 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 set(cr_network_SRCS
     byte_buffer.h
     byte_buffer.cpp
-    protobuf_utils.h
-    protobuf_utils.cpp
+    pb_connection.h
+    pb_connection.cpp
+    pb_serialize.h
+    pb_serialize.cpp
 )
 
 set(cr_network_HEADERS
     byte_buffer.h
-    protobuf_utils.h
+    pb_connection.h
+    pb_serialize.h
 )
 
 add_library(cr_network ${cr_network_SRCS})

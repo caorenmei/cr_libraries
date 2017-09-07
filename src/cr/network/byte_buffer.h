@@ -68,6 +68,12 @@ namespace cr
             std::size_t getReadableBytes() const;
 
             /**
+             * 可读字节数
+             * @return 可读字节数
+             */
+            std::size_t size() const;
+
+            /**
              * 可读数据
              * @param 可读数据缓冲区
              */

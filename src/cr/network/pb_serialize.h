@@ -1,5 +1,5 @@
-﻿#ifndef CR_NETWORK_PROTOBUF_UTILS_H_
-#define CR_NETWORK_PROTOBUF_UTILS_H_
+﻿#ifndef CR_NETWORK_PB_SERIALIZE_H_
+#define CR_NETWORK_PB_SERIALIZE_H_
 
 #include <boost/asio/buffer.hpp>
 #include <google/protobuf/message.h>

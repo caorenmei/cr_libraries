@@ -45,6 +45,11 @@ namespace cr
             return size_;
         }
 
+        std::size_t ByteBuffer::size() const
+        {
+            return size_;
+        }
+
         ByteBuffer::ConstBuffers ByteBuffer::data() const
         {
             return data(0, size_);

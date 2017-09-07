@@ -1,4 +1,4 @@
-#include "protobuf_utils.h"
+#include "pb_serialize.h"
 
 #include <google/protobuf/io/zero_copy_stream.h>
 
@@ -102,7 +102,7 @@ namespace cr
             {
                 std::size_t nodeSize = boost::asio::buffer_size(*iter_);
                 std::size_t validSize = static_cast<std::size_t>(nodeSize - index_);
-                if (count < validSize)
+                if (static_cast<std::size_t>(count) < validSize)
                 {
                     index_ += count;
                     count = 0;

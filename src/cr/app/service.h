@@ -40,6 +40,9 @@ namespace cr
              */
             virtual ~Service();
 
+            Service(const Service&) = delete;
+            Service& operator=(const Service&) = delete;
+
             /**
              * 获取应用上下文
              * @return app

@@ -1,20 +1,15 @@
 #include "any.h"
 
+#include <google/protobuf/any.pb.h>
+
 namespace cr
 {
     namespace protobuf
     {
 
-        std::string getAnyTypeName(const google::protobuf::Any& message)
+        std::string getAnyTypeName(const std::string& typeName)
         {
-            const std::string& url = message.type_url();
-            auto pos = url.find_last_of('/');
-            if (pos != std::string::npos)
-            {
-                pos = pos + 1;
-                return url.substr(pos, url.size() - pos);
-            }
-            return {};
+            return google::protobuf::internal::kTypeGoogleApisComPrefix + typeName;
         }
 
     }
