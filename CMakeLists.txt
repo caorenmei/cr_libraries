@@ -37,5 +37,3 @@ option(Boost_USE_STATIC_RUNTIME  "Use static runtime" ON)
 
 # 子文件
 add_subdirectory(src)
-add_subdirectory(example)
-add_subdirectory(test)
