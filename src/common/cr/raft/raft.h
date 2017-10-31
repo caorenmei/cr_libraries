@@ -15,7 +15,7 @@ namespace cr
 {
     namespace raft
     {
-
+        // 前置声明消息
         namespace pb
         {
             class RaftMsg;

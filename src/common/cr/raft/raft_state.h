@@ -9,7 +9,7 @@ namespace cr
 {
     namespace raft
     {
-
+        // 消息
         namespace pb
         {
             class RaftMsg;

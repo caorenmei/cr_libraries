@@ -12,7 +12,6 @@ namespace cr
         {
         public:
             using cr::Exception::Exception;
-
         };
 
         /** 参数错误 */
