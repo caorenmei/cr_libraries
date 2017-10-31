@@ -39,8 +39,8 @@ namespace cr
             for (; logIndex < stopLogIndex && packetLength < maxPacketLength; ++logIndex)
             {
                 const auto& entry = entries_[logIndex];
+                packetLength += entry.value().size();
                 results.push_back(entry);
-                packetLength += entry.ByteSize();
             }
             return results;
         }

@@ -1,8 +1,5 @@
-﻿#ifndef CR_COMMON_FILE_STORAGE_H_
-#define CR_COMMON_FILE_STORAGE_H_
-
-#include <cstdint>
-#include <memory>
+﻿#ifndef CR_COMMON_RAFT_FILE_STORAGE_H_
+#define CR_COMMON_RAFT_FILE_STORAGE_H_
 
 #include <rocksdb/db.h>
 
@@ -21,9 +18,20 @@ namespace cr
 
             /**
              * 构造函数
-             * @param 
+             * @param db 数据库句柄
+             * @param columnFamily 列族
+             * @param logger 日志
+             * @param sync 同步标志
              */
-            explicit FileStorage(rocksdb::DB* db, rocksdb::ColumnFamilyHandle* columnFamily, cr::log::Logger& logger, bool sync = true);
+            FileStorage(rocksdb::DB* db, rocksdb::ColumnFamilyHandle* columnFamily, cr::log::Logger& logger, bool sync = true);
+
+            /**
+             * 构造函数
+             * @param db 数据库句柄
+             * @param logger 日志
+             * @param sync 同步标志
+             */
+            FileStorage(rocksdb::DB* db, cr::log::Logger& logger, bool sync = true);
 
             /** 析构函数 */
             virtual ~FileStorage() noexcept override;
@@ -73,7 +81,7 @@ namespace cr
         private:
 
             // rocksdb
-            rocksdb::DB& db_;
+            rocksdb::DB* db_;
             rocksdb::ColumnFamilyHandle* columnFamily_;
             // 日志
             cr::log::Logger& logger_;

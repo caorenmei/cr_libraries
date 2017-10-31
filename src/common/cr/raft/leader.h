@@ -1,7 +1,5 @@
-﻿#ifndef CR_RAFT_LEADER_H_
-#define CR_RAFT_LEADER_H_
-
-#include <map>
+﻿#ifndef CR_COMMON_RAFT_LEADER_H_
+#define CR_COMMON_RAFT_LEADER_H_
 
 #include "raft_state.h"
 
@@ -9,68 +7,41 @@ namespace cr
 {
     namespace raft
     {
-        /** 领导者状态 */
-        class Leader : public RaftState
+        /** 领导则状态 */
+        class LeaderState : public boost::msm::front::state<BaseState, boost::msm::front::sm_ptr>
         {
         public:
 
-            struct BuddyNode;
+            /** 构造函数 */
+            LeaderState();
 
-            explicit Leader(Raft& raft);
+            /** 析构函数 */
+            ~LeaderState();
 
-            ~Leader();
+            /* 得到多数选票 */
+            void on_entry(const MajorityVotesEvent&, RaftState&);
 
-            // 当前状态
-            virtual int getState() const override;
+            /* 其它节点成为领导者 */
+            void on_exit(const DiscoversEvent&, RaftState&);
 
-            // 进入状态
-            virtual void onEnter(std::shared_ptr<RaftState> prevState) override;
+            /* 离开状态 */
+            void on_exit(const FinalEvent&, RaftState&);
 
-            // 离开状态
-            virtual void onLeave() override;
+            /* 设置状态机 */
+            void set_sm_ptr(RaftState* sm);
 
-            // 状态机逻辑
-            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
+            /**
+             * 状态逻辑处理
+             * @param nowTime 当前时间
+             * @param messages 输出消息
+             * @return 下一次需要update的时间
+             */
+            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages) override;
 
-            // 处理消息, 发生状态转换返回True
-            bool processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+        private:
 
-            // 处理其它领导者的附加日志请求
-            bool onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 处理附加日志回复
-            bool onAppendEntriesRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 处理请求投票消息
-            bool onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 计算已提交日志索引
-            std::uint64_t calNewCommitIndex();
-
-            // 发起附加日志请求
-            std::uint64_t processAppendEntriesReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
-
-            // 附加日志消息
-            void appendEntriesReq(BuddyNode& node, std::vector<RaftMsgPtr>& outMessages);
-
-            // 伙伴节点
-            struct BuddyNode
-            {
-                // 节点Id
-                std::uint64_t nodeId;
-                // 下次Update时间
-                std::uint64_t nextUpdateTime;
-                // 下一个日志索引
-                std::uint64_t nextLogIndex;
-                // 以应答的最后索引
-                std::uint64_t replyLogIndex;
-                // 匹配上的日志索引
-                std::uint64_t matchLogIndex;
-            };
-            // 节点列表
-            std::vector<BuddyNode> nodes_;
-            // 用于计算CommitIndex
-            std::vector<std::uint64_t> matchLogIndexs_;
+            // 状态机
+            RaftState* state_;
         };
     }
 }

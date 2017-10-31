@@ -1,8 +1,5 @@
-﻿#ifndef CR_RAFT_CANDIDATE_H_
-#define CR_RAFT_CANDIDATE_H_
-
-#include <set>
-#include <map>
+﻿#ifndef CR_COMMON_RAFT_CANDIDATE_STATE_H_
+#define CR_COMMON_RAFT_CANDIDATE_STATE_H_
 
 #include "raft_state.h"
 
@@ -10,54 +7,48 @@ namespace cr
 {
     namespace raft
     {
-        class Candidate : public RaftState
+        /** 候选者状态 */
+        class CandidateState : public boost::msm::front::state<BaseState, boost::msm::front::sm_ptr>
         {
         public:
 
-            explicit Candidate(Raft& raft);
+            /** 构造函数 */
+            CandidateState();
 
-            ~Candidate();
+            /** 析构函数 */
+            ~CandidateState();
 
-            // 当前状态
-            virtual int getState() const override;
+            /* 进入状态 */
+            void on_entry(const ElectionTimeoutEvent&, RaftState&);
 
-            // 进入状态
-            virtual void onEnter(std::shared_ptr<RaftState> prevState) override;
+            /* 离开状态 */
+            void on_exit(const ElectionTimeoutEvent&, RaftState&);
 
-            // 离开状态
-            virtual void onLeave() override;
+            /* 离开状态 */
+            void on_exit(const MajorityVotesEvent&, RaftState&);
 
-            // 状态机逻辑
-            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages) override;
+            /* 离开状态 */
+            void on_exit(const FinalEvent&, RaftState&);
 
-            // 更新选举超时时间
-            void updateNextElectionTime(std::uint64_t nowTime);
+            /* 设置状态机 */
+            void set_sm_ptr(RaftState* sm);
 
-            // 检查选举超时,超时返回True
-            bool checkElectionTimeout(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+            /**
+             * 状态逻辑处理
+             * @param nowTime 当前时间
+             * @param messages 输出消息
+             * @return 下一次需要update的时间
+             */
+            virtual std::uint64_t update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages) override;
 
-            // 发起投票请求
-            void processRequestVoteReq(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
+        private:
 
-            // 处理消息，如果状态转换，则返回True
-            bool processOneMessage(std::uint64_t nowTime, std::vector<RaftMsgPtr>& outMessages);
-
-            // 处理附加日志请求
-            bool onAppendEntriesReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 处理投票请求
-            bool onRequestVoteReqHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 处理请求投票回执
-            bool onRequestVoteRespHandler(std::uint64_t nowTime, RaftMsgPtr message, std::vector<RaftMsgPtr>& outMessages);
-
-            // 是否选举成功
-            bool checkVoteGranted(std::uint64_t nowTime);
-
-            // 选举超时时间
-            std::uint64_t nextElectionTime_;
-            // 拥有的选票
-            std::set<std::uint64_t> grantNodeIds_;
+            // 状态机
+            RaftState* state_;
+            // 选举时间
+            std::uint64_t electionTime_;
+            // 选票
+            std::vector<std::uint64_t> votes_;
         };
     }
 }
