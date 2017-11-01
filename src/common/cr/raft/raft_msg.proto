@@ -53,6 +53,8 @@ message RequestVoteResp
 {
     // 当前的任期号，用于领导人去更新自己
     uint64 follower_term = 1;
+    // 候选人的任期号
+    uint64 candidate_term = 2;
     // 候选人赢得了此张选票时为真
     bool success = 3;
 }

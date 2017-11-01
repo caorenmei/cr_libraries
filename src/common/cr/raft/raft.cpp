@@ -10,7 +10,7 @@ namespace cr
     {
 
         Raft::Raft(const Options& options)
-            : state_(*this),
+            : state_(std::ref(*this)),
             options_(options),
             random_(options_.getRandomSeed()),
             currentTerm_(0),
@@ -83,6 +83,11 @@ namespace cr
                 return lastApplied_ < commitIndex_;
             }
             return false;
+        }
+
+        std::mt19937& Raft::getRandom()
+        {
+            return random_;
         }
 
         void Raft::setVotedFor(const boost::optional<std::uint64_t>& votedFor)

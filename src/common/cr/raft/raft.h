@@ -95,6 +95,9 @@ namespace cr
 
         private:
 
+            /* 获取随机数 */
+            std::mt19937& getRandom();
+
             /* 设置选票投票Id */
             void setVotedFor(const boost::optional<std::uint64_t>& votedFor);
 
@@ -107,12 +110,18 @@ namespace cr
             /* 设置当前提交的日志索引 */
             void setCommitIndex(std::uint64_t commitIndex);
 
+            // 友元
+            friend class RaftState_;
+            friend class FollowerState;
+            friend class CandidateState;
+            friend class LeaderState;
+
             // 状态机
             RaftState state_;
             // 参数
             Options options_;
             // 随机数
-            std::default_random_engine random_;
+            std::mt19937 random_;
             // 当前投票
             boost::optional<std::uint64_t> votedFor_;
             // 当前领导者

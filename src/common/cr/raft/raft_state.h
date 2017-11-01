@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <vector>
 
 #include <boost/msm/front/state_machine_def.hpp>
@@ -71,7 +72,6 @@ namespace cr
             /* 状态转换表 */
             struct transition_table : boost::mpl::vector<
                 boost::msm::front::Row<FollowerState, ElectionTimeoutEvent, CandidateState>,
-                boost::msm::front::Row<CandidateState, ElectionTimeoutEvent, CandidateState>,
                 boost::msm::front::Row<CandidateState, MajorityVotesEvent, LeaderState>,
                 boost::msm::front::Row<CandidateState, DiscoversEvent, FollowerState>,
                 boost::msm::front::Row<LeaderState, DiscoversEvent, FollowerState>
@@ -105,6 +105,12 @@ namespace cr
              */
             Raft& getRaft();
 
+            /** 
+             * 获取raft
+             * @return raft
+             */
+            const Raft& getRaft() const;
+
             /**
              * 设置当前时间
              */
@@ -133,12 +139,34 @@ namespace cr
              */
             bool isLeader() const;
 
-        protected:
+            /**
+             * 获取消息队列
+             * @return 消息队列
+             */
+            std::deque<std::shared_ptr<pb::RaftMsg>>& getMessages();
+
+            /**
+             * 获取消息队列
+             * @return 消息队列
+             */
+            const std::deque<std::shared_ptr<pb::RaftMsg>>& getMessages() const;
+
+        private:
+
+            /* 随机选举超时时间 */
+            std::uint64_t randElectionTimeout() const;
+
+            // 友元
+            friend class FollowerState;
+            friend class CandidateState;
+            friend class LeaderState;
 
             // raft 
             Raft& raft_;
             // 当前时间
             std::uint64_t nowTime_;
+            // 消息队列
+            std::deque<std::shared_ptr<pb::RaftMsg>> messages_;
         };
 
         /** 跟随状态 */
@@ -176,6 +204,18 @@ namespace cr
 
         private:
 
+            // 处理追加日志消息
+            void handleAppendEntriesReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执追加日志消息
+            void sendAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 处理投票消息
+            void handleRequestVoteReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执投票消息
+            void sendRequestVoteResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
             // 状态机
             RaftState* state_;
             // 下一个超时时间
@@ -197,7 +237,7 @@ namespace cr
             void on_entry(const ElectionTimeoutEvent&, RaftState&);
 
             /* 离开状态 */
-            void on_exit(const ElectionTimeoutEvent&, RaftState&);
+            void on_exit(const DiscoversEvent&, RaftState&);
 
             /* 离开状态 */
             void on_exit(const MajorityVotesEvent&, RaftState&);
@@ -217,12 +257,30 @@ namespace cr
 
         private:
 
+            // 处理追加日志消息
+            bool handleAppendEntriesReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执追加日志消息
+            void sendAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 处理投票消息
+            bool handleRequestVoteReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执投票消息
+            void sendRequestVoteResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 处理投票回复消息
+            bool handleRequestVoteResp(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 发送投票请求
+            void sendRequestVoteReq(std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
             // 状态机
             RaftState* state_;
             // 选举时间
             std::uint64_t electionTime_;
             // 选票
-            std::vector<std::uint64_t> votes_;
+            std::set<std::uint64_t> votes_;
         };
 
         /** 领导则状态 */
