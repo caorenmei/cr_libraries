@@ -73,6 +73,33 @@ namespace cr
             return lastApplied_;
         }
 
+        bool Raft::propose(const std::string& value)
+        {
+            return propose(std::vector<std::string>{ value });
+        }
+
+        bool Raft::propose(const std::vector<std::string>& values)
+        {
+            if (state_.isLeader())
+            {
+                auto& storage = options_.getStorage();
+                auto logIndex = storage->getLastIndex();
+                std::vector<pb::Entry> entries;
+                for (auto&& value : values)
+                {
+                    logIndex = logIndex + 1;
+                    entries.emplace_back();
+                    auto& entry = entries.back();
+                    entry.set_index(logIndex);
+                    entry.set_term(currentTerm_);
+                    entry.set_value(value);
+                }
+                storage->append(entries);
+                return true;
+            }
+            return false;
+        }
+
         bool Raft::execute(std::size_t logEntryNum/* = 10*/)
         {
             if (lastApplied_ < commitIndex_)

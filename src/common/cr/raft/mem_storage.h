@@ -9,6 +9,12 @@ namespace cr
 {
     namespace raft
     {
+        namespace pb
+        {
+            /** 日志条目 */
+            class Entry;
+        }
+
         /** 内存日志存储接口，主要用于测试 */
         class MemStorage : public Storage
         {

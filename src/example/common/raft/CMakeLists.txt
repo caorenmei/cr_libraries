@@ -8,6 +8,8 @@ find_package(Rocksdb REQUIRED)
 include_directories(${ROCKSDB_INCLUDE_DIRS})
 
 set(cr_common_raft_safety_test_SRCS
+    server.h
+    server.cpp
     safety_test.cpp
 )
   

@@ -11,10 +11,12 @@ include_directories(${ROCKSDB_INCLUDE_DIRS})
 set(cr_common_raft_unittest_SRCS
     unittest_main.cpp
 #    candidate_unittest.cpp
-    file_storage_unittest.cpp
-#    follower_unittest.cpp
+#    file_storage_unittest.cpp
+    follower_unittest.cpp
     mem_storage_unittest.cpp
 #    leader_unittest.cpp
+    raft_utils.h
+    raft_utils.cpp
 )
   
 add_executable(cr_common_raft_unittest ${cr_common_raft_unittest_SRCS})

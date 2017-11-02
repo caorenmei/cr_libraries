@@ -11,9 +11,9 @@ namespace cr
         // 跟随者状态
         constexpr std::size_t FOLLOWER_STATE = 0;
         // 候选者状态
-        constexpr std::size_t CANDIDATE_STATE = 0;
+        constexpr std::size_t CANDIDATE_STATE = 1;
         // 领导者状态
-        constexpr std::size_t LEADER_STATE = 0;
+        constexpr std::size_t LEADER_STATE = 2;
         
 
         RaftState_::RaftState_(Raft& raft)
@@ -139,10 +139,18 @@ namespace cr
                 {
                     handleAppendEntriesReq(message, messages);
                 }
+                else if (message->has_append_entries_resp())
+                {
+
+                }
                 // 投票请求
                 else if (message->has_request_vote_req())
                 {
                     handleRequestVoteReq(message, messages);
+                }
+                else if (message->has_request_vote_resp())
+                {
+
                 }
             }
             return electionTime_;
@@ -358,7 +366,19 @@ namespace cr
                         return nowTime;
                     }
                 }
+                else if (message->has_append_entries_resp())
+                {
+
+                }
                 // 投票请求
+                else if (message->has_request_vote_req())
+                {
+                    if (handleRequestVoteReq(message, messages))
+                    {
+                        return nowTime;
+                    }
+                }
+                // 投票请求回复
                 else if (message->has_request_vote_resp())
                 {
                     if (handleRequestVoteResp(message, messages))
@@ -565,6 +585,14 @@ namespace cr
                         return nowTime;
                     }
                 }
+                // 追加日志回复
+                else if (message->has_append_entries_resp())
+                {
+                    if (handleAppendEntriesResp(message, messages))
+                    {
+                        return nowTime;
+                    }
+                }
                 // 投票请求
                 else if (message->has_request_vote_req())
                 {
@@ -573,13 +601,9 @@ namespace cr
                         return nowTime;
                     }
                 }
-                // 追加日志回复
-                else if (message->has_append_entries_resp())
+                else if (message->has_request_vote_resp())
                 {
-                    if (handleAppendEntriesResp(message, messages))
-                    {
-                        return nowTime;
-                    }
+
                 }
             }
             // 计算commitIndex
@@ -742,7 +766,7 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
-            auto maxEntryNum = options.getMaxPacketLength();
+            auto maxEntryNum = options.getMaxWaitEntriesNum();
             auto maxPacketNum = options.getMaxPacketLength();
             // 路由信息
             auto message = std::make_shared<pb::RaftMsg>();
@@ -780,7 +804,7 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
-            auto maxEntryNum = options.getMaxPacketLength();
+            auto maxEntryNum = options.getMaxWaitEntriesNum();
             auto lastLogIndex = storage->getLastIndex();
             for (auto&& node : nodes_)
             {

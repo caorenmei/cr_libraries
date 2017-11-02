@@ -92,6 +92,20 @@ namespace cr
             std::uint64_t getLastApplied() const;
 
             /**
+             * 提交日志
+             * @param value 日志数据
+             * @return true成功，false失败
+             */
+            bool propose(const std::string& value);
+
+            /**
+             * 提交日志
+             * @param value 日志数据
+             * @return true成功，false失败
+             */
+            bool propose(const std::vector<std::string>& values);
+
+            /**
              * 运行日志
              * @param logEntryNum 运行的日志条目
              * @return true还需继续运行，false其他
