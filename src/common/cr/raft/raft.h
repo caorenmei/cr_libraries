@@ -36,7 +36,7 @@ namespace cr
              * 获取状态
              * @return 状态
              */
-            RaftState& getStae();
+            RaftState& getState();
 
             /**
              * 获取状态

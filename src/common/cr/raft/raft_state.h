@@ -102,6 +102,14 @@ namespace cr
              */
             virtual std::uint64_t update(std::vector<std::shared_ptr<pb::RaftMsg>>& messages) override;
 
+            /**
+             * 状态逻辑处理
+             * @param nowTime 当前时间
+             * @param messages 输出消息
+             * @return 下一次需要update的时间
+             */
+            std::uint64_t update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
             /** 
              * 获取raft
              * @return raft

@@ -22,7 +22,7 @@ namespace cr
         Raft::~Raft()
         {}
 
-        RaftState& Raft::getStae()
+        RaftState& Raft::getState()
         {
             return state_;
         }
@@ -35,6 +35,11 @@ namespace cr
         const Options& Raft::getOptions() const
         {
             return options_;
+        }
+
+        const std::vector<std::uint64_t>& Raft::getBuddyNodeIds() const
+        {
+            return buddyNodeIds_;
         }
 
         void Raft::start(std::uint64_t nowTime)

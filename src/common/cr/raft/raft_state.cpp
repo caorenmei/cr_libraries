@@ -37,6 +37,12 @@ namespace cr
             return curState->update(messages);
         }
 
+        std::uint64_t RaftState_::update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            nowTime_ = nowTime;
+            return update(messages);
+        }
+
         Raft& RaftState_::getRaft()
         {
             return raft_;
@@ -86,7 +92,7 @@ namespace cr
         {
             auto& options = raft_.getOptions();
             auto& random = raft_.getRandom();
-            std::uniform_int_distribution<std::uint64_t> distribution(options.getMaxElectionTimeout(), options.getMaxElectionTimeout());
+            std::uniform_int_distribution<std::uint64_t> distribution(options.getMinElectionTimeout(), options.getMaxElectionTimeout());
             return distribution(random);
         }
 

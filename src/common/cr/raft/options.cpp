@@ -76,7 +76,7 @@ namespace cr
         Options& Options::setElectionTimeout(std::uint64_t minElectionTimeout, std::uint64_t maxElectionTimeout)
         {
             minElectionTimeout_ = minElectionTimeout;
-            maxElectionTimeout_ = maxElectionTimeout_;
+            maxElectionTimeout_ = maxElectionTimeout;
             return *this;
         }
 
