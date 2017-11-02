@@ -23,6 +23,9 @@ namespace cr
         /** raft算法 */
         class Raft;
 
+        /** 伙伴节点 */
+        class BuddyNode;
+
         /** 状态基类 */
         class BaseState
         {
@@ -180,17 +183,24 @@ namespace cr
             /** 析构函数 */
             ~FollowerState();
 
+            FollowerState(const FollowerState&) = delete;
+            FollowerState& operator=(const FollowerState&) = delete;
+
+            /* 进入状态 */
+            template <typename Event, typename FSM>
+            void on_entry(const Event&, FSM&)
+            {}
+
+            /* 退出状态 */
+            template <typename Event, typename FSM>
+            void on_exit(const Event&, FSM&)
+            {}
+
             /* 初始化 */
             void on_entry(const StartUpEvent&, RaftState&);
 
             /* 成为跟随者 */
             void on_entry(const DiscoversEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const ElectionTimeoutEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const FinalEvent&, RaftState&);
 
             /* 设置状态机 */
             void set_sm_ptr(RaftState* sm);
@@ -233,17 +243,21 @@ namespace cr
             /** 析构函数 */
             ~CandidateState();
 
+            CandidateState(const CandidateState&) = delete;
+            CandidateState& operator=(const CandidateState&) = delete;
+
+            /* 进入状态 */
+            template <typename Event, typename FSM>
+            void on_entry(const Event&, FSM&)
+            {}
+
+            /* 退出状态 */
+            template <typename Event, typename FSM>
+            void on_exit(const Event&, FSM&)
+            {}
+
             /* 进入状态 */
             void on_entry(const ElectionTimeoutEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const DiscoversEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const MajorityVotesEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const FinalEvent&, RaftState&);
 
             /* 设置状态机 */
             void set_sm_ptr(RaftState* sm);
@@ -294,14 +308,21 @@ namespace cr
             /** 析构函数 */
             ~LeaderState();
 
+            LeaderState(const LeaderState&) = delete;
+            LeaderState& operator=(const LeaderState&) = delete;
+
+            /* 进入状态 */
+            template <typename Event, typename FSM>
+            void on_entry(const Event&, FSM&)
+            {}
+
+            /* 退出状态 */
+            template <typename Event, typename FSM>
+            void on_exit(const Event&, FSM&)
+            {}
+
             /* 得到多数选票 */
             void on_entry(const MajorityVotesEvent&, RaftState&);
-
-            /* 其它节点成为领导者 */
-            void on_exit(const DiscoversEvent&, RaftState&);
-
-            /* 离开状态 */
-            void on_exit(const FinalEvent&, RaftState&);
 
             /* 设置状态机 */
             void set_sm_ptr(RaftState* sm);
@@ -315,8 +336,36 @@ namespace cr
 
         private:
 
+            // 处理追加日志消息
+            bool handleAppendEntriesReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执追加日志消息
+            void sendAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 处理投票消息
+            bool handleRequestVoteReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 回执投票消息
+            void sendRequestVoteResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 追加日志回复消息
+            bool handleAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 发送心跳超时消息
+            void sendAppendEntriesReq(BuddyNode& buddy, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 传输日志
+            void transferAppendEntriesReq(std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            // 广播心跳超时消息
+            void broadcastAppendEntriesReq(std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
             // 状态机
             RaftState* state_;
+            // 下一次心跳时间
+            std::uint64_t heatbeatTime_;
+            // 伙伴节点
+            std::vector<BuddyNode> nodes_;
         };
     }
 }

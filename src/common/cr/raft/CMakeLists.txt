@@ -16,12 +16,16 @@ source_group("Proto Files" FILES ${cr_common_raft_PROTOS})
 
 set(cr_common_raft_SRCS
     ${PROTO_HDRS} ${PROTO_SRCS}
+    buddy_node.h
+    buddy_node.cpp
     exception.h
     file_storage.h
     file_storage.cpp
-    storage.h
     mem_storage.h
     mem_storage.cpp
+    options.h
+    options.cpp
+    storage.h
     raft.h
     raft.cpp
     raft_state.h

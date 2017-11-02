@@ -1,5 +1,6 @@
 ﻿#include "raft_state.h"
 
+#include "buddy_node.h"
 #include "raft.h"
 #include "raft_msg.pb.h"
 
@@ -106,12 +107,6 @@ namespace cr
         {
             electionTime_ = state_->getNowTime() + state_->randElectionTimeout();
         }
-
-        void FollowerState::on_exit(const ElectionTimeoutEvent&, RaftState&)
-        {}
-
-        void FollowerState::on_exit(const FinalEvent&, RaftState&)
-        {}
 
         void FollowerState::set_sm_ptr(RaftState* sm)
         {
@@ -225,6 +220,8 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
+            auto& appendEntriesReq = request->append_entries_req();
+            auto appendLogIndex = appendEntriesReq.prev_log_index() + appendEntriesReq.entries_size();
             // 路由信息
             auto message = std::make_shared<pb::RaftMsg>();
             message->set_from_node_id(options.getNodeId());
@@ -232,6 +229,8 @@ namespace cr
             // 应答信息
             auto response = message->mutable_append_entries_resp();
             response->set_follower_term(raft.getCurrentTerm());
+            response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_append_log_index(appendLogIndex);
             response->set_last_log_index(storage->getLastIndex());
             response->set_success(success);
             // 发送
@@ -315,15 +314,6 @@ namespace cr
             votes_.clear();
         }
 
-        void CandidateState::on_exit(const DiscoversEvent&, RaftState&)
-        {}
-
-        void CandidateState::on_exit(const MajorityVotesEvent&, RaftState&)
-        {}
-
-        void CandidateState::on_exit(const FinalEvent&, RaftState&)
-        {}
-
         void CandidateState::set_sm_ptr(RaftState* sm)
         {
             state_ = sm;
@@ -372,7 +362,7 @@ namespace cr
                 }
             }
             // 检查投票, 超过半数投票，成为跟随着
-            if (votes_.size() > (1 + options.getBuddyNodeIds().size()) / 2)
+            if (votes_.size() > (1 + raft.getBuddyNodeIds().size()) / 2)
             {
                 state_->process_event(MajorityVotesEvent());
                 return nowTime;
@@ -406,6 +396,8 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
+            auto& appendEntriesReq = request->append_entries_req();
+            auto appendLogIndex = appendEntriesReq.prev_log_index() + appendEntriesReq.entries_size();
             // 路由信息
             auto message = std::make_shared<pb::RaftMsg>();
             message->set_from_node_id(options.getNodeId());
@@ -413,6 +405,8 @@ namespace cr
             // 应答信息
             auto response = message->mutable_append_entries_resp();
             response->set_follower_term(raft.getCurrentTerm());
+            response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_append_log_index(appendLogIndex);
             response->set_last_log_index(storage->getLastIndex());
             response->set_success(success);
             // 发送
@@ -487,7 +481,7 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
-            for (auto&& destNodeId : options.getBuddyNodeIds())
+            for (auto&& destNodeId : raft.getBuddyNodeIds())
             {
                 // 路由信息
                 auto message = std::make_shared<pb::RaftMsg>();
@@ -512,17 +506,16 @@ namespace cr
 
         void LeaderState::on_entry(const MajorityVotesEvent&, RaftState&)
         {
-
-        }
-
-        void LeaderState::on_exit(const DiscoversEvent&, RaftState&)
-        {
-
-        }
-
-        void LeaderState::on_exit(const FinalEvent&, RaftState&)
-        {
-
+            auto nowTime = state_->getNowTime();
+            auto& raft = state_->getRaft();
+            // 设置伙伴节点列表
+            nodes_.clear();
+            for (auto&& nodeId : raft.getBuddyNodeIds())
+            {
+                nodes_.emplace_back(nodeId);
+            }
+            // 设置心跳时间
+            heatbeatTime_ = nowTime;
         }
 
         void LeaderState::set_sm_ptr(RaftState* sm)
@@ -532,7 +525,267 @@ namespace cr
 
         std::uint64_t LeaderState::update(std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
         {
-            return state_->getNowTime();
+            auto nowTime = state_->getNowTime();
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            // 心跳超时
+            if (heatbeatTime_ <= nowTime)
+            {
+                broadcastAppendEntriesReq(messages);
+                heatbeatTime_ = nowTime + options.getHeatbeatTimeout();
+            }
+            // 处理消息
+            auto& messageQueue = state_->getMessages();
+            while (!messageQueue.empty())
+            {
+                auto message = messageQueue.front();
+                messageQueue.pop_front();
+                // 追加日志
+                if (message->has_append_entries_req())
+                {
+                    if (handleAppendEntriesReq(message, messages))
+                    {
+                        return nowTime;
+                    }
+                }
+                // 投票请求
+                else if (message->has_request_vote_req())
+                {
+                    if (handleRequestVoteReq(message, messages))
+                    {
+                        return nowTime;
+                    }
+                }
+                // 追加日志回复
+                else if (message->has_append_entries_resp())
+                {
+                    if (handleAppendEntriesResp(message, messages))
+                    {
+                        return nowTime;
+                    }
+                }
+            }
+            // 计算commitIndex
+            std::vector<std::uint64_t> commitIndexs;
+            commitIndexs.push_back(storage->getLastIndex());
+            for (auto&& buddy : nodes_)
+            {
+                commitIndexs.push_back(buddy.getMatchIndex());
+            }
+            std::sort(commitIndexs.begin(), commitIndexs.end(), std::greater<std::uint64_t>());
+            auto commitIndex = commitIndexs[(1 + nodes_.size()) / 2];
+            // 更新commitIndex
+            if (commitIndex > raft.getCommitIndex())
+            {
+                raft.setCommitIndex(commitIndex);
+            }
+            // 传输日志
+            transferAppendEntriesReq(messages);
+            // 等待心跳
+            return heatbeatTime_;
+        }
+
+        bool LeaderState::handleAppendEntriesReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& appendEntriesReq = request->append_entries_req();
+            if (appendEntriesReq.leader_term() > raft.getCurrentTerm())
+            {
+                auto& messageQueue = state_->getMessages();
+                messageQueue.push_front(request);
+                state_->process_event(DiscoversEvent());
+                return true;
+            }
+            else
+            {
+                sendAppendEntriesResp(request, false, messages);
+                return false;
+            }
+        }
+
+        void LeaderState::sendAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            auto& appendEntriesReq = request->append_entries_req();
+            auto appendLogIndex = appendEntriesReq.prev_log_index() + appendEntriesReq.entries_size();
+            // 路由信息
+            auto message = std::make_shared<pb::RaftMsg>();
+            message->set_from_node_id(options.getNodeId());
+            message->set_dest_node_id(request->from_node_id());
+            // 应答信息
+            auto response = message->mutable_append_entries_resp();
+            response->set_follower_term(raft.getCurrentTerm());
+            response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_append_log_index(appendLogIndex);
+            response->set_last_log_index(storage->getLastIndex());
+            response->set_success(success);
+            // 发送
+            messages.push_back(message);
+        }
+
+        bool LeaderState::handleRequestVoteReq(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& requestVoteReq = request->request_vote_req();
+            if (requestVoteReq.candidate_term() > raft.getCurrentTerm())
+            {
+                auto& messageQueue = state_->getMessages();
+                messageQueue.push_front(request);
+                state_->process_event(DiscoversEvent());
+                return true;
+            }
+            else
+            {
+                sendRequestVoteResp(request, false, messages);
+                return false;
+            }
+        }
+
+        void LeaderState::sendRequestVoteResp(const std::shared_ptr<pb::RaftMsg>& request, bool success, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            auto& requestVoteReq = request->request_vote_req();
+            // 路由信息
+            auto message = std::make_shared<pb::RaftMsg>();
+            message->set_from_node_id(options.getNodeId());
+            message->set_dest_node_id(request->from_node_id());
+            // 应答信息
+            auto response = message->mutable_request_vote_resp();
+            response->set_follower_term(raft.getCurrentTerm());
+            response->set_candidate_term(requestVoteReq.candidate_term());
+            response->set_success(success);
+            // 发送
+            messages.push_back(message);
+        }
+
+        bool LeaderState::handleAppendEntriesResp(const std::shared_ptr<pb::RaftMsg>& request, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            auto& appendEntriesResp = request->append_entries_resp();
+            // 任期过期
+            if (appendEntriesResp.follower_term() > raft.getCurrentTerm())
+            {
+                state_->process_event(DiscoversEvent());
+                return true;
+            }
+            // 来自的节点
+            auto nodeIter = std::find_if(nodes_.begin(), nodes_.end(), [&](const BuddyNode& buddy)
+            {
+                return buddy.getNodeId() == request->from_node_id();
+            });
+            if (nodeIter == nodes_.end())
+            {
+                return false;
+            }
+            auto nextIndex = nodeIter->getNextIndex();
+            auto waitIndex = nodeIter->getWaitIndex();
+            auto matchIndex = nodeIter->getMatchIndex();
+            // 任期不对
+            if (appendEntriesResp.leader_term() != raft.getCurrentTerm())
+            {
+                return false;
+            }
+            // 日志过期
+            auto appendLogIndex = appendEntriesResp.append_log_index();
+            if (appendLogIndex < waitIndex || appendLogIndex >= nextIndex)
+            {
+                return false;
+            }
+            // 追加日志失败
+            if (!appendEntriesResp.success())
+            {
+                nextIndex = std::min(nextIndex - 1, appendEntriesResp.last_log_index());
+                nextIndex = std::max(nextIndex, matchIndex + 1);
+                waitIndex = std::min(waitIndex, nextIndex);
+            }
+            else
+            {
+                nextIndex = std::max(nextIndex + 1, appendEntriesResp.last_log_index() + 1);
+                nextIndex = std::min(nextIndex, storage->getLastIndex() + 1);
+                waitIndex = std::max(waitIndex, appendLogIndex + 1);
+                matchIndex = std::max(matchIndex, appendLogIndex);
+            }
+            // 设置新的索引
+            nodeIter->setNextIndex(nextIndex);
+            nodeIter->setWaitIndex(waitIndex);
+            nodeIter->setMatchIndex(matchIndex);
+            // 追加成功
+            return false;
+        }
+
+        void LeaderState::sendAppendEntriesReq(BuddyNode& buddy, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            auto maxEntryNum = options.getMaxPacketLength();
+            auto maxPacketNum = options.getMaxPacketLength();
+            // 路由信息
+            auto message = std::make_shared<pb::RaftMsg>();
+            message->set_from_node_id(options.getNodeId());
+            message->set_dest_node_id(buddy.getNodeId());
+            // 领导者信息
+            auto appendEntriesReq = message->mutable_append_entries_req();
+            appendEntriesReq->set_leader_term(raft.getCurrentTerm());
+            appendEntriesReq->set_leader_commit(raft.getCommitIndex());
+            // 日志信息
+            auto nextLogIndex = buddy.getNextIndex();
+            auto waitLogIndex = buddy.getWaitIndex();
+            auto prevLogIndex = nextLogIndex - 1;
+            auto prevLogTerm = storage->getTermByIndex(prevLogIndex);
+            appendEntriesReq->set_prev_log_index(prevLogIndex);
+            appendEntriesReq->set_prev_log_term(prevLogTerm);
+            // 追加的日志
+            auto lastLogIndex = storage->getLastIndex();
+            if (nextLogIndex <= lastLogIndex && waitLogIndex + maxEntryNum <= nextLogIndex)
+            {
+                auto stopLogIndex = std::min(lastLogIndex, waitLogIndex + maxEntryNum);
+                auto entries = storage->getEntries(nextLogIndex, stopLogIndex, maxPacketNum);
+                auto appendEntries = appendEntriesReq->mutable_entries();
+                for (auto&& entry : entries)
+                {
+                    *appendEntries->Add() = entry;
+                }
+            }
+            // 发送
+            messages.push_back(message);
+        }
+
+        void LeaderState::transferAppendEntriesReq(std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            auto maxEntryNum = options.getMaxPacketLength();
+            auto lastLogIndex = storage->getLastIndex();
+            for (auto&& node : nodes_)
+            {
+                auto nextLogIndex = node.getNextIndex();
+                auto waitLogIndex = node.getWaitIndex();
+                while (nextLogIndex <= lastLogIndex && waitLogIndex + maxEntryNum <= nextLogIndex)
+                {
+                    // 发送日志
+                    sendAppendEntriesReq(node, messages);
+                    // 更新索引
+                    auto nextLogIndex = node.getNextIndex();
+                    auto waitLogIndex = node.getWaitIndex();
+                }
+            }
+        }
+
+        void LeaderState::broadcastAppendEntriesReq(std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            for (auto&& node : nodes_)
+            {
+                sendAppendEntriesReq(node, messages);
+            }
         }
 
     }

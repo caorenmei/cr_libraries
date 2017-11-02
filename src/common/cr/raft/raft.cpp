@@ -12,6 +12,7 @@ namespace cr
         Raft::Raft(const Options& options)
             : state_(std::ref(*this)),
             options_(options),
+            buddyNodeIds_(options_.getBuddyNodeIds()),
             random_(options_.getRandomSeed()),
             currentTerm_(0),
             commitIndex_(0),

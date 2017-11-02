@@ -51,6 +51,11 @@ namespace cr
             const Options& getOptions() const;
 
             /**
+             * 获取伙伴节点Id列表
+             */
+            const std::vector<std::uint64_t>& getBuddyNodeIds() const;
+
+            /**
              * 开始raft算法
              * @param nowTime 当前时间
              */
@@ -120,6 +125,8 @@ namespace cr
             RaftState state_;
             // 参数
             Options options_;
+            // 伙伴节点Id列表
+            std::vector<std::uint64_t> buddyNodeIds_;
             // 随机数
             std::mt19937 random_;
             // 当前投票
