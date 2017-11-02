@@ -364,6 +364,8 @@ namespace cr
             RaftState* state_;
             // 下一次心跳时间
             std::uint64_t heatbeatTime_;
+            // 保存的最大索引
+            std::uint64_t lastLogIndex_;
             // 伙伴节点
             std::vector<BuddyNode> nodes_;
         };

@@ -498,7 +498,8 @@ namespace cr
         }
 
         LeaderState::LeaderState()
-            : state_(nullptr)
+            : state_(nullptr),
+            lastLogIndex_(0)
         {}
 
         LeaderState::~LeaderState()
@@ -508,11 +509,20 @@ namespace cr
         {
             auto nowTime = state_->getNowTime();
             auto& raft = state_->getRaft();
+            auto& options = raft.getOptions();
+            auto& storage = options.getStorage();
+            // 最大索引
+            lastLogIndex_ = storage->getLastIndex();
             // 设置伙伴节点列表
+            auto nextIndex = lastLogIndex_ + 1;
+            auto waitIndex = nextIndex;
             nodes_.clear();
             for (auto&& nodeId : raft.getBuddyNodeIds())
             {
-                nodes_.emplace_back(nodeId);
+                BuddyNode buddyNode(nodeId);
+                buddyNode.setNextIndex(nextIndex);
+                buddyNode.setWaitIndex(waitIndex);
+                nodes_.push_back(buddyNode);
             }
             // 设置心跳时间
             heatbeatTime_ = nowTime;
@@ -576,7 +586,7 @@ namespace cr
             std::sort(commitIndexs.begin(), commitIndexs.end(), std::greater<std::uint64_t>());
             auto commitIndex = commitIndexs[(1 + nodes_.size()) / 2];
             // 更新commitIndex
-            if (commitIndex > raft.getCommitIndex())
+            if (commitIndex > raft.getCommitIndex() && commitIndex >= lastLogIndex_)
             {
                 raft.setCommitIndex(commitIndex);
             }
