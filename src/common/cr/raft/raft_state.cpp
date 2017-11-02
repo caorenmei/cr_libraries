@@ -672,6 +672,7 @@ namespace cr
             // 任期过期
             if (appendEntriesResp.follower_term() > raft.getCurrentTerm())
             {
+                raft.setCurrentTerm(appendEntriesResp.follower_term());
                 state_->process_event(DiscoversEvent());
                 return true;
             }
