@@ -48,9 +48,13 @@ namespace cr
         std::uint64_t MemStorage::getTermByIndex(std::uint64_t index) const
         {
             assert(index <= entries_.size());
-            index = std::max<std::uint64_t>(index, 1);
-            auto logIndex = static_cast<std::size_t>(index - 1);
-            return entries_[logIndex].term();
+            if (index != 0)
+            {
+                index = std::max<std::uint64_t>(index, 1);
+                auto logIndex = static_cast<std::size_t>(index - 1);
+                return entries_[logIndex].term();
+            }
+            return 0;
         }
 
         std::uint64_t MemStorage::getLastIndex() const

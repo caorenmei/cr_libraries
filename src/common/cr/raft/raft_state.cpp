@@ -200,7 +200,7 @@ namespace cr
             // 日志条目和新的产生冲突，删除这一条和之后所有的
             auto appendLogIndex = appendEntriesReq.prev_log_index() + 1;
             int entriesIndex = 0;
-            while (appendLogIndex != lastLogIndex && entriesIndex != appendEntriesReq.entries_size())
+            while (appendLogIndex <= lastLogIndex && entriesIndex < appendEntriesReq.entries_size())
             {
                 auto& appendEntry = appendEntriesReq.entries(entriesIndex);
                 auto appendLogTerm = storage->getTermByIndex(appendLogIndex);
@@ -716,6 +716,11 @@ namespace cr
                 state_->process_event(DiscoversEvent());
                 return true;
             }
+            // 任期不对
+            if (appendEntriesResp.leader_term() != raft.getCurrentTerm())
+            {
+                return false;
+            }
             // 来自的节点
             auto nodeIter = std::find_if(nodes_.begin(), nodes_.end(), [&](const BuddyNode& buddy)
             {
@@ -728,11 +733,6 @@ namespace cr
             auto nextIndex = nodeIter->getNextIndex();
             auto waitIndex = nodeIter->getWaitIndex();
             auto matchIndex = nodeIter->getMatchIndex();
-            // 任期不对
-            if (appendEntriesResp.leader_term() != raft.getCurrentTerm())
-            {
-                return false;
-            }
             // 日志过期
             auto appendLogIndex = appendEntriesResp.append_log_index();
             if (appendLogIndex < waitIndex || appendLogIndex >= nextIndex)
@@ -785,7 +785,7 @@ namespace cr
             appendEntriesReq->set_prev_log_term(prevLogTerm);
             // 追加的日志
             auto lastLogIndex = storage->getLastIndex();
-            if (nextLogIndex <= lastLogIndex && waitLogIndex + maxEntryNum <= nextLogIndex)
+            if (nextLogIndex <= lastLogIndex && nextLogIndex <= waitLogIndex + maxEntryNum)
             {
                 auto stopLogIndex = std::min(lastLogIndex, waitLogIndex + maxEntryNum);
                 auto entries = storage->getEntries(nextLogIndex, stopLogIndex, maxPacketNum);
@@ -794,6 +794,9 @@ namespace cr
                 {
                     *appendEntries->Add() = entry;
                 }
+                // 更新发送给索引
+                nextLogIndex = nextLogIndex + entries.size();
+                buddy.setNextIndex(nextLogIndex);
             }
             // 发送
             messages.push_back(message);
@@ -810,7 +813,7 @@ namespace cr
             {
                 auto nextLogIndex = node.getNextIndex();
                 auto waitLogIndex = node.getWaitIndex();
-                while (nextLogIndex <= lastLogIndex && waitLogIndex + maxEntryNum <= nextLogIndex)
+                while (nextLogIndex <= lastLogIndex && nextLogIndex < waitLogIndex + maxEntryNum)
                 {
                     // 发送日志
                     sendAppendEntriesReq(node, messages);
