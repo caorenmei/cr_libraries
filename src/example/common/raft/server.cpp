@@ -37,7 +37,7 @@ void Server::receive(std::shared_ptr<cr::raft::pb::RaftMsg> message)
 {
     // 5%丢包率
     auto randomValue = random_() % 1000;
-    if (raft_ && (randomValue < 750))
+    if (raft_ && (randomValue < 1000))
     {
         auto& state = raft_->getState();
         state.getMessages().push_back(message);
@@ -47,13 +47,13 @@ void Server::receive(std::shared_ptr<cr::raft::pb::RaftMsg> message)
 void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>>& messages)
 {
     // crash
-    if (raft_ != nullptr && nowTime >= nextCrashTime_ && nowTime <= nextCrashTime_ + crashDuration_)
-    {
-        raft_.reset();
-        leader_ = false;
-        checkIndex_ = 0;
-        value_ = 0;
-    }
+    //if (raft_ != nullptr && nowTime >= nextCrashTime_ && nowTime <= nextCrashTime_ + crashDuration_)
+    //{
+    //    raft_.reset();
+    //    leader_ = false;
+    //    checkIndex_ = 0;
+    //    value_ = 0;
+    //}
     if (raft_ == nullptr && nowTime >= nextCrashTime_ + crashDuration_)
     {
         // 构造raft
@@ -73,8 +73,8 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
         raft_ = std::make_unique<cr::raft::Raft>(options);
         raft_->start(nowTime);
         // 重设crash
-        nextCrashTime_ = nowTime + random_() % ( 60 * 1000);
-        crashDuration_ = random_() % (2 * 1000);
+        nextCrashTime_ = nowTime + random_() % (10 * 60 * 1000);
+        crashDuration_ = random_() % (5 * 1000);
         // 值生成时间
         genValueTime_ = nowTime;
     }

@@ -6,6 +6,8 @@
 
 #include "server.h"
 
+#define myAssert(expression) if (!(expression)) throw std::runtime_error(#expression)
+
 int main(int argc, char* argv[])
 {
     std::uint64_t nowTime = 0;
@@ -48,61 +50,61 @@ int main(int argc, char* argv[])
             (*iter)->receive(message);
         }
         messages.clear();
-        // 安全特性
-        auto validIter = std::partition(compServers.begin(), compServers.end(), [](const Server* lhs)
-        {
-            return lhs->isValid();
-        });
-        // 选举安全性
-        std::sort(compServers.begin(), std::partition(compServers.begin(), validIter, [](const Server* lhs)
-        {
-            return lhs->isLeader();
-        }), [](const Server* lhs, const Server* rhs)
-        {
-            return lhs->getCurrentTerm() < rhs->getCurrentTerm();
-        });
-        for (std::size_t i = 1; i < compServers.size() && compServers[i - 1]->isLeader() && compServers[i]->isLeader(); ++i)
-        {
-            auto server1 = compServers[i - 1];
-            auto server2 = compServers[i];
-            assert(server1->getCurrentTerm() != server2->getCurrentTerm());
-        }
-        // 日志匹配
-        std::sort(compServers.begin(), validIter, [](const Server* lhs, const Server* rhs)
-        {
-            return std::make_tuple(lhs->getCheckIndex(), lhs->getCommitIndex()) < std::make_tuple(rhs->getCheckIndex(), rhs->getCommitIndex());
-        });
-        for (std::size_t i = 1; i < compServers.size() && compServers[i - 1]->isValid() && compServers[i]->isValid(); ++i)
-        {
-            auto& entries1 = compServers[i - 1]->getEntries();
-            auto& entries2 = compServers[i]->getEntries();
-            auto checkIndex = std::min(compServers[i - 1]->getCheckIndex(), compServers[i]->getCheckIndex());
-            auto commitIndex = std::min(compServers[i - 1]->getCommitIndex(), compServers[i]->getCommitIndex());
-            for (; checkIndex < commitIndex; ++checkIndex)
-            {
-                auto& entry1 = entries1[checkIndex];
-                auto& entry2 = entries2[checkIndex];
-                assert(entry1.index() == entry2.index() && entry1.term() == entry2.term() && entry1.value() == entry2.value());
-            }
-            compServers[i - 1]->setCheckIndex(checkIndex);
-            compServers[i]->setCheckIndex(checkIndex);
-        }
-        // Leader完备性
-        auto leaderIter = std::stable_partition(compServers.begin(), validIter, [](const Server* lhs)
-        {
-            return lhs->isLeader();
-        });
-        for (auto iter1 = compServers.begin(); iter1 != validIter; ++iter1)
-        {
-            auto server1 = *iter1;
-            for (auto iter2 = compServers.begin(); iter2 != leaderIter; ++iter2)
-            {
-                auto server2 = *iter1;
-                if (server1->getCurrentTerm() <= server2->getCurrentTerm())
-                {
-                    assert(server1->getCommitIndex() <= server2->getCommitIndex());
-                }
-            }
-        }
+        //// 安全特性
+        //auto validIter = std::partition(compServers.begin(), compServers.end(), [](const Server* lhs)
+        //{
+        //    return lhs->isValid();
+        //});
+        //// 选举安全性
+        //std::sort(compServers.begin(), std::partition(compServers.begin(), validIter, [](const Server* lhs)
+        //{
+        //    return lhs->isLeader();
+        //}), [](const Server* lhs, const Server* rhs)
+        //{
+        //    return lhs->getCurrentTerm() < rhs->getCurrentTerm();
+        //});
+        //for (std::size_t i = 1; i < compServers.size() && compServers[i - 1]->isLeader() && compServers[i]->isLeader(); ++i)
+        //{
+        //    auto server1 = compServers[i - 1];
+        //    auto server2 = compServers[i];
+        //    myAssert(server1->getCurrentTerm() != server2->getCurrentTerm());
+        //}
+        //// 日志匹配
+        //std::sort(compServers.begin(), validIter, [](const Server* lhs, const Server* rhs)
+        //{
+        //    return std::make_tuple(lhs->getCheckIndex(), lhs->getCommitIndex()) < std::make_tuple(rhs->getCheckIndex(), rhs->getCommitIndex());
+        //});
+        //for (std::size_t i = 1; i < compServers.size() && compServers[i - 1]->isValid() && compServers[i]->isValid(); ++i)
+        //{
+        //    auto& entries1 = compServers[i - 1]->getEntries();
+        //    auto& entries2 = compServers[i]->getEntries();
+        //    auto checkIndex = std::min(compServers[i - 1]->getCheckIndex(), compServers[i]->getCheckIndex());
+        //    auto commitIndex = std::min(compServers[i - 1]->getCommitIndex(), compServers[i]->getCommitIndex());
+        //    for (; checkIndex < commitIndex; ++checkIndex)
+        //    {
+        //        auto& entry1 = entries1[checkIndex];
+        //        auto& entry2 = entries2[checkIndex];
+        //        myAssert(entry1.index() == entry2.index() && entry1.term() == entry2.term() && entry1.value() == entry2.value());
+        //    }
+        //    compServers[i - 1]->setCheckIndex(checkIndex);
+        //    compServers[i]->setCheckIndex(checkIndex);
+        //}
+        //// Leader完备性
+        //auto leaderIter = std::stable_partition(compServers.begin(), validIter, [](const Server* lhs)
+        //{
+        //    return lhs->isLeader();
+        //});
+        //for (auto iter1 = compServers.begin(); iter1 != validIter; ++iter1)
+        //{
+        //    auto server1 = *iter1;
+        //    for (auto iter2 = compServers.begin(); iter2 != leaderIter; ++iter2)
+        //    {
+        //        auto server2 = *iter1;
+        //        if (server1->getCurrentTerm() <= server2->getCurrentTerm())
+        //        {
+        //            myAssert(server1->getCommitIndex() <= server2->getCommitIndex());
+        //        }
+        //    }
+        //}
     }
 }
