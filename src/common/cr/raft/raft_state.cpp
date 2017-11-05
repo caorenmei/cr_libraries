@@ -24,8 +24,12 @@ namespace cr
         RaftState_::~RaftState_()
         {}
 
-        void RaftState_::on_entry(const StartUpEvent&, RaftState&)
-        {}
+        void RaftState_::on_entry(const StartUpEvent&, RaftState& fsm)
+        {
+            states_[FOLLOWER_STATE] = fsm.get_state_by_id(FOLLOWER_STATE);
+            states_[CANDIDATE_STATE] = fsm.get_state_by_id(CANDIDATE_STATE);
+            states_[LEADER_STATE] = fsm.get_state_by_id(LEADER_STATE);
+        }
 
         void RaftState_::on_exit(const StartUpEvent&, RaftState&)
         {}
@@ -33,7 +37,7 @@ namespace cr
         std::uint64_t RaftState_::update(std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
         {
             auto self = static_cast<RaftState*>(this);
-            auto curState = self->get_state_by_id(self->current_state()[0]);
+            auto curState = states_[self->current_state()[0]];
             return curState->update(messages);
         }
 
@@ -150,7 +154,7 @@ namespace cr
                 }
                 else if (message->has_request_vote_resp())
                 {
-
+                    
                 }
             }
             return electionTime_;
@@ -179,7 +183,6 @@ namespace cr
             if (!leaderId.is_initialized() || leaderId.get() != request->from_node_id())
             {
                 raft.setLeaderId(request->from_node_id());
-                raft.setVotedFor(boost::none);
             }
             // 超时时间
             electionTime_ = state_->getNowTime() + state_->randElectionTimeout();
@@ -244,6 +247,7 @@ namespace cr
             auto response = message->mutable_append_entries_resp();
             response->set_follower_term(raft.getCurrentTerm());
             response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_prev_log_index(appendEntriesReq.prev_log_index());
             response->set_append_log_index(appendLogIndex);
             response->set_last_log_index(storage->getLastIndex());
             response->set_success(success);
@@ -271,7 +275,7 @@ namespace cr
             }
             // 判断是否已投票
             auto votedFor = raft.getVotedFor();
-            if (votedFor.is_initialized() && votedFor != request->from_node_id())
+            if (votedFor.is_initialized() && votedFor.get() != request->from_node_id())
             {
                 sendRequestVoteResp(request, false, messages);
                 return;
@@ -324,8 +328,6 @@ namespace cr
             raft.setLeaderId(boost::none);
             // 更新选举超时
             electionTime_ = state_->getNowTime();
-            // 清空选票
-            votes_.clear();
         }
 
         void CandidateState::set_sm_ptr(RaftState* sm)
@@ -345,6 +347,7 @@ namespace cr
                 auto currentTerm = raft.getCurrentTerm();
                 raft.setCurrentTerm(currentTerm + 1);
                 //给自己一票
+                votes_.clear();
                 raft.setVotedFor(options.getNodeId());
                 votes_.insert(options.getNodeId());
                 // 发送投票请求
@@ -432,6 +435,7 @@ namespace cr
             auto response = message->mutable_append_entries_resp();
             response->set_follower_term(raft.getCurrentTerm());
             response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_prev_log_index(appendEntriesReq.prev_log_index());
             response->set_append_log_index(appendLogIndex);
             response->set_last_log_index(storage->getLastIndex());
             response->set_success(success);
@@ -659,6 +663,7 @@ namespace cr
             auto response = message->mutable_append_entries_resp();
             response->set_follower_term(raft.getCurrentTerm());
             response->set_leader_term(appendEntriesReq.leader_term());
+            response->set_prev_log_index(appendEntriesReq.prev_log_index());
             response->set_append_log_index(appendLogIndex);
             response->set_last_log_index(storage->getLastIndex());
             response->set_success(success);
@@ -732,30 +737,37 @@ namespace cr
             }
             auto nextIndex = nodeIter->getNextIndex();
             auto waitIndex = nodeIter->getWaitIndex();
+            auto waitEntriesNum = nodeIter->getWaitEntriesNum();
             auto matchIndex = nodeIter->getMatchIndex();
             // 日志过期
+            auto prevLogIndex = appendEntriesResp.prev_log_index();
             auto appendLogIndex = appendEntriesResp.append_log_index();
-            if (appendLogIndex < waitIndex || appendLogIndex >= nextIndex)
+            if (prevLogIndex + 1 < waitIndex || appendLogIndex >= nextIndex)
             {
                 return false;
             }
             // 追加日志失败
             if (!appendEntriesResp.success())
             {
-                nextIndex = std::min(nextIndex - 1, appendEntriesResp.last_log_index());
-                nextIndex = std::max(nextIndex, matchIndex + 1);
-                waitIndex = std::min(waitIndex, nextIndex);
+                nextIndex = std::min({ nextIndex - 1, appendEntriesResp.last_log_index(), prevLogIndex });
+                nextIndex = std::max<std::uint64_t>(nextIndex, 1);
+                waitIndex = nextIndex;
+                waitEntriesNum = 1;
+                matchIndex = std::min(matchIndex, nextIndex - 1);
             }
             else
             {
-                nextIndex = std::max(nextIndex + 1, appendEntriesResp.last_log_index() + 1);
+                nextIndex = std::max({ nextIndex, appendLogIndex + 1, appendEntriesResp.last_log_index() + 1 });
                 nextIndex = std::min(nextIndex, storage->getLastIndex() + 1);
-                waitIndex = std::max(waitIndex, appendLogIndex + 1);
+                waitIndex = std::max({ waitIndex, appendLogIndex + 1, appendEntriesResp.last_log_index() + 1 });
+                waitIndex = std::min(waitIndex, nextIndex);
+                waitEntriesNum = std::min(waitEntriesNum * 2, options.getMaxWaitEntriesNum());
                 matchIndex = std::max(matchIndex, appendLogIndex);
             }
             // 设置新的索引
             nodeIter->setNextIndex(nextIndex);
             nodeIter->setWaitIndex(waitIndex);
+            nodeIter->setWaitEntriesNum(waitEntriesNum);
             nodeIter->setMatchIndex(matchIndex);
             // 追加成功
             return false;
@@ -766,7 +778,7 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
-            auto maxEntryNum = options.getMaxWaitEntriesNum();
+            auto lastLogIndex = storage->getLastIndex();
             auto maxPacketNum = options.getMaxPacketLength();
             // 路由信息
             auto message = std::make_shared<pb::RaftMsg>();
@@ -779,23 +791,23 @@ namespace cr
             // 日志信息
             auto nextLogIndex = buddy.getNextIndex();
             auto waitLogIndex = buddy.getWaitIndex();
-            auto prevLogIndex = nextLogIndex - 1;
+            auto waitLogNum = buddy.getWaitEntriesNum();
+            auto prevLogIndex = nextLogIndex - ((nextLogIndex == waitLogIndex + waitLogNum) ? 2 : 1);
             auto prevLogTerm = storage->getTermByIndex(prevLogIndex);
             appendEntriesReq->set_prev_log_index(prevLogIndex);
             appendEntriesReq->set_prev_log_term(prevLogTerm);
             // 追加的日志
-            auto lastLogIndex = storage->getLastIndex();
-            if (nextLogIndex <= lastLogIndex && nextLogIndex <= waitLogIndex + maxEntryNum)
+            if (prevLogIndex + 1 <= lastLogIndex && prevLogIndex + 1 <= waitLogIndex + waitLogNum - 1)
             {
-                auto stopLogIndex = std::min(lastLogIndex, waitLogIndex + maxEntryNum);
-                auto entries = storage->getEntries(nextLogIndex, stopLogIndex, maxPacketNum);
+                auto stopLogIndex = std::min(lastLogIndex, waitLogIndex + waitLogNum - 1);
+                auto entries = storage->getEntries(prevLogIndex + 1, stopLogIndex, maxPacketNum);
                 auto appendEntries = appendEntriesReq->mutable_entries();
                 for (auto&& entry : entries)
                 {
                     *appendEntries->Add() = entry;
                 }
                 // 更新发送给索引
-                nextLogIndex = nextLogIndex + entries.size();
+                nextLogIndex = prevLogIndex + 1 + entries.size();
                 buddy.setNextIndex(nextLogIndex);
             }
             // 发送
@@ -807,19 +819,19 @@ namespace cr
             auto& raft = state_->getRaft();
             auto& options = raft.getOptions();
             auto& storage = options.getStorage();
-            auto maxEntryNum = options.getMaxWaitEntriesNum();
             auto lastLogIndex = storage->getLastIndex();
             for (auto&& node : nodes_)
             {
                 auto nextLogIndex = node.getNextIndex();
                 auto waitLogIndex = node.getWaitIndex();
-                while (nextLogIndex <= lastLogIndex && nextLogIndex < waitLogIndex + maxEntryNum)
+                auto waitLogNum = node.getWaitEntriesNum();
+                while (nextLogIndex <= lastLogIndex && nextLogIndex < waitLogIndex + waitLogNum)
                 {
                     // 发送日志
                     sendAppendEntriesReq(node, messages);
                     // 更新索引
-                    auto nextLogIndex = node.getNextIndex();
-                    auto waitLogIndex = node.getWaitIndex();
+                    nextLogIndex = node.getNextIndex();
+                    waitLogIndex = node.getWaitIndex();
                 }
             }
         }

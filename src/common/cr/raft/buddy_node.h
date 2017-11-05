@@ -52,6 +52,18 @@ namespace cr
             std::uint64_t getWaitIndex() const;
 
             /**
+             * 设置等待日志条目数
+             * @param waitEntriesNum 等待日志条目数
+             */
+            void setWaitEntriesNum(std::uint64_t waitEntriesNum);
+
+            /**
+             * 获取等待日志条目数
+             * @return 等待日志条目数
+             */
+            std::uint64_t getWaitEntriesNum() const;
+
+            /**
              * 设置匹配的索引
              * @param matchIndex 匹配的索引
              */
@@ -71,6 +83,8 @@ namespace cr
             std::uint64_t nextIndex_;
             // 等待回复的索引
             std::uint64_t waitIndex_;
+            // 等待日志条目数
+            std::uint64_t waitNum_;
             // 匹配索引
             std::uint64_t matchIndex_;
         };

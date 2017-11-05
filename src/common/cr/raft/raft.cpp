@@ -106,7 +106,8 @@ namespace cr
             {
                 auto& storage = options_.getStorage();
                 auto& executable = options_.getEexcutable();
-                auto entries = storage->getEntries(lastApplied_ + 1, lastApplied_ + logEntryNum, 0xffffffff);
+                auto stopLogIndex = std::min(lastApplied_ + logEntryNum, commitIndex_);
+                auto entries = storage->getEntries(lastApplied_ + 1, stopLogIndex, 0xffffffff);
                 for (auto& entry : entries)
                 {
                     assert(entry.index() == lastApplied_ + 1);

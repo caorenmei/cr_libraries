@@ -68,6 +68,12 @@ namespace cr
              */
             virtual std::uint64_t getLastTerm() const override;
 
+            /**
+             * 获取日志
+             * @return 日志条目
+             */
+            const std::vector<pb::Entry>& getEntries() const;
+
         private:
 
             std::vector<pb::Entry> entries_;

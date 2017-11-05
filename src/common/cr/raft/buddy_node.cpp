@@ -9,6 +9,7 @@ namespace cr
             : nodeId_(nodeId),
             nextIndex_(1),
             waitIndex_(0),
+            waitNum_(1),
             matchIndex_(0)
         {}
 
@@ -38,6 +39,16 @@ namespace cr
         std::uint64_t BuddyNode::getWaitIndex() const
         {
             return waitIndex_;
+        }
+
+        void BuddyNode::setWaitEntriesNum(std::uint64_t waitEntriesNum)
+        {
+            waitNum_ = waitEntriesNum;
+        }
+
+        std::uint64_t BuddyNode::getWaitEntriesNum() const
+        {
+            return waitNum_;
         }
 
         void BuddyNode::setMatchIndex(std::uint64_t matchIndex)

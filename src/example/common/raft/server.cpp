@@ -1,5 +1,7 @@
 ﻿#include "server.h"
 
+#include <iostream>
+
 #include <boost/lexical_cast.hpp>
 
 #include <cr/raft/raft_msg.pb.h>
@@ -11,7 +13,10 @@ Server::Server(std::uint64_t nodeId, std::vector<std::uint64_t> buddyNodeIds, st
     buddyNodeIds_(buddyNodeIds),
     storage_(std::make_shared<cr::raft::MemStorage>()),
     nextCrashTime_(0),
-    crashDuration_(0)
+    crashDuration_(0),
+    leader_(false),
+    checkIndex_(0),
+    value_(0)
 {}
 
 Server::~Server()
@@ -31,7 +36,8 @@ void Server::start(std::uint64_t nowTime)
 void Server::receive(std::shared_ptr<cr::raft::pb::RaftMsg> message)
 {
     // 5%丢包率
-    if (raft_/* && (random_() / 1000 < 950)*/)
+    auto randomValue = random_() % 1000;
+    if (raft_ && (randomValue < 750))
     {
         auto& state = raft_->getState();
         state.getMessages().push_back(message);
@@ -43,8 +49,10 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
     // crash
     if (raft_ != nullptr && nowTime >= nextCrashTime_ && nowTime <= nextCrashTime_ + crashDuration_)
     {
-        values_.clear();
         raft_.reset();
+        leader_ = false;
+        checkIndex_ = 0;
+        value_ = 0;
     }
     if (raft_ == nullptr && nowTime >= nextCrashTime_ + crashDuration_)
     {
@@ -60,24 +68,25 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
             .setMaxPacketSize(64);
         options.setEexcutable([this](std::uint64_t index, const std::string& value)
         {
-            values_.push_back(boost::lexical_cast<std::uint64_t>(value));
+            value_ += boost::lexical_cast<std::uint64_t>(value);
         });
         raft_ = std::make_unique<cr::raft::Raft>(options);
         raft_->start(nowTime);
         // 重设crash
-        nextCrashTime_ = nowTime + random_() % (10 * 60 * 1000);
-        crashDuration_ = random_() % (30 * 1000);
+        nextCrashTime_ = nowTime + random_() % ( 60 * 1000);
+        crashDuration_ = random_() % (2 * 1000);
         // 值生成时间
         genValueTime_ = nowTime;
     }
     if (raft_ != nullptr)
     {
         auto& state = raft_->getState();
+        leader_ = state.isLeader();
         // 生成值
-        if (state.isLeader() && genValueTime_ + 2 * 1000 <= nowTime)
+        if (leader_ && raft_->getCommitIndex() + 100 >= storage_->getLastIndex())
         {
             std::vector<std::string> values;
-            auto randomNum = random_() % 5 + 1;
+            auto randomNum = random_() % 20 + 1;
             for (std::size_t i = 0; i != randomNum; ++i)
             {
                 values.push_back(boost::lexical_cast<std::string>(random_()));
@@ -86,6 +95,7 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
         }
         // update
         state.update(nowTime, messages);
+        leader_ = state.isLeader();
         // 执行状态机
         while (raft_->execute()) continue;
     }
@@ -96,7 +106,51 @@ bool Server::isValid() const
     return raft_ != nullptr;
 }
 
-const std::vector<std::uint64_t>& Server::getValues() const
+// 是否是领导则
+bool Server::isLeader() const
 {
-    return values_;
+    return leader_;
+}
+
+std::uint64_t  Server::getCurrentTerm() const
+{
+    if (raft_)
+    {
+        return raft_->getCurrentTerm();
+    }
+    return 0;
+}
+
+// 获取值
+const std::vector<cr::raft::pb::Entry>& Server::getEntries() const
+{
+    return storage_->getEntries();
+}
+
+// 获取提交日志索引
+std::uint64_t Server::getCommitIndex() const
+{
+    if (raft_)
+    {
+        return raft_->getCommitIndex();
+    }
+    return 0;
+}
+
+// 获取校验过的日志索引
+std::uint64_t Server::getCheckIndex() const
+{
+    return checkIndex_;
+}
+
+// 设置校验过的日志索引
+void Server::setCheckIndex(std::uint64_t checkIndex)
+{
+    checkIndex_ = checkIndex;
+}
+
+// 计算出来的值
+std::uint64_t Server::getValue() const
+{
+    return value_;
 }

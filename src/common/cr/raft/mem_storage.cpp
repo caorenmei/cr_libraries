@@ -66,5 +66,10 @@ namespace cr
         {
             return !entries_.empty() ? entries_.back().term() : 0;
         }
+
+        const std::vector<pb::Entry>& MemStorage::getEntries() const
+        {
+            return entries_;
+        }
     }
 }

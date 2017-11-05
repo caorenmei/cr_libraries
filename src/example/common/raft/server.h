@@ -1,6 +1,7 @@
 ﻿#ifndef SERVER_H_
 #define SERVER_H_
 
+#include <cr/raft/mem_storage.h>
 #include <cr/raft/raft.h>
 
 // raft 服务器
@@ -29,8 +30,26 @@ public:
     // 服务是否有效
     bool isValid() const;
 
+    // 是否是领导则
+    bool isLeader() const;
+
+    // 获取当前任期
+    std::uint64_t getCurrentTerm() const;
+
     // 获取值
-    const std::vector<std::uint64_t>& getValues() const;
+    const std::vector<cr::raft::pb::Entry>& getEntries() const;
+
+    // 获取提交日志索引
+    std::uint64_t getCommitIndex() const;
+
+    // 获取校验过的日志索引
+    std::uint64_t getCheckIndex() const;
+
+    // 设置校验过的日志索引
+    void setCheckIndex(std::uint64_t checkIndex);
+
+    // 计算出来的值
+    std::uint64_t getValue() const;
 
 private:
 
@@ -41,17 +60,21 @@ private:
     // 伙伴节点Id
     std::vector<uint64_t> buddyNodeIds_;
     // 存储
-    std::shared_ptr<cr::raft::Storage> storage_;
+    std::shared_ptr<cr::raft::MemStorage> storage_;
     // 下一次值生成时间
     std::uint64_t nextCrashTime_;
     // crash时间
     std::uint64_t crashDuration_;
     // raft 算法
     std::unique_ptr<cr::raft::Raft> raft_;
+    // 是否是领导者
+    bool leader_;
+    // 校验索引
+    std::uint64_t checkIndex_;
     // 生成值时间
     std::uint64_t genValueTime_;
     // 值序列
-    std::vector<std::uint64_t> values_;
+    std::uint64_t value_;
 };
 
 #endif

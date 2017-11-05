@@ -2,6 +2,7 @@
 #define CR_COMMON_RAFT_RAFT_STATE_H_
 
 #include <cstdint>
+#include <array>
 #include <memory>
 #include <set>
 #include <vector>
@@ -174,6 +175,8 @@ namespace cr
 
             // raft 
             Raft& raft_;
+            // states
+            std::array<BaseState*, 3> states_;
             // 当前时间
             std::uint64_t nowTime_;
             // 消息队列
