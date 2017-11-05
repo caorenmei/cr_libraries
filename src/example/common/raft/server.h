@@ -21,6 +21,9 @@ public:
     // 当前时间
     void start(std::uint64_t nowTime);
 
+    // 崩溃
+    void crash(std::uint64_t nowTime, std::uint64_t durationTime);
+
     //接受消息
     void receive(std::shared_ptr<cr::raft::pb::RaftMsg> message);
 
@@ -61,18 +64,14 @@ private:
     std::vector<uint64_t> buddyNodeIds_;
     // 存储
     std::shared_ptr<cr::raft::MemStorage> storage_;
-    // 下一次值生成时间
-    std::uint64_t nextCrashTime_;
     // crash时间
-    std::uint64_t crashDuration_;
+    std::uint64_t crashEndTime_;
     // raft 算法
     std::unique_ptr<cr::raft::Raft> raft_;
     // 是否是领导者
     bool leader_;
     // 校验索引
     std::uint64_t checkIndex_;
-    // 生成值时间
-    std::uint64_t genValueTime_;
     // 值序列
     std::uint64_t value_;
 };

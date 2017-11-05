@@ -36,13 +36,7 @@ namespace cr
              * 获取状态
              * @return 状态
              */
-            RaftState& getState();
-
-            /**
-             * 获取状态
-             * @return 状态
-             */
-            const RaftState& getState() const;
+            const BaseRaftState& getState() const;
 
             /**
              * 获取raft参数
@@ -90,6 +84,20 @@ namespace cr
              * @return 应用的日志索引
              */
             std::uint64_t getLastApplied() const;
+
+            /**
+             * 状态逻辑处理
+             * @param nowTime 当前时间
+             * @param messages 输出消息
+             * @return 下一次需要update的时间
+             */
+            std::uint64_t update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
+
+            /**
+             * 接受到消息
+             * @param message 其它节点的消息
+             */
+            void receive(std::shared_ptr<pb::RaftMsg> message);
 
             /**
              * 提交日志

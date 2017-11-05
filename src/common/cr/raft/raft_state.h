@@ -43,6 +43,34 @@ namespace cr
             virtual std::uint64_t update(std::vector<std::shared_ptr<pb::RaftMsg>>& messages) = 0;
         };
 
+        /** raft基类 */
+        class BaseRaftState
+        {
+        public:
+
+            /** 析构函数 */
+            virtual ~BaseRaftState() = default;
+
+            /** 
+             * 是否是跟随者 
+             * @return true为跟随者，false其它
+             */
+            virtual bool isFollower() const = 0;
+
+            /** 
+             * 是否是候选者
+             * @return true为候选者，false其它
+             */
+           virtual bool isCandidate() const = 0;
+
+            /** 
+             * 是否是领导者
+             * @return true为领导者，false其它
+             */
+            virtual bool isLeader() const = 0;
+
+        };
+
         /** raft状态定义 */
         class RaftState_;
         using RaftState = boost::msm::back::state_machine<RaftState_>;
@@ -66,7 +94,7 @@ namespace cr
         class LeaderState;
 
         /** raft状态 */
-        class RaftState_ : public boost::msm::front::state_machine_def<RaftState_, BaseState>
+        class RaftState_ : public boost::msm::front::state_machine_def<RaftState_, BaseState>, public BaseRaftState
         {
         public:
 
@@ -103,14 +131,6 @@ namespace cr
              */
             virtual std::uint64_t update(std::vector<std::shared_ptr<pb::RaftMsg>>& messages) override;
 
-            /**
-             * 状态逻辑处理
-             * @param nowTime 当前时间
-             * @param messages 输出消息
-             * @return 下一次需要update的时间
-             */
-            std::uint64_t update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages);
-
             /** 
              * 获取raft
              * @return raft
@@ -137,19 +157,19 @@ namespace cr
              * 是否是跟随者 
              * @return true为跟随者，false其它
              */
-            bool isFollower() const;
+            bool isFollower() const override;
 
             /** 
              * 是否是候选者
              * @return true为候选者，false其它
              */
-            bool isCandidate() const;
+            bool isCandidate() const override;
 
             /** 
              * 是否是领导者
              * @return true为领导者，false其它
              */
-            bool isLeader() const;
+            bool isLeader() const override;
 
             /**
              * 获取消息队列

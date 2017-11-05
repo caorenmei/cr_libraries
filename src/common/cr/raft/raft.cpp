@@ -22,12 +22,7 @@ namespace cr
         Raft::~Raft()
         {}
 
-        RaftState& Raft::getState()
-        {
-            return state_;
-        }
-
-        const RaftState& Raft::getState() const
+        const BaseRaftState& Raft::getState() const
         {
             return state_;
         }
@@ -71,6 +66,20 @@ namespace cr
         std::uint64_t Raft::getLastApplied() const
         {
             return lastApplied_;
+        }
+
+        std::uint64_t Raft::update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
+        {
+            if (nowTime > state_.getNowTime())
+            {
+                state_.setNowTime(nowTime);
+            }
+            return state_.update(messages);
+        }
+
+        void Raft::receive(std::shared_ptr<pb::RaftMsg> message)
+        {
+            state_.getMessages().push_back(std::move(message));
         }
 
         bool Raft::propose(const std::string& value)

@@ -41,12 +41,6 @@ namespace cr
             return curState->update(messages);
         }
 
-        std::uint64_t RaftState_::update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
-        {
-            nowTime_ = nowTime;
-            return update(messages);
-        }
-
         Raft& RaftState_::getRaft()
         {
             return raft_;

@@ -12,8 +12,7 @@ Server::Server(std::uint64_t nodeId, std::vector<std::uint64_t> buddyNodeIds, st
     nodeId_(nodeId),
     buddyNodeIds_(buddyNodeIds),
     storage_(std::make_shared<cr::raft::MemStorage>()),
-    nextCrashTime_(0),
-    crashDuration_(0),
+    crashEndTime_(0),
     leader_(false),
     checkIndex_(0),
     value_(0)
@@ -29,32 +28,29 @@ std::uint64_t Server::getNodeId() const
 
 void Server::start(std::uint64_t nowTime)
 {
-    nextCrashTime_ = nowTime;
-    crashDuration_ = random_() / (10 * 1000);
+    crashEndTime_ = nowTime;
+}
+
+void Server::crash(std::uint64_t nowTime, std::uint64_t durationTime)
+{
+    crashEndTime_ = nowTime + durationTime;
+    raft_.reset();
+    leader_ = false;
+    checkIndex_ = 0;
+    value_ = 0;
 }
 
 void Server::receive(std::shared_ptr<cr::raft::pb::RaftMsg> message)
 {
-    // 5%丢包率
-    auto randomValue = random_() % 1000;
-    if (raft_ && (randomValue < 1000))
+    if (raft_)
     {
-        auto& state = raft_->getState();
-        state.getMessages().push_back(message);
+        raft_->receive(std::move(message));
     }
 }
 
 void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>>& messages)
 {
-    // crash
-    //if (raft_ != nullptr && nowTime >= nextCrashTime_ && nowTime <= nextCrashTime_ + crashDuration_)
-    //{
-    //    raft_.reset();
-    //    leader_ = false;
-    //    checkIndex_ = 0;
-    //    value_ = 0;
-    //}
-    if (raft_ == nullptr && nowTime >= nextCrashTime_ + crashDuration_)
+    if (raft_ == nullptr && nowTime >= crashEndTime_)
     {
         // 构造raft
         cr::raft::Options options;
@@ -72,11 +68,6 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
         });
         raft_ = std::make_unique<cr::raft::Raft>(options);
         raft_->start(nowTime);
-        // 重设crash
-        nextCrashTime_ = nowTime + random_() % (10 * 60 * 1000);
-        crashDuration_ = random_() % (5 * 1000);
-        // 值生成时间
-        genValueTime_ = nowTime;
     }
     if (raft_ != nullptr)
     {
@@ -94,7 +85,7 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
             raft_->propose(values);
         }
         // update
-        state.update(nowTime, messages);
+        raft_->update(nowTime, messages);
         leader_ = state.isLeader();
         // 执行状态机
         while (raft_->execute()) continue;
