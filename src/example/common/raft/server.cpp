@@ -60,8 +60,8 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
             .setHeartbeatTimeout(100)
             .setRandomSeed(random_())
             .setStorage(storage_)
-            .setMaxWaitEntriesNum(3)
-            .setMaxPacketSize(64);
+            .setMaxWaitEntriesNum(64)
+            .setMaxPacketSize(1024);
         options.setEexcutable([this](std::uint64_t index, const std::string& value)
         {
             value_ += boost::lexical_cast<std::uint64_t>(value);

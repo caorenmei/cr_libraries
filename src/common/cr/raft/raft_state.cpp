@@ -537,6 +537,8 @@ namespace cr
             auto& storage = options.getStorage();
             // 最大索引
             lastLogIndex_ = storage->getLastIndex();
+            // 设置自己是leader
+            raft.setLeaderId(options.getNodeId());
             // 设置伙伴节点列表
             auto nextIndex = lastLogIndex_ + 1;
             auto waitIndex = nextIndex;

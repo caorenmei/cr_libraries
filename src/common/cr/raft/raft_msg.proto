@@ -65,6 +65,24 @@ message RequestVoteResp
     bool success = 3;
 }
 
+// 转发数据到Leader
+message ProposeReq
+{
+    // 数据版本号
+    uint64 version = 1;
+    // 数据
+    repeated bytes vlaues = 2;
+}
+
+// 转发数据到Leader回复
+message ProposeResp
+{
+    // 数据版本号
+    uint64 version = 1;
+    // 是否成功
+    bool success = 2;
+}
+
 // raft 消息
 message RaftMsg
 {
@@ -85,5 +103,9 @@ message RaftMsg
         RequestVoteReq request_vote_req = 6;
         // 请求投票回复
         RequestVoteResp request_vote_resp = 7;
+        // 提交数据到Leader
+        ProposeReq  propose_req = 8;
+        // 提交数据回复
+        ProposeResp propose_resp = 9;
     }
 }
