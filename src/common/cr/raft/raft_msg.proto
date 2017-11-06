@@ -71,7 +71,7 @@ message ProposeReq
     // 数据版本号
     uint64 version = 1;
     // 数据
-    repeated bytes vlaues = 2;
+    repeated bytes values = 2;
 }
 
 // 转发数据到Leader回复
