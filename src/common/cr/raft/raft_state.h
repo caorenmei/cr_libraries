@@ -44,12 +44,12 @@ namespace cr
         };
 
         /** raft基类 */
-        class BaseRaftState
+        class IRaftState
         {
         public:
 
             /** 析构函数 */
-            virtual ~BaseRaftState() = default;
+            virtual ~IRaftState() = default;
 
             /** 
              * 是否是跟随者 
@@ -94,7 +94,7 @@ namespace cr
         class LeaderState;
 
         /** raft状态 */
-        class RaftState_ : public boost::msm::front::state_machine_def<RaftState_, BaseState>, public BaseRaftState
+        class RaftState_ : public boost::msm::front::state_machine_def<RaftState_, BaseState>, public IRaftState
         {
         public:
 
@@ -113,7 +113,7 @@ namespace cr
             explicit RaftState_(Raft& raft);
 
             /** 析构函数 */
-            ~RaftState_();
+            virtual ~RaftState_() override;
 
             RaftState_(const RaftState_&) = delete;
             RaftState_& operator=(const RaftState_&) = delete;

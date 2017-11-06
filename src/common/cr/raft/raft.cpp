@@ -22,7 +22,7 @@ namespace cr
         Raft::~Raft()
         {}
 
-        const BaseRaftState& Raft::getState() const
+        const IRaftState& Raft::getState() const
         {
             return state_;
         }

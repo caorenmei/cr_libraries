@@ -36,7 +36,7 @@ namespace cr
              * 获取状态
              * @return 状态
              */
-            const BaseRaftState& getState() const;
+            const IRaftState& getState() const;
 
             /**
              * 获取raft参数
