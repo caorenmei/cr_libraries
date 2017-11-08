@@ -33,12 +33,16 @@ message OpCommand
     bytes command_id = 2;
     // 节点版本
     uint64 version = 3;
+    // 数据版本
+    uint64 dversion = 4;
+    // 子节点版本
+    uint64 cversion = 5;
     // 操作
-    uint32 op = 4;
+    uint32 op = 6;
     // 路径
-    repeated string path = 5;
+    repeated string path = 7;
     // 创建模式
-    uint32 mode = 6;
+    uint32 mode = 8;
     // 值
-    bytes value = 7;
+    bytes value = 9;
 }

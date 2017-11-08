@@ -99,7 +99,7 @@ namespace cr
             // 节点树
             std::shared_ptr<ValueNode> root_;;
             // 临时节点
-            std::map<boost::uuids::uuid, std::set<std::weak_ptr<ValueNode>>> ephemerals_;
+            std::map<boost::uuids::uuid, std::pair<std::set<std::shared_ptr<ValueNode>>, std::size_t>> ephemerals_;
             // 临时节点删除检测
             std::map<boost::uuids::uuid, std::size_t> autoDeleteTicks_;
             // 接收器

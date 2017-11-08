@@ -22,6 +22,8 @@ namespace cr
             std::weak_ptr<ValueNode> parent;
             // 数据版本
             std::uint64_t version = 0;
+            // 数据版本
+            std::uint64_t dversion = 0;
             // 子节点版本
             std::uint64_t cversion = 0;
             // 所属客户端
@@ -173,16 +175,17 @@ namespace cr
                 CRLOG_WARN(logger_, "NameService") << "Add Node Already Exists, Path = " << pathToString(path);
                 return;
             }
-            // 版本号不匹配
-            if (parent->cversion != command.version())
-            {
-                CRLOG_WARN(logger_, "NameService") << "Add Parent Node Version Mismatch, Version = " << parent->cversion << "!=" << command.version() << ", Path = " << pathToString(path);
-                return;
-            }
             // 父节点是临时节点
             if ((parent->mode & pb::EPHEMERAL) != 0)
             {
                 CRLOG_WARN(logger_, "NameService") << "Add Parent Node Is Ephemeral Node, Version = " << parent->cversion << "!=" << command.version() << ", Path = " << pathToString(path);
+                return;
+            }
+            // 版本号不匹配
+            if ((command.mode() & pb::SEQUENTIAL) != 0 && parent->version != command.version()
+                || parent->cversion != command.cversion())
+            {
+                CRLOG_WARN(logger_, "NameService") << "Add Parent Node Version Mismatch, Version = " << parent->cversion << "!=" << command.version() << ", Path = " << pathToString(path);
                 return;
             }
             // 递增版本号
@@ -208,6 +211,13 @@ namespace cr
             // 加入到父节点
             parent->children.insert(std::make_pair(name, node));
             parent->cversion = versionIndex_;
+            // 临时节点，加入到列表
+            if ((command.mode() & pb::EPHEMERAL) != 0)
+            {
+                auto& ephemerals = ephemerals_[clientId];
+                ephemerals.first.insert(node);
+                ephemerals.second = 0;
+            }
             // 完成
             CRLOG_DEBUG(logger_, "NameService") << "Add Node Success: " << pathToString(path);
         }
@@ -259,6 +269,19 @@ namespace cr
             // 删除
             parent->children.erase(node->name);
             parent->cversion = versionIndex_;
+            // 如果是临时节点，从临时队列移除
+            if ((node->mode & pb::EPHEMERAL) != 0)
+            {
+                auto ephemeralIter = ephemerals_.find(node->owner);
+                assert(ephemeralIter != ephemerals_.end());
+                auto nodeIter = ephemeralIter->second.first.find(node);
+                assert(nodeIter != ephemeralIter->second.first.end());
+                ephemeralIter->second.first.erase(nodeIter);
+                if (ephemeralIter->second.first.empty())
+                {
+                    ephemerals_.erase(ephemeralIter);
+                }
+            }
             // 完成
             CRLOG_DEBUG(logger_, "NameService") << "Remove Node Success: " << pathToString(path);
         }
