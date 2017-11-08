@@ -5,6 +5,7 @@
 #include <random>
 
 #include <boost/filesystem.hpp>
+#include <network/uri.hpp>
 #include <boost/lexical_cast.hpp>
 #include <rocksdb/options.h>
 

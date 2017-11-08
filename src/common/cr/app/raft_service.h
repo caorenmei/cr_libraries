@@ -5,7 +5,6 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
-#include <network/uri.hpp>
 #include <rocksdb/db.h>
 
 #include <cr/core/logging.h>
