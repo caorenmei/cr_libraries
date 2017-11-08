@@ -203,7 +203,7 @@ namespace cr
             {
                 auto proxyIter = proxies_.find(toId);
                 assert(proxyIter != proxies_.end());
-                proxyIter->second->onClusterWatchEvent(ClusterProxy::UPDATE, name, fromId, name);
+                proxyIter->second->onClusterWatchEvent(ClusterProxy::UPDATE, name, fromId, data);
             }
         }
     }

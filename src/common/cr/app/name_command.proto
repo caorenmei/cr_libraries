@@ -1,0 +1,29 @@
+﻿syntax = "proto3";
+
+package cr.app.pb;
+
+// 键值存储指令
+message KeyValueCommand
+{
+    bytes client_id = 1;
+    // 指令Id
+    bytes command_id = 2;
+    // 操作
+    oneof operator
+    {
+        // 没有则添加
+        bool add_if_not_exists = 3;
+        // 添加或更新
+        bool add_or_update = 4;
+        // 更新
+        bool update = 5;
+        // 删除
+        bool remove = 6;
+    }
+    // 路径
+    repeated string path = 7;
+    // 临时节点
+    bool ephemeral = 8;
+    // 值
+    bytes value = 9;
+}
