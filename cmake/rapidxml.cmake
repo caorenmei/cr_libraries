@@ -1,4 +1,3 @@
-
 set(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(_CR_RAPIDXML_SRC "${_CR_PROJECT_ROOT}/third_party/rapidxml")
 

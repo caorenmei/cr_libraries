@@ -49,6 +49,7 @@ class function {};
 template <typename R, typename... Args>
 class function<R(Args...)> : detail::function_base {
     friend class Selector;
+    friend class State;
 public:
     using function_base::function_base;
 
@@ -71,6 +72,7 @@ public:
 template <typename... Args>
 class function<void(Args...)> : detail::function_base{
     friend class Selector;
+    friend class State;
 public:
     using function_base::function_base;
 
@@ -92,6 +94,7 @@ public:
 template <typename... R, typename... Args>
 class function<std::tuple<R...>(Args...)> : detail::function_base{
     friend class Selector;
+    friend class State;
 public:
     using function_base::function_base;
 

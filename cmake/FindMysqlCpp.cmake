@@ -10,7 +10,7 @@ find_path(MYSQLCPP_INCLUDE_DIR
   HINTS ${MYSQLCPP_ROOT_DIR}/include ${CMAKE_INCLUDE_PATH})
 
 find_library(MYSQLCPP_LIBRARY
-  NAMES mysqlcppconn-static
+  NAMES libmysqlcppconn-static.a mysqlcppconn-static
   HINTS ${MYSQLCPP_ROOT_DIR}/lib ${CMAKE_LIBRARY_PATH})
   
 set(MYSQLCPP_INCLUDE_DIRS ${MYSQLCPP_INCLUDE_DIR})

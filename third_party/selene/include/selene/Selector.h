@@ -193,7 +193,24 @@ public:
         return copy;
     }
 
-    template <typename L>
+    template<
+        typename T,
+        typename = typename std::enable_if<
+        detail::is_primitive<typename std::decay<T>::type>::value
+        >::type
+    >
+    void operator=(const T& value) const {
+        _evaluate_store([this, value]() {
+            detail::_push(_state, value);
+        });
+    }
+
+    template<
+        typename L,
+        typename = typename std::enable_if<
+        !detail::is_primitive<typename std::decay<L>::type>::value
+        >::type
+    >
     void operator=(L lambda) const {
         _evaluate_store([this, lambda]() {
             _registry->Register(lambda);
@@ -319,6 +336,18 @@ public:
         ResetStackOnScopeExit save(_state);
         _evaluate_retrieve(1);
         return detail::_pop(detail::_id<Pointer<T>>{}, _state);
+    }
+
+    template<
+        typename T,
+        typename = typename std::enable_if<
+        detail::is_primitive<typename std::decay<T>::type>::value
+        >::type
+    >
+    operator T() const {
+        ResetStackOnScopeExit save(_state);
+        _evaluate_retrieve(1);
+        return detail::_pop(detail::_id<T>{}, _state);
     }
 
     operator bool() const {

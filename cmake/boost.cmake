@@ -20,7 +20,7 @@ else()
     set(_CR_BOOST_B2_EXE "${_CR_BOOST_SRC_FLODER}/b2")
 endif()
 
-# ����b2
+# 编译b2
 if(NOT EXISTS "${_CR_BOOST_B2_EXE}")
      execute_process(COMMAND "${_CR_BOOST_BOOTSTRAP}" WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}")
 endif()
@@ -32,13 +32,13 @@ function(_build_boost buildMode)
     else()
         set(_CR_BOOST_VARIANT "release")
     endif()
-    # ����Ŀ¼
+    # 编译目录
     _cr_build_path(_CR_BOOST_BUILD_DIR "boost" ${buildMode})
     if(NOT EXISTS "${_CR_BOOST_BUILD_DIR}")
         file(MAKE_DIRECTORY "${_CR_BOOST_BUILD_DIR}")
         message(STATUS "MAKE_DIRECTORY ${_CR_BOOST_BUILD_DIR}")
     endif()
-    # ��װĿ¼
+    # 安装目录
      _cr_install_path(_CR_BOOST_INSTALL_DIR "boost" ${buildMode})
     if(NOT EXISTS "${_CR_BOOST_INSTALL_DIR}")
         file(MAKE_DIRECTORY "${_CR_BOOST_INSTALL_DIR}")
@@ -46,10 +46,10 @@ function(_build_boost buildMode)
     endif()
     set(_CR_BOOST_STAGE_LIBS "${_CR_BOOST_INSTALL_DIR}/lib")
     execute_process(
-        COMMAND "${_CR_BOOST_B2_EXE}" --stagedir=${_CR_BOOST_INSTALL_DIR} --build-dir=${_CR_BOOST_BUILD_DIR} variant=${_CR_BOOST_VARIANT} link=static threading=multi runtime-link=static
+        COMMAND "${_CR_BOOST_B2_EXE}" --stagedir=${_CR_BOOST_INSTALL_DIR} --build-dir=${_CR_BOOST_BUILD_DIR} variant=${_CR_BOOST_VARIANT} link=static threading=multi runtime-link=static 
         WORKING_DIRECTORY "${_CR_BOOST_SRC_FLODER}"
     )
-    # boostͷ�ļ�Ŀ¼
+    # boost头文件目录
     set(_CR_BOOST_INCLUDE_DIR "${_CR_BOOST_INSTALL_DIR}/include")
     if(NOT EXISTS "${_CR_BOOST_INCLUDE_DIR}")
         file(MAKE_DIRECTORY "${_CR_BOOST_INCLUDE_DIR}")

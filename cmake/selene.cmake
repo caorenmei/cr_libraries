@@ -31,7 +31,7 @@ function(_build_selene buildMode)
     endif()
     execute_process(
         COMMAND cmake -G "${_CR_MAKEFILE}" -DCMAKE_BUILD_TYPE=${buildMode} -DCMAKE_INSTALL_PREFIX=${_CR_SELENE_INSTALL_DIR} 
-		    -DLUA_DIR=${_CR_LUA_INSTALL_DIR} -Dselene_MSVC_STATIC_RUNTIME=ON -B "${_CR_SELENE_BUILD_DIR}" "${_CR_SELENE_SRC}"
+		    -DLUA_DIR=${_CR_LUA_INSTALL_DIR} -B "${_CR_SELENE_BUILD_DIR}" "${_CR_SELENE_SRC}"
         WORKING_DIRECTORY "${_CR_SELENE_BUILD_DIR}"
     )
     # 编译 & 安装

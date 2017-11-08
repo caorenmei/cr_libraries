@@ -1,0 +1,15 @@
+build/
+docs/build/
+docs/doxyxml/
+node_modules/
+*.obj
+*.sdf
+*.suo
+*.opensdf
+*.vcxproj.user
+*.o
+#*#
+*~
+.DS_Store
+__pycache__/
+Win32/

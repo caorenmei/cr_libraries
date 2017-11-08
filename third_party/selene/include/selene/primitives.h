@@ -32,6 +32,12 @@ template <>
 struct is_primitive<unsigned int> {
     static constexpr bool value = true;
 };
+#if LUA_VERSION_NUM >= 503
+template <>
+struct is_primitive<long long> {
+    static constexpr bool value = true;
+};
+#endif
 template <>
 struct is_primitive<bool> {
     static constexpr bool value = true;
@@ -101,6 +107,12 @@ inline unsigned int _get(_id<unsigned int>, lua_State *l, const int index) {
     return static_cast<unsigned>(lua_tointeger(l, index));
 #endif
 }
+
+#if LUA_VERSION_NUM >= 503
+inline long long _get(_id<long long>, lua_State *l, const int index) {
+    return lua_tointeger(l, index);
+}
+#endif
 
 inline lua_Number _get(_id<lua_Number>, lua_State *l, const int index) {
     return lua_tonumber(l, index);
@@ -203,6 +215,20 @@ inline unsigned int _check_get(_id<unsigned int>, lua_State *l, const int index)
 #endif
     return res;
 }
+
+#if LUA_VERSION_NUM >= 503
+inline long long _check_get(_id<long long>, lua_State *l, const int index) {
+    int isIteger = 0;
+    auto res = lua_tointegerx(l, index, &isIteger);
+    if (!isIteger) {
+        throw GetParameterFromLuaTypeError{
+            [](lua_State *l, int index) {luaL_checkinteger(l, index); },
+            index
+        };
+    }
+    return res;
+}
+#endif
 
 inline lua_Number _check_get(_id<lua_Number>, lua_State *l, const int index) {
     int isNum = 0;
@@ -334,6 +360,12 @@ inline void _push(lua_State *l, unsigned int u) {
     lua_pushinteger(l, static_cast<int>(u));
 #endif
 }
+
+#if LUA_VERSION_NUM >= 503
+inline void _push(lua_State *l, long long i) {
+    lua_pushinteger(l, i);
+}
+#endif
 
 inline void _push(lua_State *l, lua_Number f) {
     lua_pushnumber(l, f);

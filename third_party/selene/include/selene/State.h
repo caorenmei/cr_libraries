@@ -121,6 +121,13 @@ public:
         }
         return true;
     }
+
+    template <typename R, typename... Args>
+    std::function<R(Args...)> Wrap(function<R(Args...)> handler) {
+        handler._enable_exception_handler(_exception_handler.get());
+        return handler;
+    }
+
     void ForceGC() {
         lua_gc(_l, LUA_GCCOLLECT, 0);
     }

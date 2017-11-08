@@ -10,7 +10,7 @@ find_path(MYSQL_INCLUDE_DIR
   HINTS ${MYSQL_ROOT_DIR}/include ${CMAKE_INCLUDE_PATH})
 
 find_library(MYSQL_LIBRARY
-  NAMES mysqlclient
+  NAMES libmysqlclient_r.a mysqlclient_r mysqlclient
   HINTS ${MYSQL_ROOT_DIR}/lib ${CMAKE_LIBRARY_PATH})
   
 set(MYSQL_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR})

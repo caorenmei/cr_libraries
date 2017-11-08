@@ -1,6 +1,5 @@
-
-set(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
-set(_CR_LUA_SRC "${_CR_PROJECT_ROOT}/third_party/lua/cmake")
+﻿set(_CR_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(_CR_LUA_SRC "${_CR_PROJECT_ROOT}/third_party/lua")
 
 include(common.cmake)
 
@@ -33,7 +32,10 @@ function(_build_lua buildMode)
             WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
     )
     # 编译 & 安装
-    execute_process(COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}")
+    execute_process(
+        COMMAND ${_CR_MAKE} WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
+        COMMAND ${_CR_MAKE} install WORKING_DIRECTORY "${_CR_LUA_BUILD_DIR}"
+    )
 endfunction()
 
 _build_lua("Debug")
