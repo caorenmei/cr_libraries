@@ -132,6 +132,11 @@ namespace cr
             return !state.isCandidate() && raft_->getLeaderId() != boost::none;
         }
 
+		const cr::raft::IRaftState& RaftService::getState() const
+		{
+			return raft_->getState();
+		}
+
         bool RaftService::propose(const std::vector<std::string>& values)
         {
             if (raft_->getState().isLeader())

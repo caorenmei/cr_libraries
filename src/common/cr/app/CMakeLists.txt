@@ -12,7 +12,7 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 find_package(Rocksdb REQUIRED)
 include_directories(${ROCKSDB_INCLUDE_DIRS})
 
-set(cr_common_app_PROTOS name_command.proto name_op.proto)
+set(cr_common_app_PROTOS name_msg.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${cr_common_app_PROTOS})  
 source_group("Proto Files" FILES ${cr_common_app_PROTOS})
 

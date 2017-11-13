@@ -92,6 +92,11 @@ namespace cr
              */
             bool isLeaderConnected();
 
+			/**
+			 * 获取raft状态
+			 */
+			const cr::raft::IRaftState& getState() const;
+
             /**
              * 提交日志
              * @param value 日志数据

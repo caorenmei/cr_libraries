@@ -1,0 +1,70 @@
+﻿syntax = "proto3";
+
+package cr.app.pb;
+
+// 创建类型
+enum CreateMode
+{
+    // 持久节点
+    PERSISTENT = 0;
+    // 临时节点
+    EPHEMERAL = 1;
+    // 顺序节点
+    SEQUENTIAL = 2;
+}
+
+// 操作类型
+enum OpType
+{
+    // 添加
+    ADD = 0;
+    // 更新
+    UPDATE = 1;
+    // 删除
+    REMOVE = 2;
+}
+
+// 错误码
+enum Errors
+{
+	ERR_SUCCESS = 0;
+	// 父节点不存在
+	ERR_PARENT_NOT_EXISTS = 1;
+	// 节点已存在
+	ERR_NODE_EXISTS = 2;
+	// 节点不存在
+	ERR_NODE_NOT_EXISTS = 3;
+	// 父节点是临时节点
+	ERR_PARENT_IS_EPHEMERAL = 4;
+	// 节点版本号不匹配
+	ERR_VERSION_MISMATCH = 5;
+	// 数据版本号不匹配
+	ERR_DATA_VERSION_MISMATCH = 6;
+	// 子节点版本号不匹配
+	ERR_CHILD_VERSION_MISMATCH = 7;
+}
+
+// 键值存储指令
+message OpCommand
+{
+    // 客户端Id
+    bytes client_id = 1;
+    // 指令Id
+    bytes command_id = 2;
+	// 路径
+    repeated string path = 3;
+	// 节点名
+	string name = 4;
+	// 操作
+    uint32 op = 5;
+    // 创建模式
+    uint32 mode = 6;
+    // 节点版本
+    uint64 version = 7;
+    // 数据版本
+    uint64 dversion = 8;
+    // 子节点版本
+    uint64 cversion = 9;
+    // 值
+    bytes value = 10;
+}

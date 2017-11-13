@@ -6,14 +6,15 @@
 
 #include <boost/uuid/uuid.hpp>
 
-#include "name_command.pb.h"
-#include "name_op.pb.h"
+#include "name_msg.pb.h"
 #include "raft_service.h" 
+#include "service.h"
 
 namespace cr
 {
     namespace app
     {
+
         /** 名字服务 */
         class NameService : public RaftService
         {
@@ -59,32 +60,34 @@ namespace cr
 
         private:
 
-            // 节点数据结构
-            struct ValueNode;
-
-            // 连接
-            struct Connection;
+			// 节点数据结构
+			struct ValueNode;
+			// 连接
+			struct Connection;
 
             // 操作指令
             void onOpCommand(const pb::OpCommand& command);
 
             // 添加指令
-            void onAddCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId, 
-                const std::vector<std::string>& path, const pb::OpCommand& command);
+            std::uint32_t onAddCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId, 
+				const pb::OpCommand& command, std::shared_ptr<ValueNode>& node);
 
             // 更新指令
-            void onUpdateCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId,
-                const std::vector<std::string>& path, const pb::OpCommand& command);
+			std::uint32_t onUpdateCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId, 
+				const pb::OpCommand& command, std::shared_ptr<ValueNode>& node);
 
             // 删除指令
-            void onRemoveCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId,
-                const std::vector<std::string>& path, const pb::OpCommand& command);
+			std::uint32_t onRemoveCommand(const boost::uuids::uuid& clientId, const boost::uuids::uuid& commandId,
+				const pb::OpCommand& command, std::shared_ptr<ValueNode>& node);
 
-            // 获取节点
-            std::shared_ptr<ValueNode> getValueNode(const std::vector<std::string>& path) const;
+			// 添加自动删除节点
+			void addAutoDeleteNode(const std::shared_ptr<ValueNode>& node);
 
-            // 获取父节点
-            std::shared_ptr<ValueNode> getParentValueNode(const std::vector<std::string>& path) const;
+			// 移除自动删除节点
+			void removeAutoDeleteNode(const std::shared_ptr<ValueNode>& node);
+
+			// 自动删除临时节点
+			void onAutoDeleteTick();
 
             // io service
             boost::asio::io_service& ioService_;
@@ -96,12 +99,12 @@ namespace cr
             boost::asio::steady_timer tickTimer_;
             // 下一个版本号
             std::uint64_t versionIndex_;
+			// 节点数据结构
+			struct ValueNode;
             // 节点树
-            std::shared_ptr<ValueNode> root_;;
+            std::shared_ptr<ValueNode> root_;
             // 临时节点
             std::map<boost::uuids::uuid, std::pair<std::set<std::shared_ptr<ValueNode>>, std::size_t>> ephemerals_;
-            // 临时节点删除检测
-            std::map<boost::uuids::uuid, std::size_t> autoDeleteTicks_;
             // 接收器
             boost::asio::ip::tcp::acceptor acceptor_;
             boost::asio::ip::tcp::socket socket_;
