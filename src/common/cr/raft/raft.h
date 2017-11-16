@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <map>
 #include <memory>
 #include <random>
 
@@ -19,6 +20,17 @@ namespace cr
         class Raft
         {
         public:
+
+            /** 状态机执行结果 */
+            enum ExecuteResult
+            {
+                /** 成功 */
+                RESULT_COMMITTED = 0,
+                /** 日志截断 */
+                RESULT_LOG_TRUNC = 1,
+                /** 失去领导者状态 */
+                RESULT_LEADER_LOST = 2,
+            };
 
             /**
              * 构造函数
@@ -100,25 +112,19 @@ namespace cr
             void receive(std::shared_ptr<pb::RaftMsg> message);
 
             /**
-             * 提交日志
+             * 执行一条日志
              * @param value 日志数据
-             * @return true成功，false失败
+             * @return first 日志索引, second true成功，false失败
              */
-            bool propose(const std::string& value);
+            std::pair<std::uint64_t, bool> execute(const std::string& value);
 
             /**
-             * 提交日志
+             * 执行一条日志
              * @param value 日志数据
-             * @return true成功，false失败
+             * @param cb 提交回调
+             * @return first 日志索引, second true成功，false失败
              */
-            bool propose(const std::vector<std::string>& values);
-
-            /**
-             * 运行日志
-             * @param logEntryNum 运行的日志条目
-             * @return true还需继续运行，false其他
-             */
-            bool execute(std::size_t logEntryNum = 10);
+            std::pair<std::uint64_t, bool> execute(const std::string& value, std::function<void(std::uint64_t, int)> cb);
 
         private:
 
@@ -136,6 +142,12 @@ namespace cr
 
             /* 设置当前提交的日志索引 */
             void setCommitIndex(std::uint64_t commitIndex);
+
+            // 应用日志
+            void applyLog();
+
+            // 丢失领导者状态
+            void leaderLost();
 
             // 友元
             friend class RaftState_;
@@ -161,6 +173,8 @@ namespace cr
             std::uint64_t commitIndex_;
             // 最后应用到状态机的日志索引
             std::uint64_t lastApplied_;
+            // 提交回调
+            std::map<std::uint64_t, std::function<void(std::uint64_t, int)>> callbacks_;
         };
     }
 }

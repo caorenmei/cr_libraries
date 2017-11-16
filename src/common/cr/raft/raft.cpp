@@ -70,11 +70,27 @@ namespace cr
 
         std::uint64_t Raft::update(std::uint64_t nowTime, std::vector<std::shared_ptr<pb::RaftMsg>>& messages)
         {
-            if (nowTime > state_.getNowTime())
+            bool isLeader = state_.isLeader();
+            // 运行状态机
+            nowTime = std::max(nowTime, state_.getNowTime());
+            state_.setNowTime(nowTime);
+            auto nextTime = state_.update(messages);
+            // 不是领导了
+            if (isLeader && !state_.isLeader())
             {
-                state_.setNowTime(nowTime);
+                leaderLost();
             }
-            return state_.update(messages);
+            // 运行日志
+            if (lastApplied_ < commitIndex_)
+            {
+                applyLog();
+            }
+            // 继续运行日志
+            if (lastApplied_ < commitIndex_)
+            {
+                nextTime = nowTime;
+            }
+            return nextTime;
         }
 
         void Raft::receive(std::shared_ptr<pb::RaftMsg> message)
@@ -82,50 +98,32 @@ namespace cr
             state_.getMessages().push_back(std::move(message));
         }
 
-        bool Raft::propose(const std::string& value)
-        {
-            return propose(std::vector<std::string>{ value });
-        }
-
-        bool Raft::propose(const std::vector<std::string>& values)
+        std::pair<std::uint64_t, bool> Raft::execute(const std::string& value)
         {
             if (state_.isLeader())
             {
                 auto& storage = options_.getStorage();
                 auto logIndex = storage->getLastIndex();
-                std::vector<pb::Entry> entries;
-                for (auto&& value : values)
-                {
-                    logIndex = logIndex + 1;
-                    entries.emplace_back();
-                    auto& entry = entries.back();
-                    entry.set_index(logIndex);
-                    entry.set_term(currentTerm_);
-                    entry.set_value(value);
-                }
-                storage->append(entries);
-                return true;
+                // 创建日志
+                pb::Entry entry;
+                entry.set_index(logIndex + 1);
+                entry.set_term(currentTerm_);
+                entry.set_value(value);
+                // 提交日志
+                storage->append({ entry });
+                return std::make_pair(entry.index(), true);
             }
-            return false;
+            return std::make_pair(0, false);
         }
 
-        bool Raft::execute(std::size_t logEntryNum/* = 10*/)
+        std::pair<std::uint64_t, bool> Raft::execute(const std::string& value, std::function<void(std::uint64_t, int)> cb)
         {
-            if (lastApplied_ < commitIndex_)
+            auto result = execute(value);
+            if (result.second)
             {
-                auto& storage = options_.getStorage();
-                auto& executable = options_.getEexcutable();
-                auto stopLogIndex = std::min(lastApplied_ + logEntryNum, commitIndex_);
-                auto entries = storage->getEntries(lastApplied_ + 1, stopLogIndex, 0xffffffff);
-                for (auto& entry : entries)
-                {
-                    assert(entry.index() == lastApplied_ + 1);
-                    executable(entry.index(), entry.value());
-                    lastApplied_ = lastApplied_ + 1;
-                }
-                return lastApplied_ < commitIndex_;
+                callbacks_.insert(std::make_pair(result.first, std::move(cb)));
             }
-            return false;
+            return result;
         }
 
         std::mt19937& Raft::getRandom()
@@ -151,6 +149,48 @@ namespace cr
         void Raft::setCommitIndex(std::uint64_t commitIndex)
         {
             commitIndex_ = commitIndex;
+            // 已提交的回调
+            std::vector<std::function<void()>> callbacks;
+            auto committer = callbacks_.upper_bound(commitIndex);
+            for (auto iter = callbacks_.begin(); iter != committer; ++iter)
+            {
+                callbacks.push_back(std::bind(std::move(iter->second), iter->first, RESULT_COMMITTED));
+            }
+            callbacks_.erase(callbacks_.begin(), committer);
+            // 处理回调
+            for (auto& callback : callbacks)
+            {
+                callback();
+            }
+        }
+
+        void Raft::applyLog()
+        {
+            auto& storage = options_.getStorage();
+            auto& executable = options_.getEexcutable();
+            auto lastLogIndex = std::min(lastApplied_ + 10, commitIndex_);
+            auto entries = storage->getEntries(lastApplied_ + 1, lastLogIndex, 0xffffffff);
+            for (auto& entry : entries)
+            {
+                executable(entry.index(), entry.value());
+            }
+            lastApplied_ = lastApplied_ + entries.size();
+        }
+
+        void Raft::leaderLost()
+        {
+            // 所有回调
+            std::vector<std::function<void()>> callbacks;
+            for (auto iter = callbacks_.begin(); iter != callbacks_.end(); ++iter)
+            {
+                callbacks.push_back(std::bind(std::move(iter->second), iter->first, RESULT_COMMITTED));
+            }
+            callbacks_.clear();
+            // 处理回调
+            for (auto& callback : callbacks)
+            {
+                callback();
+            }
         }
     }
 }

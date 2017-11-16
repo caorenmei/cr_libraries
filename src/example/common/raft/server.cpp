@@ -80,15 +80,12 @@ void Server::update(std::uint64_t nowTime, std::vector<std::shared_ptr<cr::raft:
             auto randomNum = random_() % 20 + 1;
             for (std::size_t i = 0; i != randomNum; ++i)
             {
-                values.push_back(boost::lexical_cast<std::string>(random_()));
+                raft_->execute(boost::lexical_cast<std::string>(random_()));
             }
-            raft_->propose(values);
         }
         // update
         raft_->update(nowTime, messages);
         leader_ = state.isLeader();
-        // 执行状态机
-        while (raft_->execute()) continue;
     }
 }
 
