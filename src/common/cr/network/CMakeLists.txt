@@ -8,6 +8,8 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 set(cr_common_network_SRCS
     byte_buffer.h
     byte_buffer.cpp
+    connector.h
+    connector.cpp
     pb_connection.h
     pb_connection.cpp
     pb_serialize.h
