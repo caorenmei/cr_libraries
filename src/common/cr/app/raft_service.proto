@@ -1,0 +1,39 @@
+﻿syntax = "proto3";
+
+package cr.app.pb;
+
+// 服务握手
+message RaftHandshakeReq
+{
+    // 源节点Id
+    uint64 from_node_id = 1;
+    // 目的节点Id
+    uint64 dest_node_id = 2;
+}
+
+// 握手回复
+message RaftHandshakeResp
+{
+    // 握手是否成功
+    bool success = 1;
+}
+
+// 提交请求
+message RaftProposeReq
+{
+    // 请求号
+    uint64 serial_no = 1;
+    // 值
+    bytes value = 2;
+}
+
+// 提交氢气回复
+message RaftProposeResp
+{
+    // 请求号
+    uint64 serial_no = 1;
+    // 结果
+    uint32 result = 2;
+    // 索引
+    uint64 index = 3;
+}

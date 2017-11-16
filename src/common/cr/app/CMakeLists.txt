@@ -12,7 +12,10 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 find_package(Rocksdb REQUIRED)
 include_directories(${ROCKSDB_INCLUDE_DIRS})
 
-set(cr_common_app_PROTOS name_msg.proto)
+set(cr_common_app_PROTOS 
+    name_msg.proto
+    raft_service.proto
+)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${cr_common_app_PROTOS})  
 source_group("Proto Files" FILES ${cr_common_app_PROTOS})
 
@@ -27,8 +30,8 @@ set(cr_common_app_SRCS
     local_cluster_impl.h
     local_cluster_impl.cpp
     message.h
-    name_service.h
-    name_service.cpp
+#    name_service.h
+#    name_service.cpp
     raft_service.h
     raft_service.cpp
     service.h

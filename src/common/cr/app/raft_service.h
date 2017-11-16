@@ -20,27 +20,44 @@ namespace cr
 {
     namespace app
     {
+
+        /** 前置声明消息 */
+        namespace pb
+        {
+            /** 握手请求 */
+            class RaftHandshakeReq;
+            /** 握手回复 */
+            class RaftHandshakeResp;
+            /** 提交请求 */
+            class RaftProposeReq;
+            /** 提交回复 */
+            class RaftProposeResp;
+        }
+
+        /** Raft服务参数 */
+        struct RaftServiceOptions
+        {
+            /** 服务列表,格式: tcp://host:port/id -> tcp://127.0.0.1:3348/1 */
+            std::vector<std::string> servers;
+            /** 自己Id */
+            std::uint64_t myId;
+            /** 最小选举超时时间 */
+            std::uint64_t minElectionTime;
+            /** 最大选举超时时间 */
+            std::uint64_t maxElectionTime;
+            /** 心跳时间 */
+            std::uint64_t heatbeatTime;
+            // 日志路径
+            std::string binLogPath;
+        };
+
         /** Raft服务基类 */
         class RaftService : public Service
         {
         public:
 
             /** Raft服务参数 */
-            struct Options
-            {
-                /** 服务列表,格式: tcp://host:port/id -> tcp://127.0.0.1:3348/1 */
-                std::vector<std::string> servers;
-                /** 自己Id */
-                std::uint64_t myId;
-                /** 最小选举超时时间 */
-                std::uint64_t minElectionTime;
-                /** 最大选举超时时间 */
-                std::uint64_t maxElectionTime;
-                /** 心跳时间 */
-                std::uint64_t heatbeatTime;
-                // 日志路径
-                std::string binLogPath;
-            };
+            using Options = RaftServiceOptions;
 
             /**
              * 构造函数
@@ -131,28 +148,36 @@ namespace cr
             // 客户端断开连接
             void onClientDisconnectHandler(std::size_t index, const std::shared_ptr<cr::network::PbConnection>& conn);
 
+            // 连接断开
+            void onDisconnect(std::size_t index);
+
             // 其他服务消息回调
             void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, 
                 const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
 
             // 握手消息
-            void onPeerHandshakeReqHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
-
-            // 客户端消息回调
-            void onClientMessageHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
-
-            // 握手回复消息
-            void onClientHandshakeRespHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+                const std::shared_ptr<cr::app::pb::RaftHandshakeReq>& message);
 
             // 提交请求消息
-            void onClientProposeReqHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+                const std::shared_ptr<cr::app::pb::RaftProposeReq>& message);
 
             // 提交请求回复消息
-            void onClientProposeRespHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+                const std::shared_ptr<cr::app::pb::RaftProposeResp>& message);
 
-            // 获取伙伴节点Id
-            std::size_t getBuddyNodeIndex(std::uint64_t nodeId) const;
+            // 客户端消息回调
+            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+
+            // 握手回复消息
+            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftHandshakeResp>& message);
+
+            // 提交请求消息
+            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeReq>& message);
+
+            // 提交请求回复消息
+            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeResp>& message);
 
             // Raft 算法逻辑
             void update();

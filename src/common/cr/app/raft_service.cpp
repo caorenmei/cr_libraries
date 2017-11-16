@@ -13,10 +13,19 @@
 #include <cr/raft/file_storage.h>
 #include <cr/raft/raft_msg.pb.h>
 
+#include "raft_service.pb.h"
+
 namespace cr
 {
     namespace app
     {
+
+        template <typename T, typename Alloctor>
+        static std::size_t vectorIndexOf(const std::vector<T, Alloctor>& v, const T& value)
+        {
+            auto iter = std::find(v.begin(), v.end(), value);
+            return iter - v.begin();
+        }
 
         RaftService::RaftService(cr::app::Application& context, boost::asio::io_service& ioService,
             std::uint32_t id, std::string name, const Options& options)
@@ -127,7 +136,17 @@ namespace cr
         bool RaftService::isLeaderConnected()
         {
             auto& state = raft_->getState();
-            return !state.isCandidate() && raft_->getLeaderId() != boost::none;
+            auto leaderId = raft_->getLeaderId();
+            if (state.isFollower() && leaderId)
+            {
+                auto leaderIndex = vectorIndexOf(raft_->getBuddyNodeIds(), *leaderId);
+                return connections_[leaderIndex] != nullptr;
+            }
+            if (state.isLeader())
+            {
+                return true;
+            }
+            return false;
         }
 
 		const cr::raft::IRaftState& RaftService::getState() const
@@ -141,41 +160,33 @@ namespace cr
             // 领导者，直接提交任务
             if (state.isLeader())
             {
-                auto result = raft_->execute(value, std::move(cb));
-                return;
+                raft_->execute(value, std::move(cb));
+                update();
+                return true;
             }
-            // 选举状态，提交任务失败
-            if (state.isCandidate())
+            // 领导者已连接
+            if (isLeaderConnected())
             {
-                return false;
+                // 领导者
+                auto leaderId = raft_->getLeaderId();
+                auto leaderIndex = vectorIndexOf(raft_->getBuddyNodeIds(), leaderId.get());
+                // 保存回调
+                version_ = version_ + 1;
+                callbacks_[leaderIndex].insert(std::make_pair(version_, std::move(cb)));
+                // 构造消息
+                auto message = std::make_shared<cr::raft::pb::RaftMsg>();
+                message->set_from_node_id(options_.myId);
+                message->set_dest_node_id(leaderId.get());
+                // 数据请求
+                auto request = message->mutable_propose_req();
+                request->set_version(version_);
+                request->set_value(value);
+                // 发送
+                connections_[leaderIndex]->send(message);
+                // 完成
+                return true;
             }
-            // 丢失领导者，提交任务失败
-            auto leaderId = raft_->getLeaderId();
-            if (leaderId == boost::none)
-            {
-                return false;
-            }
-            // 领导者没有连接
-            auto leaderIndex = getBuddyNodeIndex(leaderId.get());
-            if (connections_[leaderIndex] == nullptr)
-            {
-                return false;
-            }
-            // 保存回调
-            version_ = version_ + 1;
-            callbacks_[leaderIndex].insert(std::make_pair(version_, std::move(cb)));
-            // 构造消息
-            auto message = std::make_shared<cr::raft::pb::RaftMsg>();
-            message->set_from_node_id(options_.myId);
-            message->set_dest_node_id(leaderId.get());
-            // 数据请求
-            auto request = message->mutable_propose_req();
-            request->set_version(version_);
-            request->set_value(value);
-            // 发送
-            connections_[leaderIndex]->send(message);
-            // 等待完成
-            return true;
+            return false;
         }
 
         void RaftService::accept()
@@ -201,6 +212,18 @@ namespace cr
                 {
                     onPeerMessageHandler(conn, std::static_pointer_cast<cr::raft::pb::RaftMsg>(message));
                 }
+                else if (message->GetDescriptor() == cr::app::pb::RaftHandshakeReq::descriptor())
+                {
+                    onPeerMessageHandler(conn, std::static_pointer_cast<cr::app::pb::RaftHandshakeReq>(message));
+                }
+                else if (message->GetDescriptor() == cr::app::pb::RaftProposeReq::descriptor())
+                {
+                    onPeerMessageHandler(conn, std::static_pointer_cast<cr::app::pb::RaftProposeReq>(message));
+                }
+                else if (message->GetDescriptor() == cr::app::pb::RaftProposeResp::descriptor())
+                {
+                    onPeerMessageHandler(conn, std::static_pointer_cast<cr::app::pb::RaftProposeResp>(message));
+                }
             });
             connection->setCloseHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn)
             {
@@ -216,11 +239,11 @@ namespace cr
             CRLOG_DEBUG(logger_, "RaftService") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
             peers_.erase(conn);
             // 从连接移除
-            auto connIter = std::find(connections_.begin(), connections_.end(), conn);
-            if (connIter != connections_.end())
+            auto connIndex = vectorIndexOf(connections_, conn);
+            if (connIndex < connections_.size())
             {
-                std::size_t index = connIter - connections_.begin();
-                connections_[index] = nullptr;
+                connections_[connIndex] = nullptr;
+                onDisconnect(connIndex);
             }
         }
 
@@ -261,7 +284,19 @@ namespace cr
                 {
                     if (message->GetDescriptor() == cr::raft::pb::RaftMsg::descriptor())
                     {
-                        onClientMessageHandler(index, std::static_pointer_cast<cr::raft::pb::RaftMsg>(message));
+                        onMessageHandler(index, std::static_pointer_cast<cr::raft::pb::RaftMsg>(message));
+                    }
+                    else if (message->GetDescriptor() == cr::app::pb::RaftHandshakeResp::descriptor())
+                    {
+                        onMessageHandler(index, std::static_pointer_cast<cr::app::pb::RaftHandshakeResp>(message));
+                    }
+                    else if (message->GetDescriptor() == cr::app::pb::RaftProposeReq::descriptor())
+                    {
+                        onMessageHandler(index, std::static_pointer_cast<cr::app::pb::RaftProposeReq>(message));
+                    }
+                    else if (message->GetDescriptor() == cr::app::pb::RaftProposeResp::descriptor())
+                    {
+                        onMessageHandler(index, std::static_pointer_cast<cr::app::pb::RaftProposeResp>(message));
                     }
                 });
                 // 关闭处理器
@@ -292,6 +327,8 @@ namespace cr
                 connections_[index] = nullptr;
                 // 重连
                 connect(index);
+                // 回调
+                onDisconnect(index);
             }
         }
 
@@ -303,7 +340,7 @@ namespace cr
             if (connIter != connections_.end())
             {
                 std::size_t index = connIter - connections_.begin();
-                onClientMessageHandler(index, message);
+                onMessageHandler(index, message);
                 return;
             }
             // 处理的第一个消息为握手消息
@@ -313,11 +350,11 @@ namespace cr
                 conn->close();
                 return;
             }
-            onPeerHandshakeReqHandler(conn, message);
+            onPeerMessageHandler(conn, message);
         }
 
-        void RaftService::onPeerHandshakeReqHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
-            const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftService::onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+            const std::shared_ptr<cr::app::pb::RaftHandshakeReq>& message)
         {
             // 判断握手条件
             bool success = false;
@@ -352,7 +389,7 @@ namespace cr
             // 握手成功, 保存连接
             if (success)
             {
-                auto index = getBuddyNodeIndex(message->from_node_id());
+                auto index = vectorIndexOf(raft_->getBuddyNodeIds(), message->from_node_id());
                 connections_[index] = conn;
             }
             // 握手失败，关闭连接
@@ -362,100 +399,123 @@ namespace cr
             }
         }
 
-        void RaftService::onClientMessageHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftService::onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+            const std::shared_ptr<cr::app::pb::RaftProposeReq>& message)
         {
-            // 源Id错误
-            auto fromIndex = getBuddyNodeIndex(message->from_node_id());
-            if (fromIndex != index)
+            auto connIter = std::find(connections_.begin(), connections_.end(), conn);
+            if (connIter != connections_.end())
             {
-                CRLOG_WARN(logger_, "RaftService") << "From Node Id Invalid: " << message->from_node_id();
+                std::size_t index = connIter - connections_.begin();
+                onMessageHandler(index, message);
                 return;
             }
-            // 目的Id错误
-            if (message->dest_node_id() != options_.myId)
-            {
-                CRLOG_WARN(logger_, "RaftService") << "Dest Node Id Invalid: " << message->from_node_id();
-                return;
-            }
-            // 流程控制消息
-            switch (message->body_case())
-            {
-            case cr::raft::pb::RaftMsg::kHandshakeReq:
-                break;
-            case cr::raft::pb::RaftMsg::kHandshakeResp:
-                onClientHandshakeRespHandler(index, message);
-                break;
-            case cr::raft::pb::RaftMsg::kProposeReq:
-                onClientProposeReqHandler(index, message);
-                break;
-            case cr::raft::pb::RaftMsg::kProposeResp:
-                onClientProposeRespHandler(index, message);
-                break;
-            default:
-                break;
-            }
-            // raft 处理消息
-
         }
 
-        void RaftService::onClientHandshakeRespHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftService::onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+            const std::shared_ptr<cr::app::pb::RaftProposeResp>& message)
         {
-            auto& handshakeResp = message->handshake_resp();
-            if (!handshakeResp.success())
+            auto connIter = std::find(connections_.begin(), connections_.end(), conn);
+            if (connIter != connections_.end())
+            {
+                std::size_t index = connIter - connections_.begin();
+                onMessageHandler(index, message);
+                return;
+            }
+        }
+
+        void RaftService::onMessageHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        {
+            // 提交消息
+            raft_->receive(message);
+        }
+
+        void RaftService::onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftHandshakeResp>& message)
+        {
+            if (!message->success())
             {
                 connections_[index]->close();
             }
         }
 
-        void RaftService::onClientProposeReqHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftService::onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeReq>& message)
         {
-            auto& proposeReq = message->propose_req();
             std::weak_ptr<cr::network::PbConnection> conn = connections_[index];
+            // 执行回调
             auto callback = [this, conn, message](std::uint64_t logIndex, int reason)
             {
                 auto connection = conn.lock();
                 if (connection)
                 {
-                    auto response = std::make_shared<cr::raft::pb::RaftMsg>();
-                    response->set_from_node_id(message->dest_node_id());
-                    response->set_dest_node_id(message->from_node_id());
-                    // 应答
-                    auto& proposeReq = message->propose_req();
-                    auto proposeResp = response->mutable_propose_resp();
-                    proposeResp->set_version(proposeReq.version());
-                    proposeResp->set_result(reason);
-                    proposeResp->set_index(logIndex);
+                    // 应答消息
+                    auto response = std::make_shared<cr::app::pb::RaftProposeResp>();
+                    response->set_serial_no(message->serial_no());
+                    response->set_result(reason);
+                    response->set_index(logIndex);
                     // 发送
                     connection->send(response);
                 }
             };
-            auto result = raft_->execute(proposeReq.value(), callback);
+            // 执行
+            auto result = raft_->execute(message->value(), callback);
+            // 不是领导者
             if (!result.second)
             {
                 callback(0, cr::raft::Raft::RESULT_LEADER_LOST);
             }
         }
 
-        void RaftService::onClientProposeRespHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftService::onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeResp>& message)
         {
             if (index < callbacks_.size())
             {
-                auto& response = message->propose_resp();
                 auto& callbacks = callbacks_[index];
-                auto cbIter = callbacks.find(response.version());
+                auto cbIter = callbacks.find(message->serial_no());
                 if (cbIter != callbacks.end())
                 {
-                    cbIter->second(response.index(), response.result());
+                    cbIter->second(message->index(), message->result());
                     callbacks.erase(cbIter);
                 }
             }
         }
 
-        std::size_t RaftService::getBuddyNodeIndex(std::uint64_t nodeId) const
+        void RaftService::update()
         {
-            auto& buddyIds = raft_->getBuddyNodeIds();
-            auto idIter = std::find(buddyIds.begin(), buddyIds.end(), nodeId);
-            return idIter - buddyIds.begin();
+            auto timePoint = std::chrono::steady_clock::now();
+            auto nowTime = std::chrono::duration_cast<std::chrono::milliseconds>(timePoint.time_since_epoch());
+            std::uint64_t nextTime = nowTime.count();
+            // 执行逻辑update
+            auto& state = raft_->getState();
+            bool leaderConnected = isLeaderConnected();
+            auto nextTime = raft_->update(nowTime.count(), messages_);
+            bool nowLeaderConnected = isLeaderConnected();
+            // 领导者连接状态
+            if (leaderConnected && !nowLeaderConnected)
+            {
+                onLeaderDisconnected();
+            }
+            else if (!leaderConnected && nowLeaderConnected)
+            {
+                onLeaderConnected();
+            }
+            // 发送消息
+            for (auto&& message : messages_)
+            {
+                auto nodeIndex = vectorIndexOf(raft_->getBuddyNodeIds(), message->dest_node_id());
+                if (nodeIndex < connections_.size() && connections_[nodeIndex] != nullptr)
+                {
+                    connections_[nodeIndex]->send(message);
+                }
+            }
+            messages_.clear();
+            // 投递定时器
+            timer_.expires_from_now(std::chrono::milliseconds(nextTime - nowTime.count()));
+            timer_.async_wait([this](const boost::system::error_code& error)
+            {
+                if (!error)
+                {
+                    update();
+                }
+            });
         }
     }
 }
