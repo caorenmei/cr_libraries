@@ -65,36 +65,6 @@ message RequestVoteResp
     bool success = 3;
 }
 
-// 转发数据到Leader
-message ProposeReq
-{
-    // 数据版本号
-    uint64 version = 1;
-    // 数据
-    bytes value = 2;
-}
-
-// 转发数据到Leader回复
-message ProposeResp
-{
-    // 数据版本号
-    uint64 version = 1;
-    // 是否成功
-    uint32 result = 2;
-    // 日志索引
-    uint64 index = 3;
-}
-
-// 握手消息
-message HandshakeReq
-{}
-
-// 握手消息回复
-message HandshakeResp
-{
-    bool success = 1;
-}
-
 // raft 消息
 message RaftMsg
 {
@@ -115,13 +85,5 @@ message RaftMsg
         RequestVoteReq request_vote_req = 6;
         // 请求投票回复
         RequestVoteResp request_vote_resp = 7;
-        // 提交数据到Leader
-        ProposeReq  propose_req = 8;
-        // 提交数据回复
-        ProposeResp propose_resp = 9;
-        // 握手消息
-        HandshakeReq handshake_req = 10;
-        // 握手消息回复
-        HandshakeResp handshake_resp = 11;
     }
 }

@@ -1,5 +1,5 @@
-﻿#ifndef CR_COMMON_APP_RAFT_SERVICE_H_
-#define CR_COMMON_APP_RAFT_SERVICE_H_
+﻿#ifndef CR_COMMON_RAFT_RAFT_SERVICE_H_
+#define CR_COMMON_RAFT_RAFT_SERVICE_H_
 
 #include <random>
 #include <map>
@@ -9,29 +9,23 @@
 #include <boost/asio/steady_timer.hpp>
 #include <rocksdb/db.h>
 
+#include <cr/app/service.h>
 #include <cr/core/logging.h>
 #include <cr/network/connector.h>
 #include <cr/network/pb_connection.h>
-#include <cr/raft/raft.h>
 
-#include "service.h"
+#include "raft.h"
+#include "raft_node.h"
 
 namespace cr
 {
-    namespace app
+    namespace raft
     {
-
         /** 前置声明消息 */
         namespace pb
         {
             /** 握手请求 */
             class RaftHandshakeReq;
-            /** 握手回复 */
-            class RaftHandshakeResp;
-            /** 提交请求 */
-            class RaftProposeReq;
-            /** 提交回复 */
-            class RaftProposeResp;
         }
 
         /** Raft服务参数 */
@@ -52,7 +46,7 @@ namespace cr
         };
 
         /** Raft服务基类 */
-        class RaftService : public Service
+        class RaftService : public cr::app::Service
         {
         public:
 
@@ -131,53 +125,26 @@ namespace cr
             void accept();
 
             // 客户端套接字
-            void onAcceptHandler();
+            void onConnectHandler();
+
+            // 客户端套接字
+            void onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
 
             // 远程服务器断开
-            void onPeerDisconectedHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onDisconectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
 
-            // 连接其他节点
-            void connect();
+            // 消息处理器
+            void onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+                const std::shared_ptr<google::protobuf::Message>& message);
 
-            // 连接其他节点
-            void connect(std::size_t index);
-
-            // 连接成功回调
-            void onClientConnectedHandler(std::size_t index, const std::shared_ptr<cr::network::PbConnection>& conn);
-
-            // 客户端断开连接
-            void onClientDisconnectHandler(std::size_t index, const std::shared_ptr<cr::network::PbConnection>& conn);
-
-            // 连接断开
-            void onDisconnect(std::size_t index);
-
-            // 其他服务消息回调
-            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, 
-                const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+            // 消息处理器
+            void onMessageHandler(const std::shared_ptr<RaftNode>& node, const std::shared_ptr<google::protobuf::Message>& message);
 
             // 握手消息
-            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<cr::app::pb::RaftHandshakeReq>& message);
+            void onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message);
 
-            // 提交请求消息
-            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<cr::app::pb::RaftProposeReq>& message);
-
-            // 提交请求回复消息
-            void onPeerMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<cr::app::pb::RaftProposeResp>& message);
-
-            // 客户端消息回调
-            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
-
-            // 握手回复消息
-            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftHandshakeResp>& message);
-
-            // 提交请求消息
-            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeReq>& message);
-
-            // 提交请求回复消息
-            void onMessageHandler(std::size_t index, const std::shared_ptr<cr::app::pb::RaftProposeResp>& message);
+            // 节点连接回调
+            void onNodeConnectHandler(const std::shared_ptr<RaftNode>& node);
 
             // Raft 算法逻辑
             void update();
@@ -191,24 +158,19 @@ namespace cr
             // 随机数
             std::mt19937 random_;
             // 本地文件
-            rocksdb::DB* rocksdb_;
+            std::unique_ptr<rocksdb::DB> rocksdb_;
             // 状态机
-            std::unique_ptr<cr::raft::Raft> raft_;
-            // 数据版本
-            std::uint64_t version_;
+            std::unique_ptr<Raft> raft_;
             // 心跳定时器
             boost::asio::steady_timer timer_;
-            // tcp监听器
+            // tcp服务器
+            boost::asio::ip::tcp::endpoint server_;
             boost::asio::ip::tcp::acceptor acceptor_;
             boost::asio::ip::tcp::socket socket_;
             // 服务连接
-            std::set<std::shared_ptr<cr::network::PbConnection>> peers_;
-            // 连接器
-            std::vector<std::shared_ptr<cr::network::Connector>> connectors_;
-            // 其他节点连接
-            std::vector<std::shared_ptr<cr::network::PbConnection>> connections_;
-            // 回调
-            std::vector<std::map<std::uint32_t, std::function<void(std::uint64_t, int)>>> callbacks_;
+            std::map<std::shared_ptr<cr::network::PbConnection>, std::shared_ptr<RaftNode>> connections_;
+            // 节点
+            std::map<std::uint64_t, std::shared_ptr<RaftNode>> nodes_;
             // 消息队列
             std::vector<std::shared_ptr<cr::raft::pb::RaftMsg>> messages_;
         };

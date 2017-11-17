@@ -4,13 +4,16 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+find_package(CppNetLib REQUIRED)
+include_directories(${CPPNETLIB_INCLUDE_DIRS})
+
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 find_package(Rocksdb REQUIRED)
 include_directories(${ROCKSDB_INCLUDE_DIRS})
 
-set(cr_common_raft_PROTOS raft_msg.proto)
+set(cr_common_raft_PROTOS raft_msg.proto raft_service.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${cr_common_raft_PROTOS})  
 source_group("Proto Files" FILES ${cr_common_raft_PROTOS})
 
@@ -28,6 +31,10 @@ set(cr_common_raft_SRCS
     storage.h
     raft.h
     raft.cpp
+    raft_node.h
+    raft_node.cpp
+    raft_service.h
+    raft_service.cpp
     raft_state.h
     raft_state.cpp
 )

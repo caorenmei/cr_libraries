@@ -32,6 +32,11 @@ namespace cr
             return options_;
         }
 
+        std::uint64_t Raft::getNodeId() const
+        {
+            return options_.getNodeId();
+        }
+
         const std::vector<std::uint64_t>& Raft::getBuddyNodeIds() const
         {
             return buddyNodeIds_;

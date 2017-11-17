@@ -57,7 +57,14 @@ namespace cr
             const Options& getOptions() const;
 
             /**
+             * 获取自己的Id
+             * @return 自己的Id
+             */
+            std::uint64_t getNodeId() const;
+
+            /**
              * 获取伙伴节点Id列表
+             * @return 伙伴节点Id列表
              */
             const std::vector<std::uint64_t>& getBuddyNodeIds() const;
 

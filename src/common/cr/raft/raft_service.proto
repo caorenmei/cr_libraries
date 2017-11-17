@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package cr.app.pb;
+package cr.raft.pb;
 
 // 服务握手
 message RaftHandshakeReq
