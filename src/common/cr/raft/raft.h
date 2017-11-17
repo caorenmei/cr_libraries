@@ -29,7 +29,7 @@ namespace cr
                 /** 日志截断 */
                 RESULT_LOG_TRUNC = 1,
                 /** 失去领导者状态 */
-                RESULT_LEADER_LOST = 2,
+                RESULT_LEADER_CHANGED = 2,
             };
 
             /**
@@ -151,10 +151,10 @@ namespace cr
             void setCommitIndex(std::uint64_t commitIndex);
 
             // 应用日志
-            void applyLog();
+            void apply();
 
             // 丢失领导者状态
-            void leaderLost();
+            void leaderChanged();
 
             // 友元
             friend class RaftState_;

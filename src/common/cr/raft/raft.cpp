@@ -83,12 +83,12 @@ namespace cr
             // 不是领导了
             if (isLeader && !state_.isLeader())
             {
-                leaderLost();
+                leaderChanged();
             }
             // 运行日志
             if (lastApplied_ < commitIndex_)
             {
-                applyLog();
+                apply();
             }
             // 继续运行日志
             if (lastApplied_ < commitIndex_)
@@ -169,7 +169,7 @@ namespace cr
             }
         }
 
-        void Raft::applyLog()
+        void Raft::apply()
         {
             auto& storage = options_.getStorage();
             auto& executable = options_.getEexcutable();
@@ -182,19 +182,11 @@ namespace cr
             lastApplied_ = lastApplied_ + entries.size();
         }
 
-        void Raft::leaderLost()
+        void Raft::leaderChanged()
         {
-            // 所有回调
-            std::vector<std::function<void()>> callbacks;
-            for (auto iter = callbacks_.begin(); iter != callbacks_.end(); ++iter)
+            for (auto& callback : std::move(callbacks_))
             {
-                callbacks.push_back(std::bind(std::move(iter->second), iter->first, RESULT_COMMITTED));
-            }
-            callbacks_.clear();
-            // 处理回调
-            for (auto& callback : callbacks)
-            {
-                callback();
+                callback.second(callback.first, RESULT_LEADER_CHANGED);
             }
         }
     }

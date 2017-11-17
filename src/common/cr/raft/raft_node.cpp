@@ -197,7 +197,7 @@ namespace cr
             connectCallback_(shared_from_this());
             for (auto& callback : std::move(callbacks_))
             {
-                callback.second(0, cr::raft::Raft::RESULT_LEADER_LOST);
+                callback.second(0, cr::raft::Raft::RESULT_LEADER_CHANGED);
             }
         }
 
@@ -265,7 +265,7 @@ namespace cr
             }
             else
             {
-                callback(0, cr::raft::Raft::RESULT_LEADER_LOST);
+                callback(0, cr::raft::Raft::RESULT_LEADER_CHANGED);
             }
         }
 
