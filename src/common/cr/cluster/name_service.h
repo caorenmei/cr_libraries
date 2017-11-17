@@ -1,14 +1,16 @@
-﻿#ifndef CR_COMMON_APP_NAME_SERVICE_H_
-#define CR_COMMON_APP_NAME_SERVICE_H_
+﻿#ifndef CR_COMMON_CLUSTER_NAME_SERVICE_H_
+#define CR_COMMON_CLUSTER_NAME_SERVICE_H_
 
 #include <map>
 #include <set>
 
 #include <boost/uuid/uuid.hpp>
 
-#include "name_msg.pb.h"
-#include "raft_service.h" 
-#include "service.h"
+#include <cr/raft/raft_service.h>
+
+#include "name_service.h"
+#include "name_service.pb.h"
+#include "service_options.h"
 
 namespace cr
 {
@@ -16,18 +18,12 @@ namespace cr
     {
 
         /** 名字服务 */
-        class NameService : public RaftService
+        class NameService : public cr::raft::RaftService
         {
         public:
 
             /** 服务参数 */
-            struct Options : RaftService::Options
-            {
-                /** tick 时长*/
-                std::uint64_t tickTime;
-                /** 自动删除 tick */
-                std::size_t deleteLimit;
-            };
+            using Options = ServiceOptions;
 
             /**
              * 构造函数

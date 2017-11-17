@@ -16,6 +16,7 @@
 
 #include "raft.h"
 #include "raft_node.h"
+#include "service_options.h"
 
 namespace cr
 {
@@ -28,30 +29,13 @@ namespace cr
             class RaftHandshakeReq;
         }
 
-        /** Raft服务参数 */
-        struct RaftServiceOptions
-        {
-            /** 服务列表,格式: tcp://host:port/id -> tcp://127.0.0.1:3348/1 */
-            std::vector<std::string> servers;
-            /** 自己Id */
-            std::uint64_t myId;
-            /** 最小选举超时时间 */
-            std::uint64_t minElectionTime;
-            /** 最大选举超时时间 */
-            std::uint64_t maxElectionTime;
-            /** 心跳时间 */
-            std::uint64_t heatbeatTime;
-            // 日志路径
-            std::string binLogPath;
-        };
-
         /** Raft服务基类 */
         class RaftService : public cr::app::Service
         {
         public:
 
             /** Raft服务参数 */
-            using Options = RaftServiceOptions;
+            using Options = ServiceOptions;
 
             /**
              * 构造函数

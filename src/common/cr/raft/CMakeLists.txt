@@ -37,6 +37,7 @@ set(cr_common_raft_SRCS
     raft_service.cpp
     raft_state.h
     raft_state.cpp
+    service_options.h
 )
 
 add_library(cr_common_raft ${cr_common_raft_SRCS} ${cr_common_raft_PROTOS})
