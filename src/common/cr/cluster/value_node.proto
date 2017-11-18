@@ -1,0 +1,28 @@
+﻿syntax = "proto3";
+
+package cr.cluster.pb;
+
+// 节点版本号
+message ValueNodeVersion
+{
+    // 节点版本
+    uint64 version = 1;
+    // 数据版本
+    uint64 dversion = 2;
+    // 子节点版本
+    uint64 cversion = 3;
+}
+
+// 节点
+message ValueNode
+{
+    // 节点名
+    string name = 1;
+    // 节点类型
+    uint32 mode = 2;
+    // 节点序号
+    uint64 serial_no = 3;
+    // 所有者
+    bytes owner = 4;
+    // 
+}
