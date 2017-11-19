@@ -4,7 +4,7 @@
 
 namespace cr
 {
-    namespace cluster
+    namespace zk
     {
         DataNode::DataNode(std::string parent, std::string name, std::string data, const DataNodeStat& stat)
             : parent_(std::move(parent)),

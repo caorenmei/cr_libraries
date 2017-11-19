@@ -1,12 +1,15 @@
-﻿#ifndef CR_COMMON_CLUSTER_DATA_NODE_STAT_H_
-#define CR_COMMON_CLUSTER_DATA_NODE_STAT_H_
+﻿#ifndef CR_COMMON_ZK_DATA_NODE_STAT_H_
+#define CR_COMMON_ZK_DATA_NODE_STAT_H_
 
 #include <cstdint>
 #include <string>
 
+#include <boost/optional.hpp>
+#include <boost/uuid/uuid.hpp>
+
 namespace cr
 {
-    namespace cluster
+    namespace zk
     {
         /** 节点源信息 */
         class DataNodeStat
@@ -59,13 +62,13 @@ namespace cr
              * 设置节点所有者
              * @param owner 节点所有者
              */
-            void setOwner(std::string owner);
+            void setOwner(const boost::optional<boost::uuids::uuid>& owner);
 
             /**
              * 获取节点所有者
              * @return 节点所有者
              */
-            const std::string& getOwner() const;
+            const boost::optional<boost::uuids::uuid>& getOwner() const;
 
         private:
 
@@ -76,7 +79,7 @@ namespace cr
             // 版本号, 数据
             std::uint64_t dversion_;
             // 拥有者
-            std::string owner_;
+            boost::optional<boost::uuids::uuid> owner_;
         };
     }
 }

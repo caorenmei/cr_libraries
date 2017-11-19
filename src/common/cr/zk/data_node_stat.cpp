@@ -2,7 +2,7 @@
 
 namespace cr
 {
-    namespace cluster
+    namespace zk
     {
         DataNodeStat::DataNodeStat()
             : version_(0),
@@ -43,12 +43,12 @@ namespace cr
             return dversion_;
         }
 
-        void DataNodeStat::setOwner(std::string owner)
+        void DataNodeStat::setOwner(const boost::optional<boost::uuids::uuid>& owner)
         {
-            owner_ = std::move(owner);
+            owner_ = owner;
         }
 
-        const std::string& DataNodeStat::getOwner() const
+        const boost::optional<boost::uuids::uuid>& DataNodeStat::getOwner() const
         {
             return owner_;
         }

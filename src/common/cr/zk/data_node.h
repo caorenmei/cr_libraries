@@ -1,5 +1,5 @@
-﻿#ifndef CR_COMMON_CLUSTER_DATA_NODE_H_
-#define CR_COMMON_CLUSTER_DATA_NODE_H_
+﻿#ifndef CR_COMMON_ZK_DATA_NODE_H_
+#define CR_COMMON_ZK_DATA_NODE_H_
 
 #include <cstdint>
 #include <set>
@@ -9,7 +9,7 @@
 
 namespace cr
 {
-    namespace cluster
+    namespace zk
     {
         /** 数据节点 */
         class DataNode

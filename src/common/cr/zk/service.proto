@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package cr.app.pb;
+package cr.zk.pb;
 
 // 创建类型
 enum CreateMode
