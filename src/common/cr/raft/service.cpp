@@ -5,11 +5,8 @@
 #include <random>
 
 #include <boost/filesystem.hpp>
-#include <network/uri.hpp>
-#include <boost/lexical_cast.hpp>
 #include <rocksdb/options.h>
 
-#include <cr/core/streams.h>
 #include <cr/raft/file_storage.h>
 #include <cr/raft/raft_msg.pb.h>
 
@@ -32,44 +29,36 @@ namespace cr
             acceptor_(ioService_),
             socket_(ioService_)
         {
-            // 解析node
-            std::map<std::uint64_t, boost::asio::ip::tcp::endpoint> servers;
+            // 姐弟Id
             std::vector<std::uint64_t> buddyIds;
-            for (auto& server : options_.servers)
+            for (auto& server : options_.getNodes())
             {
-                ::network::uri uri(server);
-                // 解析节点
-                auto id = boost::lexical_cast<std::uint64_t>(uri.path().to_string().substr(1));
-                auto ip = boost::asio::ip::address::from_string(uri.host().to_string());
-                auto port = boost::lexical_cast<std::uint16_t>(uri.port().to_string());
-                boost::asio::ip::tcp::endpoint endpoint(ip, port);
-                servers.insert(std::make_pair(id, endpoint));
-                if (id == options_.myId)
+                if (server.first == options_.getMyId())
                 {
-                    server_ = endpoint;
+                    server_ = server.second;
                 }
                 else
                 {
-                    buddyIds.push_back(id);
+                    buddyIds.push_back(server.first);
                 }
             }
             // 创建目录
-            boost::filesystem::create_directories(options_.binLogPath);
+            boost::filesystem::create_directories(options_.getBinLogPath());
             // 打开db
             rocksdb::Options dbOptions;
             dbOptions.create_if_missing = true;
             rocksdb::DB* db = nullptr;
-            auto status = rocksdb::DB::Open(dbOptions, options_.binLogPath, &db);
+            auto status = rocksdb::DB::Open(dbOptions, options_.getBinLogPath(), &db);
             assert(status.ok());
             rocksdb_ = std::unique_ptr<rocksdb::DB>(db);
             // storage
             auto storage = std::make_shared<cr::raft::FileStorage>(rocksdb_.get(), logger_);
             // options
             cr::raft::Options raftOptons;
-            raftOptons.setNodeId(options_.myId)
+            raftOptons.setNodeId(options_.getMyId())
                 .setBuddyNodeIds(buddyIds)
-                .setElectionTimeout(options_.minElectionTime, options_.maxElectionTime)
-                .setHeartbeatTimeout(options_.heatbeatTime)
+                .setElectionTimeout(options_.getMinElectionTime(), options_.getMaxElectionTime())
+                .setHeartbeatTimeout(options_.getHeartbeatTime())
                 .setRandomSeed(random_())
                 .setStorage(storage)
                 .setMaxWaitEntriesNum(64)
@@ -80,7 +69,7 @@ namespace cr
             });
             raft_ = std::make_unique<cr::raft::Raft>(raftOptons);
             // 创建节点
-            for (auto& server : servers)
+            for (auto& server : options_.getNodes())
             {
                 auto node = std::make_shared<RaftNode>(ioService_, logger_, *raft_, server.first, server.second);
                 node->setConnectCallback([this](const std::shared_ptr<RaftNode>& node)
@@ -277,7 +266,7 @@ namespace cr
                     break;
                 }
                 // 节点不匹配
-                if (message->from_node_id() == message->dest_node_id() && message->dest_node_id() != options_.myId)
+                if (message->from_node_id() == message->dest_node_id() && message->dest_node_id() != options_.getMyId())
                 {
                     break;
                 }
