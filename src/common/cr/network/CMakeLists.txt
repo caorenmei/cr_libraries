@@ -6,20 +6,16 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 set(cr_common_network_SRCS
+    byte_buffer_stream.h
+    byte_buffer_stream.cpp
     byte_buffer.h
     byte_buffer.cpp
     connector.h
     connector.cpp
-    pb_connection.h
-    pb_connection.cpp
-    pb_serialize.h
-    pb_serialize.cpp
-)
-
-set(cr_common_network_HEADERS
-    byte_buffer.h
-    pb_connection.h
-    pb_serialize.h
+    connection.h
+    connection.cpp
+    protobuf_codec.h
+    protobuf_codec.cpp
 )
 
 add_library(cr_common_network ${cr_common_network_SRCS})

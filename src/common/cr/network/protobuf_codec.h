@@ -1,6 +1,7 @@
-﻿#ifndef CR_COMMON_NETOWRK_PROTOBUF_H_
-#define CR_COMMON_NETOWRK_PROTOBUF_H_
+﻿#ifndef CR_COMMON_NETOWRK_PROTOBUF_CODEC_H_
+#define CR_COMMON_NETOWRK_PROTOBUF_CODEC_H_
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 
@@ -43,6 +44,16 @@ namespace cr
             using ErrorCallback = std::function<void(const std::shared_ptr<Connection>&, ErrorCode)>;
 
             /**
+             * 构造函数
+             * @param checksum 验证校验码
+             * @param maxPacketLength 最大包长
+             */
+            explicit ProtobufCodec(bool verifyCheck = true, std::uint32_t maxPacketLength = 64 * 1024 * 1024);
+
+            /** 析构函数 */
+            ~ProtobufCodec();
+
+            /**
              * 发送消息
              * @param conn 连接
              * @param message 消息
@@ -70,8 +81,16 @@ namespace cr
 
         private:
 
+            // 使用校验码
+            bool verifyCheck_;
+            // 最大包长
+            std::size_t maxPacketLength_;
             // 消息回调
             MessageCallback messageCallback_;
+            // 错误回调
+            ErrorCallback errorCallback_;
+            // 缓冲区
+            std::string tempBuffer_;
         };
     }
 }
