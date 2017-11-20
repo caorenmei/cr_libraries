@@ -16,7 +16,17 @@ namespace cr
             running_(false),
             connected_(raft.getNodeId() == id),
             serialNo_(0)
-        {}
+        {
+            codec_.setMessageHandler([this](const std::shared_ptr<cr::network::Connection>& conn,
+                const std::shared_ptr<google::protobuf::Message>& message)
+            {
+                onMessageHandler(message);
+            });
+            codec_.setErrorHandler([this](const std::shared_ptr<cr::network::Connection>& conn, int)
+            {
+                onMessageErrorHandler(conn);
+            });
+        }
 
         RaftNode::~RaftNode()
         {}
@@ -81,7 +91,7 @@ namespace cr
             }
         }
 
-        void RaftNode::onConnect(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void RaftNode::onConnect(const std::shared_ptr<cr::network::Connection>& conn)
         {
             if (running_ && !connected_)
             {
@@ -91,7 +101,7 @@ namespace cr
             }
         }
 
-        void RaftNode::onDisconnect(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void RaftNode::onDisconnect(const std::shared_ptr<cr::network::Connection>& conn)
         {
             if (running_ && connected_)
             {
@@ -113,7 +123,7 @@ namespace cr
         {
             if (running_ && connected_)
             {
-                connection_->send(message);
+                codec_.send(connection_, *message);
             }
         }
 
@@ -133,10 +143,10 @@ namespace cr
                     serialNo_ = serialNo_ + 1;
                     callbacks_.insert(std::make_pair(serialNo_, cb));
                     // 转发请求
-                    auto request = std::make_shared<cr::raft::pb::RaftProposeReq>();
-                    request->set_serial_no(serialNo_);
-                    request->set_value(value);
-                    connection_->send(request);
+                    cr::raft::pb::RaftProposeReq request;
+                    request.set_serial_no(serialNo_);
+                    request.set_value(value);
+                    codec_.send(connection_, request);
                     // 完成
                     return true;
                 }
@@ -148,36 +158,35 @@ namespace cr
         {
             if (running_)
             {
-                cr::network::PbConnection::Options options;
-                auto conn = std::make_shared<cr::network::PbConnection>(std::move(socket), logger_, options);
+                auto conn = std::make_shared<cr::network::Connection>(std::move(socket));
                 onConnectHandler(conn);
             }
         }
 
-        void RaftNode::onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void RaftNode::onConnectHandler(const std::shared_ptr<cr::network::Connection>& conn)
         {
             connection_ = conn;
             // 消息处理器
-            connection_->setMessageHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<google::protobuf::Message>& message)
+            connection_->setMessageHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::Connection>& conn,
+                cr::network::ByteBuffer& buffer)
             {
-                onMessageHandler(message);
+                codec_.onMessage(conn, buffer);
             });
             // 关闭处理器
-            connection_->setCloseHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn)
+            connection_->setCloseHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::Connection>& conn)
             {
                 onDisconnectHandler(conn);
             });
             // 开始
             connection_->start();
             // 握手
-            auto request = std::make_shared<cr::raft::pb::RaftHandshakeReq>();
-            request->set_from_node_id(raft_.getNodeId());
-            request->set_dest_node_id(id_);
-            connection_->send(request);
+            pb::RaftHandshakeReq request;
+            request.set_from_node_id(raft_.getNodeId());
+            request.set_dest_node_id(id_);
+            codec_.send(connection_, request);
         }
 
-        void RaftNode::onDisconnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void RaftNode::onDisconnectHandler(const std::shared_ptr<cr::network::Connection>& conn)
         {
             if (running_)
             {
@@ -192,6 +201,11 @@ namespace cr
                     onConnectHandler(std::move(socket));
                 });
             }
+        }
+
+        void RaftNode::onMessageErrorHandler(const std::shared_ptr<cr::network::Connection>& conn)
+        {
+            conn->close();
         }
 
         void RaftNode::onDisconnect()
@@ -209,30 +223,30 @@ namespace cr
             {
                 auto descriptor = message->GetDescriptor();
                 // 握手消息
-                if (descriptor == cr::raft::pb::RaftHandshakeResp::descriptor())
+                if (descriptor == pb::RaftHandshakeResp::descriptor())
                 {
-                    onMessageHandler(std::static_pointer_cast<cr::raft::pb::RaftHandshakeResp>(message));
+                    onMessageHandler(std::static_pointer_cast<pb::RaftHandshakeResp>(message));
                 }
                 // 逻辑消息
                 if (connected_)
                 {
-                    if (descriptor == cr::raft::pb::RaftProposeReq::descriptor())
+                    if (descriptor == pb::RaftProposeReq::descriptor())
                     {
-                        onMessageHandler(std::static_pointer_cast<cr::raft::pb::RaftProposeReq>(message));
+                        onMessageHandler(std::static_pointer_cast<pb::RaftProposeReq>(message));
                     }
-                    else if (descriptor == cr::raft::pb::RaftProposeResp::descriptor())
+                    else if (descriptor == pb::RaftProposeResp::descriptor())
                     {
-                        onMessageHandler(std::static_pointer_cast<cr::raft::pb::RaftProposeResp>(message));
+                        onMessageHandler(std::static_pointer_cast<pb::RaftProposeResp>(message));
                     }
-                    else if (descriptor == cr::raft::pb::RaftMsg::descriptor())
+                    else if (descriptor == pb::RaftMsg::descriptor())
                     {
-                        onMessageHandler(std::static_pointer_cast<cr::raft::pb::RaftMsg>(message));
+                        onMessageHandler(std::static_pointer_cast<pb::RaftMsg>(message));
                     }
                 }
             }
         }
 
-        void RaftNode::onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftHandshakeResp>& message)
+        void RaftNode::onMessageHandler(const std::shared_ptr<pb::RaftHandshakeResp>& message)
         {
             if (message->success())
             {
@@ -245,19 +259,19 @@ namespace cr
             }
         }
 
-        void RaftNode::onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftProposeReq>& message)
+        void RaftNode::onMessageHandler(const std::shared_ptr<pb::RaftProposeReq>& message)
         {
-            auto conn = std::weak_ptr<cr::network::PbConnection>(connection_);
-            auto callback = [serialNo = message->serial_no(), conn](std::uint64_t index, int reason)
+            auto conn = std::weak_ptr<cr::network::Connection>(connection_);
+            auto callback = [this, serialNo = message->serial_no(), conn](std::uint64_t index, int reason)
             {
                 auto connection = conn.lock();
                 if (connection != nullptr)
                 {
-                    auto response = std::make_shared<cr::raft::pb::RaftProposeResp>();
-                    response->set_serial_no(serialNo);
-                    response->set_result(reason);
-                    response->set_index(index);
-                    connection->send(response);
+                    pb::RaftProposeResp response;
+                    response.set_serial_no(serialNo);
+                    response.set_result(reason);
+                    response.set_index(index);
+                    codec_.send(connection, response);
                 }
             };
             if (raft_.getState().isLeader())
@@ -271,7 +285,7 @@ namespace cr
             }
         }
 
-        void RaftNode::onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftProposeResp>& message)
+        void RaftNode::onMessageHandler(const std::shared_ptr<pb::RaftProposeResp>& message)
         {
             auto callbackIter = callbacks_.find(message->serial_no());
             if (callbackIter != callbacks_.end())
@@ -281,7 +295,7 @@ namespace cr
             }
         }
 
-        void RaftNode::onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftMsg>& message)
+        void RaftNode::onMessageHandler(const std::shared_ptr<pb::RaftMsg>& message)
         {
             raft_.receive(message);
             updateCallback_(shared_from_this());

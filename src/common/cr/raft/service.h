@@ -11,8 +11,9 @@
 
 #include <cr/app/service.h>
 #include <cr/core/logging.h>
+#include <cr/network/connection.h>
 #include <cr/network/connector.h>
-#include <cr/network/pb_connection.h>
+#include <cr/network/protobuf_codec.h>
 
 #include "raft.h"
 #include "raft_node.h"
@@ -112,20 +113,20 @@ namespace cr
             void onConnectHandler();
 
             // 客户端套接字
-            void onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onConnectHandler(const std::shared_ptr<cr::network::Connection>& conn);
 
             // 远程服务器断开
-            void onDisconectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onDisconectHandler(const std::shared_ptr<cr::network::Connection>& conn);
 
             // 消息处理器
-            void onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+            void onMessageHandler(const std::shared_ptr<cr::network::Connection>& conn,
                 const std::shared_ptr<google::protobuf::Message>& message);
 
-            // 消息处理器
-            void onMessageHandler(const std::shared_ptr<RaftNode>& node, const std::shared_ptr<google::protobuf::Message>& message);
+            // 消息解析失败
+            void onMessageErrorHandler(const std::shared_ptr<cr::network::Connection>& conn);
 
             // 握手消息
-            void onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message);
+            void onMessageHandler(const std::shared_ptr<cr::network::Connection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message);
 
             // 节点连接回调
             void onNodeConnectHandler(const std::shared_ptr<RaftNode>& node);
@@ -152,7 +153,9 @@ namespace cr
             boost::asio::ip::tcp::acceptor acceptor_;
             boost::asio::ip::tcp::socket socket_;
             // 服务连接
-            std::map<std::shared_ptr<cr::network::PbConnection>, std::shared_ptr<RaftNode>> connections_;
+            std::map<std::shared_ptr<cr::network::Connection>, std::shared_ptr<RaftNode>> connections_;
+            // 消息编解码器
+            cr::network::ProtobufCodec codec_;
             // 节点
             std::map<std::uint64_t, std::shared_ptr<RaftNode>> nodes_;
             // 消息队列

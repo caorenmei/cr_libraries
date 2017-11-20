@@ -92,7 +92,17 @@ namespace cr
                     update();
                 });
                 nodes_.insert(std::make_pair(server.first, node));
-            }        
+            }    
+            // 编解码器
+            codec_.setMessageHandler([this](const std::shared_ptr<cr::network::Connection>& conn,
+                const std::shared_ptr<google::protobuf::Message>& message)
+            {
+                onMessageHandler(conn, message);
+            });
+            codec_.setErrorHandler([this](const std::shared_ptr<cr::network::Connection>& conn, int)
+            {
+                onMessageErrorHandler(conn);
+            });
         }
 
         Service::~Service()
@@ -195,21 +205,20 @@ namespace cr
 
         void Service::onConnectHandler()
         {
-            cr::network::PbConnection::Options options;
-            auto conn = std::make_shared<cr::network::PbConnection>(std::move(socket_), logger_, options);
+            auto conn = std::make_shared<cr::network::Connection>(std::move(socket_));
             onConnectHandler(conn);
         }
 
-        void Service::onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void Service::onConnectHandler(const std::shared_ptr<cr::network::Connection>& conn)
         {
             auto peerEndpoint = conn->getRemoteEndpoint();
             CRLOG_DEBUG(logger_, "Service") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
-            conn->setMessageHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn,
-                const std::shared_ptr<google::protobuf::Message>& message)
+            conn->setMessageHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::Connection>& conn,
+                cr::network::ByteBuffer& buffer)
             {
-                onMessageHandler(conn, message);
+                codec_.onMessage(conn, buffer);
             });
-            conn->setCloseHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn)
+            conn->setCloseHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::Connection>& conn)
             {
                 onDisconectHandler(conn);
             });
@@ -217,7 +226,7 @@ namespace cr
             conn->start();
         }
 
-        void Service::onDisconectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void Service::onDisconectHandler(const std::shared_ptr<cr::network::Connection>& conn)
         {
             auto peerEndpoint = conn->getRemoteEndpoint();
             CRLOG_DEBUG(logger_, "Service") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
@@ -232,7 +241,7 @@ namespace cr
             }
         }
 
-        void Service::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+        void Service::onMessageHandler(const std::shared_ptr<cr::network::Connection>& conn,
             const std::shared_ptr<google::protobuf::Message>& message)
         {
             if (message->GetDescriptor() == pb::RaftHandshakeReq::descriptor())
@@ -247,7 +256,12 @@ namespace cr
             }
         }
 
-        void Service::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message)
+        void Service::onMessageErrorHandler(const std::shared_ptr<cr::network::Connection>& conn)
+        {
+            conn->close();
+        }
+
+        void Service::onMessageHandler(const std::shared_ptr<cr::network::Connection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message)
         {
             auto connIter = connections_.find(conn);
             if (connIter != connections_.end())
@@ -278,9 +292,9 @@ namespace cr
                 success = true;
             } while (0);
             // 回复
-            auto response = std::make_shared<pb::RaftHandshakeResp>();
-            response->set_success(success);
-            conn->send(response);
+            pb::RaftHandshakeResp response;
+            response.set_success(success);
+            codec_.send(conn, response);
             // 回调连接成功
             if (success)
             {

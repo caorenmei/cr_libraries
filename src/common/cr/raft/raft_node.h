@@ -10,8 +10,9 @@
 #include <boost/asio.hpp>
 
 #include <cr/core/logging.h>
+#include <cr/network/connection.h>
 #include <cr/network/connector.h>
-#include <cr/network/pb_connection.h>
+#include <cr/network/protobuf_codec.h>
 
 #include "raft.h"
 #include "raft_msg.pb.h"
@@ -102,13 +103,13 @@ namespace cr
              * 有客户端连接上
              * @param conn 连接
              */
-            void onConnect(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onConnect(const std::shared_ptr<cr::network::Connection>& conn);
 
             /**
              * 连接断开
              * @param conn 连接
              */
-            void onDisconnect(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onDisconnect(const std::shared_ptr<cr::network::Connection>& conn);
 
             /**
              * 接受到消息
@@ -135,10 +136,13 @@ namespace cr
             void onConnectHandler(boost::asio::ip::tcp::socket socket);
             
             // 连接建立
-            void onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onConnectHandler(const std::shared_ptr<cr::network::Connection>& conn);
 
             // 连接断开
-            void onDisconnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn);
+            void onDisconnectHandler(const std::shared_ptr<cr::network::Connection>& conn);
+
+            // 消息解析失败
+            void onMessageErrorHandler(const std::shared_ptr<cr::network::Connection>& conn);
 
             // 连接断开
             void onDisconnect();
@@ -147,16 +151,16 @@ namespace cr
             void onMessageHandler(const std::shared_ptr<google::protobuf::Message>& message);
 
             // 握手回执
-            void onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftHandshakeResp>& message);
+            void onMessageHandler(const std::shared_ptr<pb::RaftHandshakeResp>& message);
 
             // 转发消息
-            void onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftProposeReq>& message);
+            void onMessageHandler(const std::shared_ptr<pb::RaftProposeReq>& message);
 
             // 转发回执
-            void onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftProposeResp>& message);
+            void onMessageHandler(const std::shared_ptr<pb::RaftProposeResp>& message);
 
             // raft 消息
-            void onMessageHandler(const std::shared_ptr<cr::raft::pb::RaftMsg>& message);
+            void onMessageHandler(const std::shared_ptr<pb::RaftMsg>& message);
 
             // io service
             boost::asio::io_service& ioService_;
@@ -177,7 +181,9 @@ namespace cr
             // 连接器
             std::shared_ptr<cr::network::Connector> connector_;
             // 连接
-            std::shared_ptr<cr::network::PbConnection> connection_;
+            std::shared_ptr<cr::network::Connection> connection_;
+            // 消息解码器
+            cr::network::ProtobufCodec codec_;
             // 是否连接
             bool connected_;
             // 消息序号
