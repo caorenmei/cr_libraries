@@ -13,7 +13,7 @@ set(cr_common_network_unittest_SRCS
     ${PROTO_HDRS}
     ${PROTO_SRCS}
     byte_buffer_unittest.cpp
-    protobuf_utils_unittest.cpp
+    byte_buffer_stream_unittest.cpp
     unittest_main.cpp
 )
 
