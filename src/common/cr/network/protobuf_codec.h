@@ -38,10 +38,10 @@ namespace cr
             };
 
             /** 消息回调 */
-            using MessageCallback = std::function<void(const std::shared_ptr<Connection>&, const std::shared_ptr<google::protobuf::Message>&)>;
+            using MessageHandler = std::function<void(const std::shared_ptr<Connection>&, const std::shared_ptr<google::protobuf::Message>&)>;
 
             /** 错误回调 */
-            using ErrorCallback = std::function<void(const std::shared_ptr<Connection>&, int)>;
+            using ErrorHandler = std::function<void(const std::shared_ptr<Connection>&, int)>;
 
             /**
              * 构造函数
@@ -71,13 +71,13 @@ namespace cr
              * 设置消息回调
              * @param cb 回调
              */
-            void setMessageCallback(MessageCallback cb);
+            void setMessageHandler(MessageHandler cb);
 
             /**
              * 设置错误回调
              * @param cb 错误回调
              */
-            void setErrorCallback(ErrorCallback cb);
+            void setErrorHandler(ErrorHandler cb);
 
         private:
 
@@ -86,9 +86,9 @@ namespace cr
             // 最大包长
             std::size_t maxPacketLength_;
             // 消息回调
-            MessageCallback messageCallback_;
+            MessageHandler messageHandler_;
             // 错误回调
-            ErrorCallback errorCallback_;
+            ErrorHandler errorHandler_;
             // 缓冲区
             std::string tempBuffer_;
         };

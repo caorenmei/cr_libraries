@@ -65,7 +65,7 @@ namespace cr
                 length = boost::endian::little_to_native(length);
                 if (length > maxPacketLength_)
                 {
-                    errorCallback_(conn, ERROR_LENGTH);
+                    errorHandler_(conn, ERROR_LENGTH);
                     break;
                 }
                 if (length < buffer.size())
@@ -83,7 +83,7 @@ namespace cr
                     }
                     if (checksum != crc.checksum())
                     {
-                        errorCallback_(conn, ERROR_CHECKSUM);
+                        errorHandler_(conn, ERROR_CHECKSUM);
                         break;
                     }
                 }
@@ -101,7 +101,7 @@ namespace cr
                 }
                 if (typeName.size() == length - (sizeof(length) - sizeof(checksum)))
                 {
-                    errorCallback_(conn, ERROR_TYPE);
+                    errorHandler_(conn, ERROR_TYPE);
                     break;
                 }
                 std::shared_ptr<google::protobuf::Message> message;
@@ -122,7 +122,7 @@ namespace cr
                     ByteBufferInputStream stream(body);
                     if (!message->ParseFromZeroCopyStream(&stream))
                     {
-                        errorCallback_(conn, ERROR_PARSE);
+                        errorHandler_(conn, ERROR_PARSE);
                         break;
                     }
                 }
@@ -136,18 +136,18 @@ namespace cr
                     }
                     message = any;
                 }
-                messageCallback_(conn, message);
+                messageHandler_(conn, message);
             }
         }
 
-        void ProtobufCodec::setMessageCallback(MessageCallback cb)
+        void ProtobufCodec::setMessageHandler(MessageHandler cb)
         {
-            messageCallback_ = std::move(cb);
+            messageHandler_ = std::move(cb);
         }
 
-        void ProtobufCodec::setErrorCallback(ErrorCallback cb)
+        void ProtobufCodec::setErrorHandler(ErrorHandler cb)
         {
-            errorCallback_ = std::move(cb);
+            errorHandler_ = std::move(cb);
         }
     }
 }
