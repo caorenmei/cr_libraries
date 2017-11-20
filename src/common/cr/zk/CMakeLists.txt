@@ -28,6 +28,8 @@ set(cr_common_zk_SRCS
     data_tree.h
     data_tree.cpp
     exceptions.h
+    session.h
+    session.cpp
     watcher.h
     watcher.cpp
     watch_manager.h
