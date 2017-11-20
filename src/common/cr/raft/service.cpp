@@ -1,4 +1,4 @@
-﻿#include "raft_service.h"
+﻿#include "service.h"
 
 #include <cassert>
 #include <algorithm>
@@ -13,14 +13,14 @@
 #include <cr/raft/file_storage.h>
 #include <cr/raft/raft_msg.pb.h>
 
-#include "raft_service.pb.h"
+#include "service.pb.h"
 
 namespace cr
 {
     namespace raft
     {
 
-        RaftService::RaftService(cr::app::Application& context, boost::asio::io_service& ioService,
+        Service::Service(cr::app::Application& context, boost::asio::io_service& ioService,
             std::uint32_t id, std::string name, const Options& options)
             : cr::app::Service(context, ioService, id, name),
             ioService_(ioService),
@@ -95,20 +95,20 @@ namespace cr
             }        
         }
 
-        RaftService::~RaftService()
+        Service::~Service()
         {}
 
-        cr::log::Logger& RaftService::getLogger()
+        cr::log::Logger& Service::getLogger()
         {
             return logger_;
         }
 
-        const RaftService::Options& RaftService::getOptions() const
+        const Service::Options& Service::getOptions() const
         {
             return options_;
         }
 
-        void RaftService::onStart()
+        void Service::onStart()
         {
             cr::app::Service::onStart();
             // 开始监听
@@ -125,7 +125,7 @@ namespace cr
             update();
         }
 
-        void RaftService::onStop()
+        void Service::onStop()
         {
             cr::app::Service::onStop();
             // 停止监听
@@ -146,13 +146,13 @@ namespace cr
             timer_.cancel();
         }
 
-        void RaftService::onLeaderConnected()
+        void Service::onLeaderConnected()
         {}
 
-        void RaftService::onLeaderDisconnected()
+        void Service::onLeaderDisconnected()
         {}
 
-        bool RaftService::isLeaderConnected()
+        bool Service::isLeaderConnected()
         {
             auto leaderId = raft_->getLeaderId();
             if (leaderId.is_initialized())
@@ -164,12 +164,12 @@ namespace cr
             return false;
         }
 
-		const cr::raft::IRaftState& RaftService::getState() const
+		const cr::raft::IRaftState& Service::getState() const
 		{
 			return raft_->getState();
 		}
 
-        bool RaftService::execute(const std::string& value, std::function<void(std::uint64_t, int)> cb)
+        bool Service::execute(const std::string& value, std::function<void(std::uint64_t, int)> cb)
         {
             auto leaderId = raft_->getLeaderId();
             if (leaderId.is_initialized())
@@ -181,7 +181,7 @@ namespace cr
             return false;
         }
 
-        void RaftService::accept()
+        void Service::accept()
         {
             acceptor_.async_accept(socket_, [this](const boost::system::error_code& error)
             {
@@ -193,17 +193,17 @@ namespace cr
             });
         }
 
-        void RaftService::onConnectHandler()
+        void Service::onConnectHandler()
         {
             cr::network::PbConnection::Options options;
             auto conn = std::make_shared<cr::network::PbConnection>(std::move(socket_), logger_, options);
             onConnectHandler(conn);
         }
 
-        void RaftService::onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void Service::onConnectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
         {
             auto peerEndpoint = conn->getRemoteEndpoint();
-            CRLOG_DEBUG(logger_, "RaftService") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
+            CRLOG_DEBUG(logger_, "Service") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
             conn->setMessageHandler([this, self = shared_from_this()](const std::shared_ptr<cr::network::PbConnection>& conn,
                 const std::shared_ptr<google::protobuf::Message>& message)
             {
@@ -217,10 +217,10 @@ namespace cr
             conn->start();
         }
 
-        void RaftService::onDisconectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
+        void Service::onDisconectHandler(const std::shared_ptr<cr::network::PbConnection>& conn)
         {
             auto peerEndpoint = conn->getRemoteEndpoint();
-            CRLOG_DEBUG(logger_, "RaftService") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
+            CRLOG_DEBUG(logger_, "Service") << "Peer Socket Disconnect: " << peerEndpoint.address().to_string() << ":" << peerEndpoint.port();
             auto connIter = connections_.find(conn);
             if (connIter != connections_.end())
             {
@@ -232,7 +232,7 @@ namespace cr
             }
         }
 
-        void RaftService::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
+        void Service::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn,
             const std::shared_ptr<google::protobuf::Message>& message)
         {
             if (message->GetDescriptor() == pb::RaftHandshakeReq::descriptor())
@@ -247,7 +247,7 @@ namespace cr
             }
         }
 
-        void RaftService::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message)
+        void Service::onMessageHandler(const std::shared_ptr<cr::network::PbConnection>& conn, const std::shared_ptr<pb::RaftHandshakeReq>& message)
         {
             auto connIter = connections_.find(conn);
             if (connIter != connections_.end())
@@ -293,7 +293,7 @@ namespace cr
             }
         }
 
-        void RaftService::onNodeConnectHandler(const std::shared_ptr<RaftNode>& node)
+        void Service::onNodeConnectHandler(const std::shared_ptr<RaftNode>& node)
         {
             if (node->isLeader())
             {
@@ -308,7 +308,7 @@ namespace cr
             }
         }
 
-        void RaftService::update()
+        void Service::update()
         {
             auto timePoint = std::chrono::steady_clock::now();
             auto nowTime = std::chrono::duration_cast<std::chrono::milliseconds>(timePoint.time_since_epoch());

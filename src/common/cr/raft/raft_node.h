@@ -15,12 +15,25 @@
 
 #include "raft.h"
 #include "raft_msg.pb.h"
-#include "raft_service.pb.h"
 
 namespace cr
 {
     namespace raft
     {
+
+        /** 前置声明消息 */
+        namespace pb
+        {
+            /** 握手请求 */
+            class RaftHandshakeReq;
+            /** 握手回复 */
+            class RaftHandshakeResp;
+            /** 提交请求 */
+            class RaftProposeReq;
+            /** 提交回复 */
+            class RaftProposeResp;
+        }
+
         /** 一个raft节点 */
         class RaftNode : public std::enable_shared_from_this<RaftNode>
         {

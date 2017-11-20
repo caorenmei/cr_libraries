@@ -1,5 +1,5 @@
-﻿#ifndef CR_COMMON_RAFT_RAFT_SERVICE_H_
-#define CR_COMMON_RAFT_RAFT_SERVICE_H_
+﻿#ifndef CR_COMMON_RAFT_SERVICE_H_
+#define CR_COMMON_RAFT_SERVICE_H_
 
 #include <random>
 #include <map>
@@ -30,7 +30,7 @@ namespace cr
         }
 
         /** Raft服务基类 */
-        class RaftService : public cr::app::Service
+        class Service : public cr::app::Service
         {
         public:
 
@@ -45,11 +45,11 @@ namespace cr
              * @param name 服务名字
              * @param options 服务参数
              */
-            RaftService(cr::app::Application& context, boost::asio::io_service& ioService,
+            Service(cr::app::Application& context, boost::asio::io_service& ioService,
                 std::uint32_t id, std::string name, const Options& options);
 
             /** 析构函数 */
-            ~RaftService();
+            ~Service();
 
         protected:
 

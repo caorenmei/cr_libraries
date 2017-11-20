@@ -1,5 +1,7 @@
 ﻿#include "raft_node.h"
 
+#include "service.pb.h"
+
 namespace cr
 {
     namespace raft
