@@ -71,7 +71,7 @@ namespace cr
         void Connector::retry()
         {
             timer_.expires_from_now(std::chrono::seconds(1));
-            timer_.async_wait([this](const boost::system::error_code& error)
+            timer_.async_wait([this, self = shared_from_this()](const boost::system::error_code& error)
             {
                 if (!error)
                 {
