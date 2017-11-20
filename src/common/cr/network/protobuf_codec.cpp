@@ -101,7 +101,7 @@ namespace cr
                 }
                 if (typeName.size() == length - (sizeof(length) - sizeof(checksum)))
                 {
-                    errorCallback_(conn, ERROR_UNKONW_PROTO);
+                    errorCallback_(conn, ERROR_TYPE);
                     break;
                 }
                 std::shared_ptr<google::protobuf::Message> message;

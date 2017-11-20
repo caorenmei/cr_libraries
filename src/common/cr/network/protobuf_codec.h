@@ -31,8 +31,8 @@ namespace cr
                 ERROR_LENGTH = 1,
                 /** 检验码错误 */
                 ERROR_CHECKSUM = 2,
-                /** 未知协议 */
-                ERROR_UNKONW_PROTO = 3,
+                /** 消息类型错误 */
+                ERROR_TYPE = 3,
                 /** 解析错误 */
                 ERROR_PARSE = 4,
             };
@@ -41,7 +41,7 @@ namespace cr
             using MessageCallback = std::function<void(const std::shared_ptr<Connection>&, const std::shared_ptr<google::protobuf::Message>&)>;
 
             /** 错误回调 */
-            using ErrorCallback = std::function<void(const std::shared_ptr<Connection>&, ErrorCode)>;
+            using ErrorCallback = std::function<void(const std::shared_ptr<Connection>&, int)>;
 
             /**
              * 构造函数
