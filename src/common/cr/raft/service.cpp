@@ -25,23 +25,8 @@ namespace cr
             options_(options),
             random_(std::random_device()()),
             rocksdb_(nullptr),
-            timer_(ioService_),
-            acceptor_(ioService_),
-            socket_(ioService_)
+            timer_(ioService_)
         {
-            // 姐弟Id
-            std::vector<std::uint64_t> buddyIds;
-            for (auto& server : options_.getNodes())
-            {
-                if (server.first == options_.getMyId())
-                {
-                    server_ = server.second;
-                }
-                else
-                {
-                    buddyIds.push_back(server.first);
-                }
-            }
             // 创建目录
             boost::filesystem::create_directories(options_.getBinLogPath());
             // 打开db
@@ -56,7 +41,7 @@ namespace cr
             // options
             cr::raft::Options raftOptons;
             raftOptons.setNodeId(options_.getMyId())
-                .setBuddyNodeIds(buddyIds)
+                .setBuddyNodeIds(options_.getBuddyNodeIds())
                 .setElectionTimeout(options_.getMinElectionTime(), options_.getMaxElectionTime())
                 .setHeartbeatTimeout(options_.getHeartbeatTime())
                 .setRandomSeed(random_())
@@ -68,6 +53,12 @@ namespace cr
                 onCommand(index, value);
             });
             raft_ = std::make_unique<cr::raft::Raft>(raftOptons);
+            // tcp监听器
+            acceptor_ = std::make_shared<cr::network::Acceptor>(ioService_, options_.getMyEndpoint());
+            acceptor_->setAcceptHandler([this](boost::asio::ip::tcp::socket socket)
+            {
+                onConnectHandler(std::move(socket));
+            });
             // 创建节点
             for (auto& server : options_.getNodes())
             {
@@ -111,10 +102,7 @@ namespace cr
         {
             cr::app::Service::onStart();
             // 开始监听
-            acceptor_.non_blocking(true);
-            acceptor_.bind(server_);
-            acceptor_.listen();
-            accept();
+            acceptor_->start();
             // 启动节点
             for (auto& node : nodes_)
             {
@@ -128,7 +116,7 @@ namespace cr
         {
             cr::app::Service::onStop();
             // 停止监听
-            acceptor_.close();
+            acceptor_->stop();
             //关闭连接
             for (auto& conn : connections_)
             {
@@ -180,21 +168,9 @@ namespace cr
             return false;
         }
 
-        void Service::accept()
+        void Service::onConnectHandler(boost::asio::ip::tcp::socket socket)
         {
-            acceptor_.async_accept(socket_, [this](const boost::system::error_code& error)
-            {
-                if (!error)
-                {
-                    onConnectHandler();
-                    accept();
-                }
-            });
-        }
-
-        void Service::onConnectHandler()
-        {
-            auto conn = std::make_shared<cr::network::Connection>(std::move(socket_));
+            auto conn = std::make_shared<cr::network::Connection>(std::move(socket));
             onConnectHandler(conn);
         }
 

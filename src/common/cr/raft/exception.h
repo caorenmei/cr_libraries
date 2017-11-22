@@ -14,6 +14,13 @@ namespace cr
             using cr::Exception::Exception;
         };
 
+        /** 配置错误 */
+        class ConfigException : public RaftException
+        {
+        public:
+            using RaftException::RaftException;
+        };
+
         /** 参数错误 */
         class ArgumentException : public RaftException
         {

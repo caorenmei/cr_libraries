@@ -11,8 +11,8 @@
 
 #include <cr/app/service.h>
 #include <cr/core/logging.h>
+#include <cr/network/acceptor.h>
 #include <cr/network/connection.h>
-#include <cr/network/connector.h>
 #include <cr/network/protobuf_codec.h>
 
 #include "raft.h"
@@ -106,11 +106,8 @@ namespace cr
 
         private:
 
-            // 监听套接字
-            void accept();
-
             // 客户端套接字
-            void onConnectHandler();
+            void onConnectHandler(boost::asio::ip::tcp::socket socket);
 
             // 客户端套接字
             void onConnectHandler(const std::shared_ptr<cr::network::Connection>& conn);
@@ -149,9 +146,7 @@ namespace cr
             // 心跳定时器
             boost::asio::steady_timer timer_;
             // tcp服务器
-            boost::asio::ip::tcp::endpoint server_;
-            boost::asio::ip::tcp::acceptor acceptor_;
-            boost::asio::ip::tcp::socket socket_;
+            std::shared_ptr<cr::network::Acceptor> acceptor_;
             // 服务连接
             std::map<std::shared_ptr<cr::network::Connection>, std::shared_ptr<RaftNode>> connections_;
             // 消息编解码器
