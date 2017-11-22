@@ -6,6 +6,8 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 set(cr_common_network_SRCS
+    acceptor.h
+    acceptor.cpp
     byte_buffer_stream.h
     byte_buffer_stream.cpp
     byte_buffer.h
